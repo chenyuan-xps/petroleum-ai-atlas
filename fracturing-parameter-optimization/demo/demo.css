@@ -1,0 +1,856 @@
+/* =========================================================
+   完井智能决策实验室 · 六个案例共用的示范样式
+   ---------------------------------------------------------
+   所有类名以 .iq 前缀，避免污染主站；
+   颜色只用站点设计令牌或低饱和浅色。
+   本文件由 tools/build-cases.js 复制到各案例包 demo/demo.css。
+   ========================================================= */
+
+.iqd{
+  position:relative;
+  --iq-paper:#f9f8f4;
+  --iq-card:#ffffff;
+  --iq-line:#eae6da;
+  --iq-line-2:#f3f0e7;
+  --iq-ink:#151b1e;
+  --iq-ink-2:#39434b;
+  --iq-ink-3:#56616a;
+  --iq-ink-4:#6f7a82;
+  --iq-jade:#4a443a;
+  --iq-jade-l:#e7f1ed;
+  --iq-clay:#b06a3b;
+  --iq-clay-l:#f8ecdf;
+  --iq-blue:#8a3040;
+  --iq-blue-l:#e8eef9;
+  --iq-red:#a85249;
+  --iq-red-l:#f9e9e5;
+  --iq-amber:#9c6f18;
+  --iq-amber-l:#f9efd7;
+  --iq-sans:"Inter","Segoe UI Variable Display","Segoe UI",-apple-system,"PingFang SC","Microsoft YaHei",system-ui,sans-serif;
+  --iq-mono:ui-monospace,SFMono-Regular,Consolas,"Courier New",monospace;
+  font-family:var(--iq-sans);
+  font-size:14px;
+  line-height:1.72;
+  color:var(--iq-ink);
+  background:transparent;
+  -webkit-font-smoothing:antialiased;
+}
+.iqd *{box-sizing:border-box}
+.iqd p{margin:0 0 8px}
+.iqd h3,.iqd h4,.iqd h5{margin:0;font-weight:650}
+.iqd b{font-weight:650}
+.iqd svg{display:block;width:100%;height:auto;overflow:visible}
+.iqd .iq-mono{font-family:var(--iq-mono);font-variant-numeric:tabular-nums}
+
+/* ---------- 头部 ---------- */
+.iq-head{
+  display:flex;align-items:flex-end;justify-content:space-between;gap:16px;
+  flex-wrap:wrap;margin-bottom:12px;
+}
+.iq-head h3{font-size:20.5px;line-height:1.34;letter-spacing:-.02em;font-weight:660}
+.iq-head p{font-size:13px;color:var(--iq-ink-3);margin-top:7px;max-width:72ch;line-height:1.74}
+.iq-kicker{font-size:10.5px;letter-spacing:.15em;text-transform:uppercase;color:var(--iq-ink-4);font-weight:600}
+.iq-tags{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.iq-tag{
+  display:inline-flex;align-items:center;gap:4px;font-size:11px;line-height:1;
+  padding:4px 8px;border-radius:99px;border:1px solid var(--iq-line);
+  background:#fff;color:var(--iq-ink-2);white-space:nowrap;
+}
+.iq-tag.jade{background:var(--iq-jade-l);border-color:rgba(58,53,45,.22);color:#3a352d}
+.iq-tag.clay{background:var(--iq-clay-l);border-color:rgba(178,106,57,.22);color:#8f5128}
+.iq-tag.blue{background:var(--iq-blue-l);border-color:rgba(65,105,155,.22);color:#31527b}
+
+/* ---------- 三栏 ---------- */
+/* 用 fr + minmax 而不是固定 px：容器变窄时三列一起按比例收缩，
+   中间列不会被挤成 0 宽（旧写法 232px / 1fr / 286px 在窄容器里会塌）。 */
+.iq-grid{
+  display:grid;
+  grid-template-columns:minmax(150px,0.9fr) minmax(0,2.05fr) minmax(170px,1.05fr);
+  gap:12px;align-items:start;
+}
+@media (min-width:1200px){
+  .iq-grid{grid-template-columns:232px minmax(0,1fr) 286px}
+}
+.iq-card{
+  background:var(--iq-card);border:1px solid var(--iq-line);border-radius:14px;
+  padding:14px 15px;min-width:0;
+  box-shadow:0 1px 2px rgba(28,24,12,.045),0 1px 1px rgba(28,24,12,.025);
+  transition:box-shadow .2s ease,border-color .2s ease;
+}
+.iq-card:hover{box-shadow:0 1px 2px rgba(28,24,12,.04),0 10px 22px -16px rgba(28,24,12,.22)}
+.iq-card + .iq-card{margin-top:11px}
+.iq-card-h{
+  display:flex;align-items:center;justify-content:space-between;gap:8px;
+  margin-bottom:9px;padding-bottom:7px;border-bottom:1px solid var(--iq-line-2);
+}
+.iq-card-h h4{font-size:13.5px;letter-spacing:-.008em;font-weight:650}
+.iq-card-h .iq-mini{font-size:10.5px;color:var(--iq-ink-4);font-family:var(--iq-mono)}
+.iq-card h4 .iq-dot{
+  display:inline-block;width:6px;height:6px;border-radius:50%;
+  background:var(--iq-jade);margin-right:6px;vertical-align:1px;
+}
+
+/* ---------- 参数控件 ---------- */
+.iq-ctl{margin-bottom:10px}
+.iq-ctl:last-child{margin-bottom:2px}
+.iq-ctl-top{
+  display:flex;align-items:baseline;justify-content:space-between;gap:8px;
+  font-size:12.2px;color:var(--iq-ink-2);margin-bottom:2px;
+}
+.iq-ctl-top output{
+  font-family:var(--iq-mono);font-size:12.5px;font-weight:650;color:var(--iq-jade);
+  background:var(--iq-jade-l);padding:1px 6px;border-radius:4px;
+}
+.iq-ctl input[type=range]{
+  -webkit-appearance:none;appearance:none;width:100%;height:16px;
+  background:transparent;cursor:pointer;margin:0;
+}
+.iq-ctl input[type=range]::-webkit-slider-runnable-track{
+  height:3px;border-radius:2px;background:#e4dfd1;
+}
+.iq-ctl input[type=range]::-webkit-slider-thumb{
+  -webkit-appearance:none;appearance:none;width:12px;height:12px;border-radius:50%;
+  background:var(--iq-jade);border:2px solid #fff;margin-top:-4.5px;
+  box-shadow:0 1px 3px rgba(36,43,46,.25);
+}
+.iq-ctl input[type=range]::-moz-range-track{height:3px;border-radius:2px;background:#e4dfd1}
+.iq-ctl input[type=range]::-moz-range-thumb{
+  width:10px;height:10px;border-radius:50%;background:var(--iq-jade);border:2px solid #fff;
+}
+.iq-ctl select{
+  width:100%;font-family:var(--iq-sans);font-size:12px;color:var(--iq-ink);
+  background:#fff;border:1px solid var(--iq-line);border-radius:5px;padding:5px 7px;
+}
+.iq-seg{display:flex;gap:4px;flex-wrap:wrap}
+.iq-seg button{
+  flex:1;min-width:52px;font-family:var(--iq-sans);font-size:11.4px;color:var(--iq-ink-2);
+  background:#fff;border:1px solid var(--iq-line);border-radius:5px;padding:4px 6px;cursor:pointer;
+}
+.iq-seg button.on{background:var(--iq-jade);border-color:var(--iq-jade);color:#fff}
+.iq-seg button:hover{border-color:var(--iq-jade)}
+
+/* 搜索口径切换（co2）：三档等宽，说明放在下方 */
+.iq-mode{
+  border:1px solid var(--iq-line);border-radius:7px;background:#fcfbf7;
+  padding:7px 8px 6px;margin-bottom:9px;
+}
+.iq-mode-k{font-size:11px;color:var(--iq-ink-2);font-weight:600;margin-bottom:5px}
+.iq-mode-k .iq-mini{font-weight:400;margin-left:4px}
+.iq-mode .iq-seg{display:grid;grid-template-columns:repeat(3,1fr);gap:0;margin:0}
+.iq-mode .iq-seg button{
+  font-size:10.5px;padding:5px 2px;border-radius:0;border-left-width:0;white-space:nowrap;
+}
+.iq-mode .iq-seg button:first-child{border-radius:5px 0 0 5px;border-left-width:1px}
+.iq-mode .iq-seg button:last-child{border-radius:0 5px 5px 0}
+.iq-note.slim{font-size:11px;line-height:1.55;padding:6px 8px;margin-top:6px;background:#fff}
+
+/* 预测周期快捷按钮（pr2）：四档等宽 */
+.iq-quick .iq-seg{display:grid;grid-template-columns:repeat(4,1fr);gap:0;margin:0 0 3px}
+.iq-quick .iq-seg button{font-size:11px;padding:4px 2px;border-radius:0;border-left-width:0}
+.iq-quick .iq-seg button:first-child{border-radius:5px 0 0 5px;border-left-width:1px}
+.iq-quick .iq-seg button:last-child{border-radius:0 5px 5px 0}
+.iq-btns{display:flex;gap:6px;flex-wrap:wrap;margin-top:9px}
+.iq-btn{
+  font-family:var(--iq-sans);font-size:12.2px;line-height:1.2;color:var(--iq-ink-2);
+  background:#fff;border:1px solid var(--iq-line);border-radius:6px;padding:7px 10px;
+  cursor:pointer;transition:border-color .15s,background .15s,color .15s;
+}
+.iq-btn:hover{border-color:var(--iq-jade);color:var(--iq-jade)}
+.iq-btn.primary{background:var(--iq-jade);border-color:var(--iq-jade);color:#fff}
+.iq-btn.primary:hover{background:#3a352d;color:#fff}
+.iq-btn.ghost{background:transparent}
+.iq-btn:disabled{opacity:.45;cursor:default}
+.iq-btn.sm{padding:6px 10px;font-size:11.2px}
+
+/* ---------- 回放时间轴（co4） ---------- */
+.iq-timecard{padding-bottom:8px}
+.iq-timebar{display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+.iq-timebar .iq-seg{display:inline-flex;flex-wrap:nowrap;gap:0;margin:0}
+.iq-timebar .iq-seg button{
+  font-size:11px;padding:5px 10px;border-radius:0;border-left-width:0;white-space:nowrap;
+}
+.iq-timebar .iq-seg button:first-child{border-radius:5px 0 0 5px;border-left-width:1px}
+.iq-timebar .iq-seg button:last-child{border-radius:0 5px 5px 0}
+.iq-timebar input[type=range]{
+  -webkit-appearance:none;appearance:none;flex:1;min-width:120px;height:16px;
+  background:transparent;cursor:pointer;margin:0;
+}
+.iq-timebar input[type=range]::-webkit-slider-runnable-track{height:3px;border-radius:2px;background:#e4dfd1}
+.iq-timebar input[type=range]::-webkit-slider-thumb{
+  -webkit-appearance:none;appearance:none;width:12px;height:12px;border-radius:50%;
+  background:var(--iq-jade);border:2px solid #fff;margin-top:-4.5px;
+  box-shadow:0 1px 3px rgba(36,43,46,.25);
+}
+.iq-timebar input[type=range]::-moz-range-track{height:3px;border-radius:2px;background:#e4dfd1}
+.iq-timebar input[type=range]::-moz-range-thumb{
+  width:10px;height:10px;border-radius:50%;background:var(--iq-jade);border:2px solid #fff;
+}
+.iq-day{
+  font-family:var(--iq-mono);font-size:11.5px;font-weight:650;color:#3a352d;
+  background:var(--iq-jade-l);padding:3px 8px;border-radius:4px;min-width:44px;text-align:center;
+}
+
+/* ---------- 分层面积 / 流量分配 ---------- */
+.iq-extra{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:12px;margin-top:12px}
+.iq-extra .iq-card{margin-top:0}
+
+/* ---------- 指标 ---------- */
+.iq-kpis{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--iq-line);border:1px solid var(--iq-line);border-radius:7px;overflow:hidden}
+.iq-kpi{background:#fff;padding:7px 9px}
+.iq-kpi span{display:block;font-size:10.5px;color:var(--iq-ink-4);letter-spacing:.03em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.iq-kpi b{display:block;font-family:var(--iq-mono);font-size:19px;font-weight:650;line-height:1.25;letter-spacing:-.02em;margin-top:2px}
+.iq-kpi b small{font-size:10.5px;font-weight:500;color:var(--iq-ink-3);letter-spacing:0;margin-left:2px}
+.iq-kpi b.ok{color:var(--iq-jade)}
+.iq-kpi b.warn{color:var(--iq-amber)}
+.iq-kpi b.bad{color:var(--iq-red)}
+.iq-kpi b.hero{font-size:21px;color:var(--iq-jade)}
+.iq-kpi.wide{grid-column:span 2}
+.iq-kpi.wide b{font-size:15px}
+
+.iq-badge{
+  display:inline-flex;align-items:center;gap:4px;font-size:10.5px;line-height:1;
+  padding:4px 7px;border-radius:99px;font-weight:600;white-space:nowrap;
+}
+.iq-badge.ok{background:var(--iq-jade-l);color:#3a352d}
+.iq-badge.warn{background:var(--iq-amber-l);color:#806019}
+.iq-badge.bad{background:var(--iq-red-l);color:#94443c}
+.iq-badge.neutral{background:#f1efe8;color:var(--iq-ink-2)}
+
+.iq-meter{height:6px;border-radius:99px;background:#eeebe1;overflow:hidden;margin-top:5px}
+.iq-meter i{display:block;height:100%;border-radius:99px;background:var(--iq-jade);transition:width .35s}
+
+/* ---------- 推荐方案卡：把 AI 结论单独拎出来 ---------- */
+.iq-reco{
+  display:flex;align-items:center;gap:7px;flex-wrap:wrap;
+  margin-bottom:9px;padding:7px 10px;border-radius:7px;
+  background:var(--iq-jade-l);border:1px solid rgba(58,53,45,.22);
+  font-size:11px;line-height:1.5;color:#3a352d;
+}
+.iq-reco .tag{
+  font-family:var(--iq-mono);font-size:8.5px;letter-spacing:.12em;
+  color:#6b6255;opacity:.85;text-transform:uppercase;
+}
+.iq-reco b{font-family:var(--iq-mono);font-size:14px;font-weight:680;letter-spacing:-.01em}
+
+/* ---------- 前后对比条：经验 / 基准 vs AI 推荐 ---------- */
+.iq-cmp{margin-top:10px;padding-top:9px;border-top:1px dashed var(--iq-line)}
+.iq-cmp-h{
+  display:flex;align-items:baseline;justify-content:space-between;gap:8px;
+  font-size:10.5px;color:var(--iq-ink-4);letter-spacing:.03em;margin-bottom:7px;
+}
+.iq-cmp-h b{font-family:var(--iq-mono);font-size:11px;font-weight:650;color:var(--iq-ink-2)}
+.iq-cmp-h .delta{
+  font-family:var(--iq-mono);font-size:10.5px;font-weight:650;
+  padding:1px 6px;border-radius:99px;background:var(--iq-jade-l);color:#3a352d;
+}
+.iq-cmp-h .delta.bad{background:var(--iq-red-l);color:#94443c}
+.iq-cmp-row{display:grid;grid-template-columns:56px 1fr 52px;align-items:center;gap:8px;margin-top:5px}
+.iq-cmp-row .lb{font-size:10.5px;color:var(--iq-ink-3);white-space:nowrap}
+.iq-cmp-row .tr{height:9px;border-radius:99px;background:#f2efe6;overflow:hidden}
+.iq-cmp-row .tr i{display:block;height:100%;border-radius:99px;background:#c3bdb0;transition:width .4s}
+.iq-cmp-row .tr i.ai{
+  background:linear-gradient(90deg,var(--iq-jade) 0%,#3f9a80 100%);
+  box-shadow:0 0 0 1px rgba(58,53,45,.18);
+}
+.iq-cmp-row b{
+  font-family:var(--iq-mono);font-size:11.5px;font-weight:650;
+  color:var(--iq-ink-2);text-align:right;
+}
+.iq-cmp-row.ai b{color:#3a352d}
+.iq-meter i.warn{background:var(--iq-amber)}
+.iq-meter i.bad{background:var(--iq-red)}
+.iq-meter-row{display:flex;justify-content:space-between;font-size:10px;color:var(--iq-ink-4);margin-top:3px}
+
+/* ---------- 图例 / 提示 ---------- */
+.iq-legend{display:flex;gap:10px;flex-wrap:wrap;font-size:11px;color:var(--iq-ink-2);margin-top:5px}
+.iq-legend span{display:inline-flex;align-items:center;gap:4px;white-space:nowrap}
+.iq-legend i{width:9px;height:9px;border-radius:2px;display:inline-block}
+.iq-legend i.line{height:2px;width:12px;border-radius:1px}
+.iq-tip{
+  position:absolute;z-index:9;pointer-events:none;opacity:0;transform:translate(-50%,-120%);
+  background:#242a32;color:#fff;border-radius:6px;padding:5px 8px;font-size:10.8px;
+  line-height:1.5;white-space:nowrap;transition:opacity .12s;box-shadow:0 4px 14px rgba(0,0,0,.18);
+}
+.iq-tip b{color:#f0d9a4}
+.iq-tip.on{opacity:1}
+
+.iq-note{
+  font-size:12.3px;color:var(--iq-ink-3);line-height:1.72;
+  background:#fcfbf7;border:1px solid var(--iq-line);border-left:3px solid var(--iq-jade);
+  border-radius:0 6px 6px 0;padding:8px 10px;margin-top:8px;
+}
+.iq-note b{color:var(--iq-ink)}
+.iq-note.clay{border-left-color:var(--iq-clay)}
+.iq-note.red{border-left-color:var(--iq-red)}
+.iq-note.blue{border-left-color:var(--iq-blue)}
+
+/* 敏感性筹码：每格是一次权重扰动后的第一名 */
+.iq-stress{display:grid;grid-template-columns:repeat(5,1fr);gap:4px}
+.st-chip{
+  border:1px solid var(--iq-line);border-radius:5px;padding:4px 3px;text-align:center;
+  background:#fff;cursor:pointer;transition:border-color .15s,background .15s,transform .15s;
+}
+.st-chip:hover{transform:translateY(-1px);border-color:var(--iq-jade)}
+.st-chip .st-k{display:block;font-size:8.5px;color:var(--iq-ink-4);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.st-chip .st-v{display:block;font-size:10px;font-weight:600;margin-top:1px;color:var(--iq-ink-2)}
+.st-chip.ok{background:#f5faf8;border-color:rgba(58,53,45,.26)}
+.st-chip.ok .st-v{color:var(--iq-jade)}
+.st-chip.flip{background:#fdf6f4;border-color:rgba(176,90,81,.3)}
+.st-chip.flip .st-v{color:var(--iq-red)}
+
+/* ---------- 表格 ---------- */
+.iq-table{width:100%;border-collapse:collapse;font-size:11.8px}
+.iq-table th{
+  text-align:left;font-weight:600;color:var(--iq-ink-4);font-size:10.5px;letter-spacing:.05em;
+  padding:5px 6px;border-bottom:1px solid var(--iq-line);white-space:nowrap;
+}
+.iq-table td{padding:5px 6px;border-bottom:1px solid var(--iq-line-2);color:var(--iq-ink-2);vertical-align:top}
+.iq-table tr:last-child td{border-bottom:0}
+.iq-table td.num{font-family:var(--iq-mono);text-align:right;font-variant-numeric:tabular-nums}
+.iq-table tr.hl td{background:#f7fbf9}
+.iq-table tr.hl td:first-child{box-shadow:inset 3px 0 var(--iq-jade)}
+.iq-table .ok{color:var(--iq-jade);font-weight:600}
+.iq-table .bad{color:var(--iq-red);font-weight:600}
+
+/* ---------- 底部 ---------- */
+.iq-bottom{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:12px;margin-top:12px}
+.iq-bottom .iq-card{margin-top:0}
+.iq-flow{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-top:2px}
+.iq-flow span{
+  font-size:11px;padding:5px 8px;border-radius:5px;background:#f5f3ec;color:var(--iq-ink-2);
+  border:1px solid var(--iq-line-2);white-space:nowrap;
+}
+.iq-flow em{font-style:normal;color:var(--iq-ink-4);font-size:10px}
+
+.iq-miss{
+  border:1px solid var(--iq-red);background:var(--iq-red-l);color:var(--iq-red);
+  border-radius:8px;padding:12px 14px;font-size:12px;line-height:1.7;
+}
+.iq-poll{font-size:10.5px;color:var(--iq-ink-4);margin-top:5px}
+
+/* ---------- 小屏 ----------
+   注意：这里曾经把三栏在 1040px 就降成两栏、720px 降成单栏，
+   导致「概念图」被挤到上面、图表掉到下面。现在三栏一路保留到
+   520px（按比例收缩），只有手机竖屏才堆叠。 */
+@media (max-width:720px){
+  .iq-bottom{grid-template-columns:minmax(0,1fr)}
+  .iq-extra{grid-template-columns:minmax(0,1fr)}
+  .iq-head h3{font-size:16px}
+}
+@media (max-width:599px){
+  .iq-grid{grid-template-columns:minmax(0,1fr)}
+  .iq-grid > .iq-figure,.iq-grid > .iq-side{grid-column:1 / -1}
+  .iq-side{grid-template-columns:minmax(0,1fr)}
+}
+
+/* ---------- 整页模式 ---------- */
+body.iq-page{
+  margin:0;padding:18px 20px 26px;background:#fbfaf6;color:#242a32;
+  font-family:"Inter","PingFang SC","Microsoft YaHei",system-ui,sans-serif;
+  font-size:13px;line-height:1.7;
+  -webkit-font-smoothing:antialiased;
+}
+body.iq-page .iqd{max-width:1160px;margin:0 auto}
+body.iq-page .iq-foot{
+  max-width:1160px;margin:14px auto 0;font-size:10.5px;color:#9ba3a9;line-height:1.7;
+}
+
+/* =========================================================
+   视觉升级 v2.2 · 示范层打磨
+   ---------------------------------------------------------
+   只调整字号、间距、控件手感与表格读感，不改任何计算逻辑。
+   本文件会被复制到六个案例包，改这里等于六个示范同时生效。
+   ========================================================= */
+
+.iq-head{padding-bottom:13px;border-bottom:1px solid var(--iq-line);margin-bottom:14px}
+.iq-head h3{font-size:20px;letter-spacing:-.02em}
+.iq-head p{max-width:74ch}
+.iq-kicker{color:var(--iq-jade);opacity:.86}
+.iq-tag{border-color:var(--iq-line-2);background:#fff;font-size:10.8px;padding:5px 9px}
+
+.iq-grid{gap:14px}
+.iq-card{padding:14px 15px 15px;box-shadow:0 1px 2px rgba(48,44,30,.035)}
+.iq-card + .iq-card{margin-top:12px}
+.iq-card-h{margin-bottom:10px;padding-bottom:7px}
+.iq-card-h h4{font-size:13.4px}
+.iq-card-h .iq-mini{font-size:10px}
+
+/* 参数控件：更粗的轨道、更大的滑块、更清楚的数值 */
+.iq-ctl{margin-bottom:13px}
+.iq-ctl-top{font-size:12.4px}
+.iq-ctl-top output{padding:2px 7px;font-size:12.6px}
+.iq-ctl input[type=range]{height:18px}
+.iq-ctl input[type=range]::-webkit-slider-runnable-track{height:4px;background:#e9e4d6}
+.iq-ctl input[type=range]::-webkit-slider-thumb{width:14px;height:14px;border-width:3px;margin-top:-5px}
+.iq-ctl input[type=range]::-moz-range-track{height:4px;background:#e9e4d6}
+.iq-ctl input[type=range]::-moz-range-thumb{width:12px;height:12px}
+
+.iq-btns{gap:8px;margin-top:12px;align-items:stretch}
+.iq-btn{padding:8px 12px;border-color:var(--iq-line-2);transition:border-color .15s,background .15s,color .15s,transform .15s}
+.iq-btn:hover{transform:translateY(-1px)}
+.iq-btn.primary{box-shadow:0 6px 14px -10px rgba(58,53,45,.85)}
+
+/* 指标：主指标放大，其余保持等宽数字 */
+/* 注意：站内主样式有全局 .hero{padding:34px 0 0}，这里必须清掉，否则主指标被顶下去 */
+.iq-kpi b.hero{padding:0;margin-top:1px}
+.iq-kpis{border-radius:9px;border-color:var(--iq-line-2);background:var(--iq-line-2)}
+.iq-kpi{padding:9px 10px 8px}
+.iq-kpi span{font-size:10.3px;letter-spacing:.04em;line-height:1.4}
+.iq-kpi b{font-size:19px;line-height:1.18}
+.iq-kpi b.hero{font-size:19px;letter-spacing:0}
+.iq-meter-row{font-size:10.5px;line-height:1.5;gap:10px;align-items:baseline;margin-top:5px;flex-wrap:wrap}
+.iq-meter-row span:last-child{text-align:right;color:var(--iq-ink-3)}
+/* 置信度明细（co1—pr2 的 *-conf-txt）：独占一行、左对齐，避免挤成竖条 */
+.iq-meter-row span[id$="-conf-txt"]{
+  flex:1 1 100%;text-align:left;font-size:10.4px;line-height:1.55;color:var(--iq-ink-3);
+}
+.iq-kpi.wide{padding:10px 11px 9px}
+.iq-kpi.wide b{font-size:16px;letter-spacing:.03em;color:var(--iq-ink)}
+.iq-badge{padding:5px 8px}
+.iq-meter{height:7px}
+
+/* 图例 / 说明 / 表格 */
+.iq-legend{font-size:11.2px;gap:12px 16px;margin-top:7px}
+.iq-legend i{width:10px;height:10px}
+.iq-legend i.line{width:14px;height:2.5px}
+.iq-note{padding:9px 11px;border-radius:0 7px 7px 0}
+.iq-table tbody tr:nth-child(even) td{background:#fdfcf9}
+.iq-table tbody tr:hover td{background:#f5faf8}
+.iq-flow span{background:#f7f5ee}
+.iq-extra{gap:14px;margin-top:14px}
+
+/* 回放时间轴 */
+.iq-timebar{gap:9px}
+.iq-timebar input[type=range]{height:18px}
+.iq-timebar input[type=range]::-webkit-slider-runnable-track{height:4px;background:#e9e4d6}
+.iq-timebar input[type=range]::-webkit-slider-thumb{width:14px;height:14px;border-width:3px;margin-top:-5px}
+.iq-timebar input[type=range]::-moz-range-track{height:4px;background:#e9e4d6}
+.iq-timebar input[type=range]::-moz-range-thumb{width:12px;height:12px}
+.iq-day{min-width:50px;padding:4px 9px}
+
+/* 口径切换与敏感性筹码 */
+.iq-mode{border-radius:8px;padding:8px 9px 7px}
+.iq-mode-k{font-size:11.2px}
+.iq-mode .iq-seg button,.iq-quick .iq-seg button{font-size:11px;padding:6px 2px}
+.iq-stress{gap:5px}
+.st-chip{padding:5px 3px;border-color:var(--iq-line-2)}
+.st-chip .st-k{font-size:8px}
+.st-chip .st-v{font-size:10.5px}
+
+/* 宽屏：左侧井筒/结构图随滚动停靠，方便边调参边对照 */
+@media (min-width:1041px){
+  .iq-grid > .iq-figure{position:sticky;top:126px;align-self:start}
+}
+@media (max-width:720px){
+  .iq-head h3{font-size:17px}
+  .iq-card{padding:12px 13px}
+  .iq-kpi b{font-size:17px}
+}
+
+/* =========================================================
+   学习层 v3 · 概念图解 / 流程可视化 / 补充图表
+   ---------------------------------------------------------
+   只做加法：新增一块“先看图再看数据”的版面与配套卡片，
+   不改动原有三栏结构、配色与计算逻辑。
+   ========================================================= */
+.iq-learn{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,.95fr);gap:14px;margin-top:14px}
+.iq-learn .iq-card{margin-top:0}
+
+/* 生活比喻—专业概念 对照卡 */
+.iq-metas{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin-top:9px}
+.iq-metas-h{display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin-top:12px;padding:0 2px;font-size:10px;color:var(--iq-ink-3)}
+.iq-metas-h em{font-style:normal;font-family:var(--iq-mono);font-size:8px;letter-spacing:.06em;color:var(--iq-ink-4)}
+.iq-meta{border:1px solid var(--iq-line-2);border-radius:7px;background:#fcfbf7;padding:6px 8px 7px;min-width:0}
+.iq-meta .t{font-size:11px;font-weight:650;color:var(--iq-ink);line-height:1.35}
+.iq-meta .row{font-size:9.8px;line-height:1.55;color:var(--iq-ink-3);margin-top:3px}
+.iq-meta .row .k{font-family:var(--iq-mono);font-size:8px;letter-spacing:.06em;color:var(--iq-ink-4);margin-right:3px}
+.iq-meta .row.life{color:#8f5128}
+.iq-meta .row.see{color:#3a352d}
+
+/* 点击式流程步骤 */
+.iq-steps{display:flex;gap:5px;flex-wrap:wrap;margin:2px 0 8px}
+.iq-step{
+  flex:1 1 84px;min-width:0;text-align:left;border:1px solid var(--iq-line-2);border-radius:7px;
+  background:#fff;padding:6px 7px;cursor:pointer;font-family:var(--iq-sans);
+  transition:border-color .15s,background .15s,transform .15s;
+}
+.iq-step:hover{border-color:var(--iq-jade);transform:translateY(-1px)}
+.iq-step.on{background:var(--iq-jade-l);border-color:rgba(58,53,45,.34)}
+.iq-step .no{display:block;font-family:var(--iq-mono);font-size:8px;letter-spacing:.1em;color:var(--iq-ink-4)}
+.iq-step.on .no{color:#6b6255}
+.iq-step .nm{display:block;font-size:10.2px;line-height:1.35;color:var(--iq-ink-2);margin-top:2px;font-weight:600}
+.iq-step.on .nm{color:#3a352d}
+
+/* 输入—处理—输出 三格 */
+.iq-io{display:grid;grid-template-columns:minmax(0,1fr) 14px minmax(0,1fr) 14px minmax(0,1fr);gap:4px;align-items:stretch;margin-top:6px}
+.iq-io .bx{border:1px solid var(--iq-line-2);border-radius:6px;padding:5px 7px;background:#fcfbf7;min-width:0}
+.iq-io .bx.proc{background:#f4f9f6;border-color:rgba(58,53,45,.24)}
+.iq-io .bx .kk{font-family:var(--iq-mono);font-size:8px;letter-spacing:.08em;color:var(--iq-ink-4);display:block}
+.iq-io .bx.proc .kk{color:#6b6255}
+.iq-io .bx .vv{font-size:10px;line-height:1.5;color:var(--iq-ink-2);margin-top:2px;display:block}
+.iq-io .ar{display:flex;align-items:center;justify-content:center;color:var(--iq-ink-4);font-size:11px}
+.iq-sd-h{display:flex;align-items:baseline;gap:6px;flex-wrap:wrap;font-size:11px;color:var(--iq-ink-3);line-height:1.55;margin-top:2px}
+.iq-sd-h b{color:var(--iq-ink);font-size:12px}
+
+/* 方案三态卡（推荐 / 备选 / 不推荐） */
+.iq-tri{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.iq-tcard{border:1px solid var(--iq-line-2);border-radius:8px;padding:8px 9px;background:#fff;cursor:pointer;min-width:0;transition:box-shadow .15s,border-color .15s}
+.iq-tcard:hover{border-color:var(--iq-jade)}
+.iq-tcard .cap{font-family:var(--iq-mono);font-size:8px;letter-spacing:.1em;color:var(--iq-ink-4)}
+.iq-tcard .nm{font-size:12px;font-weight:650;margin-top:3px;color:var(--iq-ink)}
+.iq-tcard .val{font-family:var(--iq-mono);font-size:17px;font-weight:650;color:var(--iq-jade);margin-top:1px;line-height:1.2}
+.iq-tcard .val small{font-size:9.5px;color:var(--iq-ink-3);font-weight:400;margin-left:2px}
+.iq-tcard .sub{font-size:9.8px;color:var(--iq-ink-3);line-height:1.55;margin-top:3px}
+.iq-tcard.reco{background:var(--iq-jade-l);border-color:rgba(58,53,45,.3)}
+.iq-tcard.alt{background:#fbfaf6}
+.iq-tcard.no{opacity:.7}
+.iq-tcard.on{box-shadow:0 0 0 1.5px var(--iq-jade) inset}
+
+/* 滑套开度时间轴 */
+.iq-strip{margin-top:4px}
+.iq-strip-row{display:grid;grid-template-columns:26px minmax(0,1fr);gap:6px;align-items:center;margin-bottom:4px}
+.iq-strip-row .lb{font-size:9.5px;color:var(--iq-ink-3);font-family:var(--iq-mono)}
+.iq-strip-cells{display:flex;gap:1px}
+.iq-strip-cells i{flex:1;height:13px;border-radius:2px;display:block;background:#eeebe1}
+.iq-strip-note{display:flex;justify-content:space-between;font-size:9.5px;color:var(--iq-ink-4);margin-top:2px}
+
+@media (max-width:1040px){
+  .iq-learn{grid-template-columns:minmax(0,1fr)}
+}
+@media (max-width:720px){
+  .iq-learn{grid-template-columns:minmax(0,1fr)}
+  .iq-metas{grid-template-columns:minmax(0,1fr)}
+  .iq-io{grid-template-columns:minmax(0,1fr)}
+  .iq-io .ar{transform:rotate(90deg);padding:1px 0}
+  .iq-tri{grid-template-columns:minmax(0,1fr)}
+}
+
+/* ---------- 智能方法说明卡（iq-smart.js） ---------- */
+.iq-smart{
+  margin:0 0 12px;padding:13px 15px 14px;background:var(--iq-card);
+  border:1px solid var(--iq-line);border-radius:12px;
+  box-shadow:0 1px 2px rgba(48,44,30,.035);
+}
+.iq-smart-h{
+  display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap;
+  padding-bottom:9px;border-bottom:1px solid var(--iq-line-2);
+}
+.iq-smart-h .t{font-size:14.5px;font-weight:650;line-height:1.4;margin-top:2px}
+.iq-smart-h .t small{display:block;font-size:10.5px;color:var(--iq-ink-4);font-weight:400;margin-top:3px}
+.iq-smart-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px;margin-top:9px}
+.iq-s-cell{background:#fbf9f3;border:1px solid var(--iq-line-2);border-radius:8px;padding:7px 9px;min-height:60px}
+.iq-s-cell span{display:block;font-size:9.5px;letter-spacing:.08em;color:var(--iq-ink-4)}
+.iq-s-cell b{display:block;font-size:11.6px;line-height:1.55;color:var(--iq-ink-2);font-weight:600;margin-top:2px}
+.iq-smart-flow{margin-top:9px}
+/* 算法解剖图：方法区块的主视觉，替代原来的四格文字说明 */
+.iq-algo{
+  margin-top:10px;border:1px solid var(--iq-line-2);border-radius:10px;
+  background:#fff;padding:9px 11px 8px;
+}
+.iq-algo svg{display:block;width:100%;height:auto}
+.iq-algo-cap{
+  display:flex;flex-wrap:wrap;gap:4px 14px;margin-top:6px;
+  font-size:10.5px;line-height:1.5;color:var(--iq-ink-4);
+}
+.iq-algo-cap b{color:var(--iq-ink-2);font-weight:600}
+.iq-algo-cap i{
+  font-style:normal;display:inline-block;width:7px;height:7px;border-radius:2px;
+  margin-right:4px;vertical-align:1px;
+}
+/* 折叠说明：输入/输出/原理/边界 */
+.iq-smart-more{margin-top:10px;padding-top:9px;border-top:1px dashed var(--iq-line)}
+.iq-smart-more>summary{
+  cursor:pointer;font-size:10.5px;letter-spacing:.04em;color:var(--iq-ink-3);
+  list-style:none;display:flex;align-items:center;gap:6px;
+}
+.iq-smart-more>summary::-webkit-details-marker{display:none}
+.iq-smart-more>summary::before{
+  content:'＋';font-family:var(--mono);font-size:10px;color:var(--iq-ink-4);
+  border:1px solid var(--iq-line-2);border-radius:4px;width:14px;height:14px;
+  display:inline-flex;align-items:center;justify-content:center;
+}
+.iq-smart-more[open]>summary{margin-bottom:9px;color:var(--iq-ink-2)}
+.iq-smart-more[open]>summary::before{content:'－'}
+/* 本轮中间量：算法在这一次刷新里真正算出来的数，不是文案 */
+.iq-smart-trace{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-top:9px}
+.iq-smart-trace .lb{
+  font-size:9.5px;letter-spacing:.1em;color:var(--iq-ink-4);
+  text-transform:uppercase;margin-right:1px;
+}
+.iq-smart-trace i{
+  font-style:normal;display:inline-flex;align-items:baseline;gap:5px;
+  font-size:10px;color:var(--iq-ink-4);background:#f7f4ec;
+  border:1px solid var(--iq-line-2);border-radius:999px;padding:2px 8px 3px;
+}
+.iq-smart-trace i b{
+  font-family:ui-monospace,SFMono-Regular,Consolas,monospace;
+  font-size:11.5px;line-height:1.2;color:var(--iq-ink);font-weight:650;
+}
+.iq-smart-sec{margin-top:10px;padding-top:9px;border-top:1px dashed var(--iq-line)}
+.iq-smart-sec h5{font-size:11px;letter-spacing:.06em;color:var(--iq-ink-3);margin:0 0 5px}
+.iq-smart-sec ul{margin:0;padding-left:16px}
+.iq-smart-sec li{font-size:11.5px;line-height:1.65;color:var(--iq-ink-2);margin-bottom:2px}
+.iq-smart-bound{background:#fbf9f3;border:1px solid var(--iq-line-2);border-radius:8px;padding:8px 10px;margin-top:10px}
+.iq-smart-bound b{font-size:10.5px;color:var(--iq-amber);letter-spacing:.04em}
+.iq-smart-bound ul{margin:4px 0 0;padding-left:16px}
+.iq-smart-bound li{font-size:11px;line-height:1.6;color:var(--iq-ink-3);margin-bottom:1px}
+@media (max-width:820px){.iq-smart-grid{grid-template-columns:1fr 1fr}}
+
+/* =========================================================
+   14 · 版式统一层（co1—co4）
+   ---------------------------------------------------------
+   目标：让完井四个案例的示范台，与「测井曲线智能分层」
+   （welllog-layer）的示范台使用同一套版式语言：
+     ① 外框：整块白底圆角面板，替掉原来的三栏浮卡
+     ② 头部：标题带（kicker / 标题 / 说明），底部一条细线
+     ③ 说明条：智能方法卡片变成整幅横条
+     ④ 主体：左侧图区 + 右侧控制区，两栏贴边、用细线分隔
+     ⑤ 组合件：指标格、滑杆行、按钮、表头统一到站点 .demo 口径
+   只改外观与栅格，不动图表逻辑与事件绑定（各图仍按 id 挂载）。
+   ========================================================= */
+.iqd.iq-unified{
+  /* 与 tokens.css 对齐，保证站点内与独立页面色值一致 */
+  --iq-paper:#f6f4ee;
+  --iq-card:#ffffff;
+  --iq-card-soft:#faf9f5;
+  --iq-line:#e4e0d6;
+  --iq-line-2:#d2ccbf;
+  --iq-ink:#1c1a16;
+  --iq-ink-2:#3b3831;
+  --iq-ink-3:#5c574d;
+  --iq-ink-4:#8a8377;
+  --iq-jade:#3a352d;
+  --iq-jade-l:#efe9df;
+  --iq-clay:#b8622f;
+  --iq-red:#a03d4f;
+  --iq-amber:#a9711a;
+
+  margin-top:6px;
+  border:1px solid var(--iq-line);
+  border-radius:16px;
+  background:#fff;
+  box-shadow:0 1px 2px rgba(26,22,17,.05),0 24px 48px -38px rgba(26,22,17,.55);
+  /* 用 clip 而不是 hidden：hidden 会让本元素变成滚动容器，右侧栏的 sticky 就失效 */
+  overflow:clip;
+}
+
+/* ---------- ① 头部标题带 ---------- */
+.iqd.iq-unified .iq-head{
+  padding:20px 24px 17px;margin:0;
+  border-bottom:1px solid var(--iq-line);
+  background:#fff;align-items:flex-start;
+}
+.iqd.iq-unified .iq-head h3{font-size:18px;line-height:1.45;letter-spacing:-.015em}
+.iqd.iq-unified .iq-head p{font-size:13px;line-height:1.68;margin-top:7px;max-width:80ch;color:var(--iq-ink-3)}
+.iqd.iq-unified .iq-kicker{font-family:var(--iq-mono);font-size:9.5px;letter-spacing:.14em}
+.iqd.iq-unified .iq-tags{gap:0;margin-top:10px}
+.iqd.iq-unified .iq-tag{
+  background:none;border:0;border-radius:0;padding:0;
+  font-family:var(--iq-mono);font-size:9.5px;letter-spacing:.1em;color:var(--iq-ink-4);
+}
+.iqd.iq-unified .iq-tag + .iq-tag::before{content:"·";margin:0 9px 0 1px;color:var(--iq-line-2)}
+
+/* ---------- ② 方法说明横条 ---------- */
+.iqd.iq-unified .iq-smart{
+  margin:0;padding:15px 24px 16px;
+  border:0;border-bottom:1px solid var(--iq-line);border-radius:0;
+  background:var(--iq-card-soft);box-shadow:none;
+}
+.iqd.iq-unified .iq-smart-h{padding-bottom:10px}
+.iqd.iq-unified .iq-smart-h .t{font-size:13.5px}
+
+/* ---------- ③ 主体两栏：左图区 / 右控制区 ---------- */
+.iqd.iq-unified .iq-grid{
+  grid-template-columns:minmax(0,1fr) 320px;
+  gap:0;align-items:start;
+}
+.iqd.iq-unified .iq-figure{
+  grid-column:1;grid-row:1;position:static;
+  padding:20px 24px 18px;background:var(--iq-card-soft);
+  border-right:1px solid var(--iq-line);
+  border-bottom:1px solid var(--iq-line);
+}
+.iqd.iq-unified .iq-main{
+  grid-column:1;grid-row:2;
+  padding:20px 24px 24px;background:#fff;
+  border-right:1px solid var(--iq-line);
+}
+/* 右侧控制栏：随滚动吸附，避免左侧图表很长时侧栏早早结束留白 */
+.iqd.iq-unified .iq-side{
+  grid-column:2;grid-row:1 / -1;
+  position:sticky;top:74px;align-self:start;
+  padding:18px 18px 8px;
+  border-left:0;background:transparent;
+}
+/* 示意图按 460px 上限居中：与测井案例的井道图同宽，避免被拉成整屏大海报 */
+.iqd.iq-unified .iq-figure .iq-card > svg,
+.iqd.iq-unified .iq-figure .iq-card > div > svg{
+  max-width:460px;margin-left:auto;margin-right:auto;
+}
+
+/* ---------- ④ 卡片：左栏细线分区，右栏保留方盒 ---------- */
+.iqd.iq-unified .iq-figure .iq-card,
+.iqd.iq-unified .iq-main .iq-card{
+  padding:0;background:none;border:0;border-radius:0;box-shadow:none;
+}
+.iqd.iq-unified .iq-figure .iq-card:hover,
+.iqd.iq-unified .iq-main .iq-card:hover{box-shadow:none}
+.iqd.iq-unified .iq-figure .iq-card + .iq-card,
+.iqd.iq-unified .iq-main .iq-card + .iq-card{
+  margin-top:16px;padding-top:16px;border-top:1px solid var(--iq-line-2);
+}
+.iqd.iq-unified .iq-side .iq-card{
+  padding:13px 14px;background:#fff;
+  border:1px solid var(--iq-line);border-radius:8px;box-shadow:none;
+}
+.iqd.iq-unified .iq-side .iq-card:hover{box-shadow:none}
+.iqd.iq-unified .iq-side .iq-card + .iq-card{margin-top:11px}
+
+/* 卡头：等宽小标 + 细线，贴近测井案例里的 .fitbox .ft */
+.iqd.iq-unified .iq-card-h{
+  margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid var(--iq-line-2);
+}
+.iqd.iq-unified .iq-card-h h4{
+  font-family:var(--iq-mono);font-size:10.5px;font-weight:600;
+  letter-spacing:.06em;color:var(--iq-ink-3);
+}
+.iqd.iq-unified .iq-card-h .iq-mini{font-size:9.5px;letter-spacing:.04em}
+.iqd.iq-unified .iq-card h4 .iq-dot{width:5px;height:5px;background:var(--iq-clay);margin-right:5px}
+
+/* ---------- ⑤ 指标格：对齐 .metric ---------- */
+.iqd.iq-unified .iq-kpis{
+  gap:8px;background:none;border:0;border-radius:0;overflow:visible;
+  grid-template-columns:1fr 1fr;
+}
+.iqd.iq-unified .iq-kpi{
+  padding:11px 12px;background:#fff;
+  border:1px solid var(--iq-line);border-radius:8px;
+}
+.iqd.iq-unified .iq-kpi span{font-size:9px;letter-spacing:.08em}
+.iqd.iq-unified .iq-kpi b{font-size:19px}
+.iqd.iq-unified .iq-kpi b.hero{font-size:19px}
+.iqd.iq-unified .iq-kpi.wide b{font-size:14px}
+
+/* ---------- ⑥ 滑杆：一行「标签 — 滑杆 — 数值」，对齐 .ctl ---------- */
+.iqd.iq-unified .iq-ctl{display:flex;align-items:center;gap:8px;margin:0 0 9px}
+.iqd.iq-unified .iq-ctl:last-child{margin-bottom:2px}
+.iqd.iq-unified .iq-ctl-top{display:contents}
+.iqd.iq-unified .iq-ctl-top > span{
+  order:1;flex:0 0 58px;font-size:10.5px;line-height:1.3;color:var(--iq-ink-3);
+}
+.iqd.iq-unified .iq-ctl input[type=range]{order:2;flex:1 1 40px;width:auto;min-width:0}
+.iqd.iq-unified .iq-ctl-top output{
+  order:3;flex:0 0 auto;min-width:0;text-align:right;white-space:nowrap;
+  background:none;padding:0;font-size:11.5px;font-weight:600;color:var(--iq-ink);
+}
+.iqd.iq-unified .iq-ctl select{
+  order:2;flex:1 1 auto;width:auto;min-width:0;
+  font-size:11.5px;padding:4px 6px;border-radius:6px;
+}
+
+/* ---------- ⑦ 按钮 / 分段控件 / 图例 ---------- */
+.iqd.iq-unified .iq-btn{border-radius:8px;padding:7px 12px;font-weight:600}
+.iqd.iq-unified .iq-seg button{border-radius:6px}
+.iqd.iq-unified .iq-mode{border-radius:8px;background:#fff}
+.iqd.iq-unified .iq-legend{font-size:10.5px;gap:12px;margin-top:7px}
+.iqd.iq-unified .iq-note{font-size:11.5px;line-height:1.7;border-radius:0 6px 6px 0}
+.iqd.iq-unified .iq-table{font-size:12px}
+.iqd.iq-unified .iq-table th{
+  font-size:9.5px;letter-spacing:.1em;color:var(--iq-ink-4);
+  padding:9px 8px;border-bottom:1px solid var(--iq-line);
+}
+.iqd.iq-unified .iq-table td{padding:9px 8px;border-bottom:1px solid var(--iq-line-2)}
+
+/* ---------- ⑧ 窄屏 ----------
+   这里原来是「1180px 降两栏 / 980px 降单栏」，结果一进笔记本窗口
+   概念图就被并进中栏、图表掉到下面。三栏现在统一由 .iq-grid 的
+   fr 栅格按比例收缩，只在 520px 以下堆叠（见文末第 16 节）。 */
+@media (max-width:520px){
+  .iqd.iq-unified .iq-figure{
+    border-right:0;border-bottom:1px solid var(--iq-line);
+  }
+  .iqd.iq-unified .iq-main{border-right:0}
+}
+@media (max-width:720px){
+  .iqd.iq-unified .iq-head,.iqd.iq-unified .iq-smart{padding-left:16px;padding-right:16px}
+  .iqd.iq-unified .iq-figure,.iqd.iq-unified .iq-main,.iqd.iq-unified .iq-side{padding-left:16px;padding-right:16px}
+  .iqd.iq-unified .iq-ctl-top > span{flex-basis:54px}
+}
+
+/* =========================================================
+   16 · 三栏版式 + 图表放大（2026-11-02 / 修正版 v2）
+   ---------------------------------------------------------
+   由 iq-smart.js 的 IQFrame.boot() 给 .iqd 挂上 .iq-app。
+   · 左右两栏 position:sticky —— 页面滚动时钉住不动
+   · 中栏随页面自然滚动 —— 不做内部滚动容器，卡片不会被裁切
+   · 中栏内容滚完，左右栏自动解钉，三栏一起上滑露出下方内容
+   · 左右栏内容若高于视口，才在自己列内滚动
+   ========================================================= */
+.iq-app .iq-grid{
+  grid-template-columns:minmax(230px,260px) minmax(0,1fr) minmax(260px,300px);
+  gap:14px;
+  align-items:start;
+  overflow:visible;
+}
+.iq-app .iq-figure,
+.iq-app .iq-side{
+  position:sticky;
+  /* 站点里有固定顶栏时，钉住位置要让出顶栏高度 */
+  top:calc(var(--nav-h, 0px) + 10px);
+  align-self:start;
+  max-height:calc(100dvh - 24px);
+  overflow-y:auto;
+  overflow-x:hidden;
+  overscroll-behavior:contain;
+  scrollbar-width:thin;
+  scrollbar-color:var(--iq-line-3) transparent;
+}
+.iq-app .iq-figure::-webkit-scrollbar,
+.iq-app .iq-side::-webkit-scrollbar{width:5px}
+.iq-app .iq-figure::-webkit-scrollbar-thumb,
+.iq-app .iq-side::-webkit-scrollbar-thumb{background:var(--iq-line-3);border-radius:3px}
+.iq-app .iq-main > .iq-card:first-child{margin-top:0}
+/* 放大按钮占位：卡片标题右侧留出 26px，避免压住“半长 47 m”这类角标 */
+.iq-card.has-zoom > .iq-card-h{padding-right:26px}
+
+/* 只有特别窄（手机竖屏）才堆叠；其它宽度保持三栏，只按比例收缩 */
+@media (max-width:519px){
+  .iq-app .iq-grid{grid-template-columns:1fr;overflow:visible;height:auto!important}
+  .iq-app .iq-figure,
+  .iq-app .iq-side{position:static;max-height:none;overflow:visible}
+}
+
+/* ---------- 图表放大 ---------- */
+.iq-card{position:relative}
+.iq-zoom-btn{
+  position:absolute;top:7px;right:8px;z-index:4;
+  width:22px;height:22px;padding:0;border-radius:6px;
+  border:1px solid var(--iq-line-2);background:rgba(255,255,255,.92);
+  color:var(--iq-ink-3);font-size:12px;line-height:1;
+  display:flex;align-items:center;justify-content:center;
+  opacity:.34;transition:opacity .15s,background .15s;
+  cursor:zoom-in;box-shadow:0 1px 3px rgba(30,26,14,.08);
+}
+.iq-card:hover > .iq-zoom-btn{opacity:1}
+.iq-zoom-btn:hover{background:#fff;border-color:var(--iq-line-3);color:var(--iq-ink)}
+.iq-zoom{
+  position:fixed;inset:0;z-index:9999;
+  background:rgba(24,21,16,.74);
+  display:flex;align-items:center;justify-content:center;
+  padding:2.4vh 2.4vw;
+  animation:iqzoom .16s ease-out;
+}
+@keyframes iqzoom{from{opacity:0}to{opacity:1}}
+.iq-zoom-box{
+  position:relative;background:#fff;border-radius:14px;
+  width:min(1240px,95vw);max-height:94vh;overflow:auto;
+  padding:20px 22px 18px;
+  box-shadow:0 30px 90px -34px rgba(0,0,0,.7);
+}
+.iq-zoom-body svg{display:block;width:100%;height:auto}
+.iq-zoom-x{
+  position:absolute;top:8px;right:10px;z-index:2;
+  width:26px;height:26px;border-radius:7px;border:1px solid var(--iq-line-2);
+  background:#fff;color:var(--iq-ink-3);font-size:13px;line-height:1;cursor:pointer;
+}
+.iq-zoom-x:hover{background:var(--iq-paper);color:var(--iq-ink)}

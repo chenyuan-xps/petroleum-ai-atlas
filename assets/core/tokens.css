@@ -1,78 +1,123 @@
 /* =========================================================
-   设计令牌 Design Tokens
-   风格：暖白纸面 + 低饱和彩色分区
-   规则：所有颜色只在这里定义，案例与组件不得写死色值
+   设计令牌 Design Tokens · v4
+   ---------------------------------------------------------
+   风格：暖砂底色 + 纯白卡片 + 石墨黑主色 + 铜色焦点
+   目标：去掉蓝绿两色倾向，改为油田现场的“炭黑 + 铜”工业感，
+        白底、强焦点、清晰分层。
+
+   规则：所有颜色 / 字号 / 圆角 / 阴影只在这里定义，
+        组件与案例不得写死色值。
    ========================================================= */
 
 :root{
   /* ---------- 画布 ---------- */
-  --paper:      #fbfaf6;   /* 主背景，暖白 */
-  --paper-2:    #f5f2ea;   /* 次级底板 */
-  --paper-3:    #efece1;   /* 三级底板 */
+  --paper:      #f6f4ee;   /* 主背景，冷调雾白，让白卡片浮起来 */
+  --paper-2:    #ece8df;   /* 次级底板 */
+  --paper-3:    #ddd7ca;   /* 三级底板 / 进度槽 */
   --card:       #ffffff;   /* 卡片 */
-  --card-soft:  #fdfcf9;   /* 卡片内嵌区 */
+  --card-soft:  #faf9f5;   /* 卡片内嵌区 */
 
-  /* ---------- 描边 ---------- */
-  --line:       #e9e4d8;
-  --line-2:     #ddd7c8;
-  --line-3:     #c9c2b0;
+  /* ---------- 描边（统一暖灰，避免冷色） ---------- */
+  --line:       #e4e0d6;
+  --line-2:     #d2ccbf;
+  --line-3:     #b6b0a2;
+  --hair:       rgba(26,22,17,.07);
+  --hair-2:     rgba(26,22,17,.13);
 
   /* ---------- 墨色（文字） ---------- */
-  --ink:        #242b2e;
-  --ink-2:      #4d565b;
-  --ink-3:      #79828a;
-  --ink-4:      #9ba3a9;
-  --ink-inv:    #fdfcf9;
+  --ink:        #1c1a16;
+  --ink-2:      #3b3831;
+  --ink-3:      #5c574d;
+  --ink-4:      #8a8377;
+  --ink-inv:    #f9fbfa;
 
-  /* ---------- 主强调 ---------- */
-  --jade:       #2f7d6b;
-  --jade-d:     #235f51;
-  --jade-l:     #e6f1ec;
-  --clay:       #b26a39;
-  --clay-d:     #8e5229;
-  --clay-l:     #f8ecdf;
+  /* ---------- 主强调：石墨黑（石油 / 地层） ---------- */
+  --jade:       #3a352d;
+  --jade-d:     #241f19;
+  --jade-l:     #efe9df;
+  --jade-mid:   #6b6255;
+  --jade-bright:#9a8b73;
+  --jade-glow:  rgba(58,53,45,.18);
 
-  /* ---------- 五类方法色（中饱和，白底可读） ---------- */
-  --c-cv:       #2f7d6b;   /* 计算机视觉 */
-  --c-ts:       #b26a39;   /* 时序预测 */
-  --c-nlp:      #7e5a8d;   /* 自然语言处理 */
-  --c-opt:      #41699b;   /* 优化算法 */
-  --c-kg:       #767a2e;   /* 知识图谱 */
+  /* ---------- 焦点强调：铜色 ---------- */
+  --clay:       #b8622f;
+  --clay-d:     #97571a;
+  --clay-l:     #fdf0de;
+  --clay-glow:  rgba(184,98,47,.2);
+  --gold:       #d8a33e;
 
-  --bg-cv:      #e6f1ec;
-  --bg-ts:      #f8ecdf;
-  --bg-nlp:     #efe9f4;
-  --bg-opt:     #e7eef9;
-  --bg-kg:      #f1f1dd;
+  /* ---------- 五类方法色（提饱和，白底可读） ---------- */
+  --c-cv:       #b3542c;   /* 计算机视觉 */
+  --c-ts:       #b38a1f;   /* 时序预测 */
+  --c-nlp:      #7a4fa8;   /* 自然语言处理 */
+  --c-opt:      #a03d4f;   /* 优化算法 */
+  --c-kg:       #8b7a14;   /* 知识图谱 */
+
+  --bg-cv:      #f7e9e1;
+  --bg-ts:      #fdf0de;
+  --bg-nlp:     #f1eafa;
+  --bg-opt:     #f4e9e4;
+  --bg-kg:      #f5f2d8;
 
   /* ---------- 语义色 ---------- */
-  --ok:         #3f8560;
-  --ok-bg:      #e7f3ea;
-  --warn:       #a97a1c;
-  --warn-bg:    #f9efd7;
-  --bad:        #b05a51;
-  --bad-bg:     #f9e9e5;
+  --ok:         #4a6b32;
+  --ok-bg:      #e6f2ea;
+  --warn:       #a9711a;
+  --warn-bg:    #fbf0d6;
+  --bad:        #b23a34;
+  --bad-bg:     #fbe9e7;
 
-  /* ---------- 圆角与阴影 ---------- */
-  --r-s: 5px;
-  --r-m: 9px;
-  --r-l: 14px;
-  --r-xl: 20px;
+  /* ---------- 圆角 ---------- */
+  --r-xs: 8px;
+  --r-s:  10px;
+  --r-m:  14px;
+  --r-l:  18px;
+  --r-xl: 24px;
+  --r-pill: 999px;
 
-  --sh-1: 0 1px 2px rgba(48,44,30,.045);
-  --sh-2: 0 1px 2px rgba(48,44,30,.05), 0 6px 18px -10px rgba(48,44,30,.14);
-  --sh-3: 0 2px 4px rgba(48,44,30,.05), 0 14px 34px -16px rgba(48,44,30,.20);
+  /* ---------- 阴影：冷调、低对比、分层 ---------- */
+  --sh-1: 0 1px 2px rgba(14,21,29,.04), 0 2px 6px rgba(14,21,29,.03);
+  --sh-2: 0 2px 4px rgba(14,21,29,.04), 0 12px 24px -14px rgba(14,21,29,.18);
+  --sh-3: 0 4px 10px rgba(14,21,29,.05), 0 28px 56px -28px rgba(14,21,29,.26);
+  --sh-4: 0 8px 20px rgba(14,21,29,.06), 0 48px 96px -40px rgba(14,21,29,.32);
+  --sh-top: inset 0 1px 0 rgba(255,255,255,.7);
 
   /* ---------- 字体 ---------- */
   --mono: 'JetBrains Mono','SFMono-Regular','Cascadia Mono',Consolas,'Liberation Mono',monospace;
-  --sans: 'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI Variable','Segoe UI',
+  --sans: 'Inter','Segoe UI Variable Display','Segoe UI',-apple-system,BlinkMacSystemFont,
           'PingFang SC','Hiragino Sans GB','Microsoft YaHei UI','Microsoft YaHei',sans-serif;
 
+  /* ---------- 字号阶梯 ---------- */
+  --fs-micro: 10.5px;  /* 等宽标注 */
+  --fs-xs:    12px;    /* 辅助说明 */
+  --fs-s:     13px;    /* 密集表格 / 元信息 */
+  --fs-m:     14px;    /* 正文小 */
+  --fs-b:     15px;    /* 正文 */
+  --fs-l:     17px;    /* 小标题 */
+  --fs-h3:    20px;
+  --fs-h2:    clamp(24px,2.4vw,32px);
+  --fs-h1:    clamp(32px,3.6vw,50px);
+
+  --lh-tight: 1.15;
+  --lh-body:  1.72;
+
   /* ---------- 布局 ---------- */
-  --nav-h: 54px;
-  --maxw: 1180px;
-  --sp-1: 6px;  --sp-2: 10px;  --sp-3: 14px;
-  --sp-4: 20px; --sp-5: 28px;  --sp-6: 40px;
+  --nav-h: 64px;
+  --maxw: 1280px;
+  --maxw-wide: 1420px;
+  --rail-w: 252px;
+  --rail-w-compact: 72px;
+  --sp-1: 6px;  --sp-2: 10px;  --sp-3: 16px;
+  --sp-4: 22px; --sp-5: 34px;  --sp-6: 50px;
+  --sec-y: 76px;
+
+  /* ---------- 平台状态 ---------- */
+  --surface-1: #ffffff;
+  --surface-2: #faf9f5;
+  --state-ready: var(--ok);
+  --state-review: var(--warn);
+  --state-risk: var(--bad);
+  --state-empty: var(--ink-4);
 }
 
 /* =========================================================
@@ -82,86 +127,77 @@
 html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
 body{
   font-family:var(--sans);
-  font-size:14px;
-  line-height:1.68;
+  font-size:var(--fs-b);
+  line-height:var(--lh-body);
   color:var(--ink);
   background:var(--paper);
   -webkit-font-smoothing:antialiased;
   -moz-osx-font-smoothing:grayscale;
   overflow-x:hidden;
+  text-rendering:optimizeLegibility;
 }
 
-/* 背景：四处低饱和色晕，制造“纸面有光”的感觉，不做暗色 */
+/* 背景：一层冷调柔光 + 顶部一点主色/焦点色晕，不再铺网格 */
 body::before{
   content:'';
   position:fixed;inset:0;z-index:-2;
   background:
-    radial-gradient(1000px 620px at 6% -12%,  #e5f1eb 0%, rgba(229,241,235,0) 62%),
-    radial-gradient(880px 560px at 96% -6%,   #f9ecdf 0%, rgba(249,236,223,0) 60%),
-    radial-gradient(900px 760px at 74% 102%,  #e8eef8 0%, rgba(232,238,248,0) 62%),
-    radial-gradient(760px 620px at 18% 96%,   #f7ebee 0%, rgba(247,235,238,0) 60%),
+    radial-gradient(1200px 620px at 50% -16%, rgba(255,255,255,.95) 0%, rgba(255,255,255,0) 62%),
+    radial-gradient(900px 560px at 2% -6%, rgba(230,238,246,.7) 0%, rgba(230,238,246,0) 62%),
+    radial-gradient(820px 500px at 100% -4%, rgba(253,240,222,.6) 0%, rgba(253,240,222,0) 60%),
     var(--paper);
-}
-/* 极淡网格，只在上半页可见 */
-body::after{
-  content:'';
-  position:fixed;inset:0;z-index:-1;pointer-events:none;
-  background-image:
-    linear-gradient(to right, rgba(80,74,55,.055) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(80,74,55,.055) 1px, transparent 1px);
-  background-size:76px 76px;
-  mask-image:radial-gradient(ellipse 70% 46% at 50% 0%, #000 0%, transparent 82%);
-  -webkit-mask-image:radial-gradient(ellipse 70% 46% at 50% 0%, #000 0%, transparent 82%);
 }
 
 a{color:inherit;text-decoration:none}
 button{font-family:inherit;font-size:inherit;color:inherit;background:none;border:none;cursor:pointer}
 input,select,textarea{font-family:inherit;font-size:inherit}
 img,svg{max-width:100%}
-::selection{background:rgba(47,125,107,.20);color:var(--ink)}
+::selection{background:rgba(58,53,45,.18);color:var(--ink)}
 
 ::-webkit-scrollbar{width:11px;height:11px}
-::-webkit-scrollbar-track{background:var(--paper-2)}
-::-webkit-scrollbar-thumb{background:var(--line-2);border-radius:6px;border:3px solid var(--paper-2)}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--line-2);border-radius:6px;border:3px solid var(--paper)}
 ::-webkit-scrollbar-thumb:hover{background:var(--line-3)}
 
-:focus-visible{outline:2px solid var(--jade);outline-offset:2px;border-radius:3px}
+:focus-visible{outline:2px solid var(--jade);outline-offset:2px;border-radius:6px}
 
 /* =========================================================
    排版基元
    ========================================================= */
-h1,h2,h3,h4,h5{font-weight:650;letter-spacing:-.005em;line-height:1.3;color:var(--ink)}
-p{color:var(--ink-2)}
-b,strong{font-weight:650;color:var(--ink)}
+h1,h2,h3,h4,h5{font-weight:680;letter-spacing:-.018em;line-height:var(--lh-tight);color:var(--ink)}
+p{color:var(--ink-2);line-height:var(--lh-body)}
+b,strong{font-weight:680;color:var(--ink)}
+small{font-size:.86em}
 
-.wrap{width:min(var(--maxw),calc(100% - 48px));margin:0 auto}
+.wrap{width:min(var(--maxw),calc(100% - 56px));margin:0 auto}
 .mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
 
 .kicker{
-  font-family:var(--mono);font-size:10px;letter-spacing:.2em;text-transform:uppercase;
-  color:var(--jade-d);display:inline-flex;align-items:center;gap:9px;
+  font-family:var(--mono);font-size:var(--fs-micro);letter-spacing:.18em;text-transform:uppercase;
+  color:var(--jade-d);display:inline-flex;align-items:center;gap:9px;font-weight:650;
 }
-.kicker::before{content:'';width:20px;height:1.5px;background:currentColor;opacity:.55;border-radius:2px}
+.kicker::before{content:'';width:18px;height:2px;background:currentColor;opacity:.55;border-radius:2px}
 .kicker.plain::before{display:none}
 .kicker.clay{color:var(--clay-d)}
 
 .eyebrow{
-  font-family:var(--mono);font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--ink-4);
+  font-family:var(--mono);font-size:var(--fs-micro);letter-spacing:.16em;
+  text-transform:uppercase;color:var(--ink-4);
 }
 
-.lede{font-size:13.5px;line-height:1.8;color:var(--ink-2)}
+.lede{font-size:var(--fs-m);line-height:1.8;color:var(--ink-2)}
 
 /* 工具类 */
 .muted{color:var(--ink-3)}
-.small{font-size:12px}
+.small{font-size:var(--fs-s)}
 .nowrap{white-space:nowrap}
 .hr{height:1px;background:var(--line);border:0;margin:0}
 .stack{display:flex;flex-direction:column}
 .row{display:flex;align-items:center}
 
 /* 动效：轻微上浮，不做夸张动画 */
-@keyframes rise{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
-.rise{animation:rise .42s cubic-bezier(.2,.7,.3,1) both}
+@keyframes rise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+.rise{animation:rise .46s cubic-bezier(.2,.7,.3,1) both}
 .d1{animation-delay:.03s}.d2{animation-delay:.06s}.d3{animation-delay:.09s}.d4{animation-delay:.12s}.d5{animation-delay:.15s}
 
 @media (prefers-reduced-motion:reduce){

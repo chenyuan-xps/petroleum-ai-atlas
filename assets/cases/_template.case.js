@@ -25,8 +25,8 @@
      ========================================================= */
   function figExample() {
     return '<svg viewBox="0 0 620 200" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="示意图">' +
-      '<rect x="10" y="20" width="180" height="90" rx="8" fill="#e6f1ec" stroke="#2f7d6b" stroke-opacity=".3"/>' +
-      '<text x="100" y="72" text-anchor="middle" font-size="13" fill="#2f7d6b">改这里</text>' +
+      '<rect x="10" y="20" width="180" height="90" rx="8" fill="#f8f1e8" stroke="#3a352d" stroke-opacity=".3"/>' +
+      '<text x="100" y="72" text-anchor="middle" font-size="13" fill="#3a352d">改这里</text>' +
       '</svg>';
   }
 

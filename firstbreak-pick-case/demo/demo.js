@@ -68,6 +68,43 @@
     return -1;   /* 全程未触发 = 漏拾取 */
   }
 
+  /* 经验阈值（现场常用固定值）与当前调优阈值的对比 */
+  var FIXED_TH = 3.0;
+
+  function verdict(pk) {
+    if (pk < 0) return { t: '漏拾取', c: 'bad' };
+    var err = pk - T0;
+    if (err < -2) return { t: '假拾取', c: 'bad' };
+    if (err > 2) return { t: '滞后', c: 'bad' };
+    return { t: '命中', c: 'ok' };
+  }
+
+  function fillCompare(ratio, th, pk) {
+    var box = document.getElementById('fb-cmp');
+    if (!box) return;
+    var fixedPk = pick(ratio, FIXED_TH);
+    var peak = 1;
+    for (var i = 0; i < N; i++) if (ratio[i] > peak) peak = ratio[i];
+
+    function pos(v) { return v < 0 ? '未触发' : (v * FS) + ' ms'; }
+    function err(v) { return v < 0 ? '—' : ((v - T0) > 0 ? '+' : '') + ((v - T0) * FS) + ' ms'; }
+    function pass(v) { return v >= 0 && Math.abs(v - T0) <= 2 ? '是' : '否'; }
+    var vf = verdict(fixedPk), vc = verdict(pk);
+
+    box.innerHTML =
+      '<h4>经验固定阈值 vs 当前阈值（同一道波形）</h4>' +
+      '<table>' +
+      '<thead><tr><th>指标</th><th>固定阈值 ' + FIXED_TH.toFixed(1) + '（经验）</th><th>当前阈值 ' + th.toFixed(1) + '（调优）</th><th>说明</th></tr></thead>' +
+      '<tbody>' +
+      '<tr><td>拾取位置</td><td class="num">' + pos(fixedPk) + '</td><td class="num">' + pos(pk) + '</td><td>真实初至 ' + (T0 * FS) + ' ms</td></tr>' +
+      '<tr><td>拾取误差</td><td class="num">' + err(fixedPk) + '</td><td class="num">' + err(pk) + '</td><td>采样间隔 ' + FS + ' ms</td></tr>' +
+      '<tr><td>判定</td><td class="' + vf.c + '">' + vf.t + '</td><td class="' + vc.c + '">' + vc.t + '</td><td>误差 ≤ 2 个采样点记命中</td></tr>' +
+      '<tr><td>是否命中</td><td class="' + (pass(fixedPk) === '是' ? 'ok' : 'bad') + '">' + pass(fixedPk) + '</td><td class="' + (pass(pk) === '是' ? 'ok' : 'bad') + '">' + pass(pk) + '</td><td>约束：|误差| ≤ 2 点</td></tr>' +
+      '<tr><td>能量比峰值</td><td class="num">' + peak.toFixed(2) + '</td><td class="num">' + peak.toFixed(2) + '</td><td>峰值越高，阈值选择越有余量</td></tr>' +
+      '</tbody></table>' +
+      '<p class="poll">固定阈值 3.0 为现场常见经验值；当前阈值由上方滑杆设定。两者使用同一道波形与同一 STA/LTA 参数。</p>';
+  }
+
   /* ---------- 2. 绘图 ---------- */
   function grid(s, H, marks, fmt) {
     marks.forEach(function (v) {
@@ -123,12 +160,12 @@
 
     /* 真实初至（绿虚线） */
     s += '<line x1="' + x(T0) + '" y1="' + T + '" x2="' + x(T0) + '" y2="' + (H1 - B) +
-      '" stroke="#2f7d6b" stroke-width="1.1" stroke-dasharray="5 3" opacity=".8"/>';
-    s += '<text x="' + (x(T0) + 4) + '" y="' + (T + 10) + '" font-size="9.5" fill="#2f7d6b" font-family="monospace">真实初至</text>';
+      '" stroke="#3a352d" stroke-width="1.1" stroke-dasharray="5 3" opacity=".8"/>';
+    s += '<text x="' + (x(T0) + 4) + '" y="' + (T + 10) + '" font-size="9.5" fill="#3a352d" font-family="monospace">真实初至</text>';
 
     /* 波形 */
     s += '<path d="' + pathOf(trace, lo, hi, H1) +
-      '" fill="none" stroke="#242b2e" stroke-width="1.1" stroke-linejoin="round"/>';
+      '" fill="none" stroke="#242a32" stroke-width="1.1" stroke-linejoin="round"/>';
 
     /* 拾取线（陶土色实线） */
     if (pk >= 0) {
@@ -159,7 +196,7 @@
     for (var k2 = 0; k2 < N; k2++) {
       d2 += (k2 ? "L" : "M") + x(k2).toFixed(1) + " " + yR(ratio[k2]).toFixed(1);
     }
-    s2 += '<path d="' + d2 + '" fill="none" stroke="#41699b" stroke-width="1.2" stroke-linejoin="round"/>';
+    s2 += '<path d="' + d2 + '" fill="none" stroke="#a03d4f" stroke-width="1.2" stroke-linejoin="round"/>';
     if (pk >= 0) {
       s2 += '<circle cx="' + x(pk) + '" cy="' + yR(ratio[pk]) + '" r="3" fill="#b26a39"/>';
     }
@@ -194,6 +231,9 @@
           "这正是流程里第 3、4 步（一致性约束 + 低置信度人工复核）存在的理由。";
       }
     }
+
+    /* 经验固定阈值 vs 当前阈值：用同一道波形实时对比 */
+    fillCompare(ratio, th, pk);
   }
 
   noiseIn.addEventListener("input", draw);

@@ -1,0 +1,279 @@
+/* =========================================================
+   自动生成：intelligent-sleeve-control/case.json → 站点插件注册器
+   不要手改本文件；改 case.json 或 demo/*，再跑 node tools/build-cases.js
+   ========================================================= */
+(function () {
+  'use strict';
+  var def = {
+  "id": "intelligent-sleeve-control",
+  "sceneId": "co4",
+  "methods": [
+    "opt"
+  ],
+  "code": "CO4",
+  "title": "智能完井滑套控制策略",
+  "status": "ready",
+  "version": "2.0.0",
+  "updated": "2026-11-02",
+  "highlight": "滑套不是“全开最好”，但也不是“每天都要动”。",
+  "preview": "输入 6 项开度与目标 → 输出 30 天逐日开度、产油 / 含水曲线与达标天数",
+  "credibility": {
+    "score": 73,
+    "level": "中高",
+    "basis": "分层产能与含水响应为简化模型，未含层间窜流、滑套砂堵与井间干扰；调控周期按现场实际（月度）另有说明。",
+    "checks": [
+      {
+        "k": "数据",
+        "v": "3 层 × 30 天合成序列"
+      },
+      {
+        "k": "方法",
+        "v": "分层产能 + 网格优化 + 滚动"
+      },
+      {
+        "k": "验证",
+        "v": "产油达标 24/30 天，含水 30/30 天"
+      }
+    ]
+  },
+  "conclusion": {
+    "title": "把 C 层关到 5%，用省下的液量换 A/B 层产油",
+    "html": "<p>第 30 天 AI 开度为 <b>A 100% / B 100% / C 5%</b>：日产油 <b>113.3 t/d</b>、含水 <b>30.9%</b>、30 天累产油 <b>3401 t</b>。固定开度情景累产油 3121 t、累产水 2094 t，AI 分别多产油 <b>280 t</b>、少产水 <b>844 t</b>。</p><p>原因在 C 层含水 72%：开度增加时产水增长快于产油，会挤占井筒液量上限。AI 每 7 天按最新含水重算一次，30 天共调控 5 次 —— <b>这是为了在 30 天里看到效果而压缩的节奏</b>。现场按月度调控：以每月一次计，2 万次动作寿命可支撑 10 年以上，与中海油“海龙”阀的认证口径一致。</p><p>现场可对标的量级：渤海水平井应用后含水率下降 <b>10.8%</b>，3 口水平井平均日增油 <b>35 m³</b>、最大含水下降 25.4%。</p>"
+  },
+  "limits": [
+    "分层产能与含水响应为简化模型，未含层间窜流、滑套砂堵与压力干扰。",
+    "示范调控周期压到 3—15 天；现场按月度执行，滑套动作次数与作业窗口才是真正的约束。",
+    "目标日产与含水上限由示范给定，实际配产需结合集输能力、液处理能力与经济性。",
+    "分层产液剖面往往很少测，模型的分层贡献是反演得到的，误差会随含水上升放大。"
+  ],
+  "concept": {
+    "title": "决策链",
+    "steps": [
+      {
+        "k": "INPUT",
+        "t": "分层数据",
+        "d": "三层产能、含水、液量上限"
+      },
+      {
+        "k": "MODEL",
+        "t": "分层产能与含水",
+        "d": "开度 → 产油 / 产水响应"
+      },
+      {
+        "k": "OPTIMIZE",
+        "t": "约束优化",
+        "d": "目标油量 + 含水上限"
+      },
+      {
+        "k": "ROLL",
+        "t": "滚动调控",
+        "d": "按周期用最新含水分层重算"
+      },
+      {
+        "k": "OUTPUT",
+        "t": "开度策略",
+        "d": "开度、产油、含水、达标天数"
+      }
+    ]
+  },
+  "tabs": {
+    "background": {
+      "label": "专业背景",
+      "judge": [
+        {
+          "label": "方法组合",
+          "value": "TS · OPT · NLP",
+          "desc": "先反演分层，再滚动优化，后复盘异常"
+        },
+        {
+          "label": "输入",
+          "value": "6 项参数",
+          "desc": "三层开度、目标油量、含水、周期"
+        },
+        {
+          "label": "输出",
+          "value": "开度策略",
+          "desc": "开度组合、产油 / 含水、达标情况"
+        },
+        {
+          "label": "难度",
+          "value": "较高",
+          "desc": "层间干扰与含水上升需要滚动优化",
+          "html": "<span class=\"dtag\" data-d=\"高\">难度 高</span>"
+        },
+        {
+          "label": "关键约束",
+          "value": "动作次数",
+          "desc": "现场按月度调控；滑套寿命按 2 万次动作设计",
+          "html": "<b style=\"color:var(--clay-d);font-family:var(--mono)\">≤ 12 次/年</b>"
+        }
+      ],
+      "lede": "智能完井在水平段装可调滑套（ICV）与封隔器，按层控制产出，管柱内还有压力与流量监测。国内已经跨过“能不能用”的阶段 —— 中海油“海龙”井下流量控制阀 2022 年 12 月在渤海水平井首次应用，目前已在国内海上油田 26 口井使用；国产 ICC 系统的井下多级流量装置最多 20 级、流量控制误差小于 6%。真正难的是“怎么调”：现场常见做法是完井后设一次开度，之后很少动，结果高含水层越开越大、油层被憋住。",
+      "sections": [
+        {
+          "no": 1,
+          "en": "PROBLEM",
+          "title": "当前做法与问题",
+          "html": "<p>智能完井投产后，工程师根据各层产液剖面给定一组滑套开度，之后除非出现明显出水或产量下降，很少主动调整；部分井甚至长期全开。</p><p>问题有三个：<b>层间干扰</b> —— 高渗高含水层大量产水，井筒回压升高，低含水油层产出受限；<b>动作有代价</b> —— 滑套不是无磨损的开关，每次动作都有砂卡与密封失效的风险，现场天然倾向于“少动”；<b>缺预测</b> —— 调整前无法判断 30 天后含水会走到哪里，只能凭经验猜。</p><p>所以“多久调一次”本身就是设计变量：调得太勤，动作次数与风险上升；调得太懒，含水已经上来了。示范把周期压到 7 天是为了在 30 天里看到效果，现场一般按月。</p><figure style='margin:10px 0 0'><svg viewBox='0 0 640 226' xmlns='http://www.w3.org/2000/svg' role='img' aria-label='多层水平井滑套示意'><rect width='640' height='226' fill='#fff'/><rect x='20' y='62' width='600' height='130' fill='#efe9dc'/><g stroke='#d8d2c4' stroke-dasharray='4 3'><line x1='20' y1='105' x2='620' y2='105'/><line x1='20' y1='145' x2='620' y2='145'/></g><line x1='70' y1='26' x2='70' y2='170' stroke='#8d979d' stroke-width='7'/><line x1='70' y1='78' x2='560' y2='78' stroke='#8d979d' stroke-width='5'/><line x1='70' y1='128' x2='470' y2='128' stroke='#8d979d' stroke-width='5'/><line x1='70' y1='170' x2='380' y2='170' stroke='#8d979d' stroke-width='5'/><g font-size='10' fill='#4d565b' font-family='sans-serif'><text x='66' y='20' text-anchor='middle'>井口</text><text x='300' y='70' fill='#256354'>A 层 · 主力油层</text><text x='260' y='120' fill='#256354'>B 层 · 接替层</text><text x='218' y='162' fill='#256354'>C 层 · 含水层</text></g><g><rect x='250' y='72' width='26' height='12' rx='3' fill='#2f7d6b'/><rect x='250' y='72' width='26' height='12' rx='3' fill='none' stroke='#fff' stroke-width='1'/><rect x='330' y='122' width='20' height='12' rx='3' fill='#2f7d6b'/><rect x='240' y='164' width='12' height='12' rx='3' fill='#b26a39'/></g><g stroke='#b26a39' stroke-width='1.6' marker-end='url(#co4-a)'><line x1='300' y1='100' x2='300' y2='88'/><line x1='300' y1='100' x2='300' y2='86'/><line x1='380' y1='145' x2='380' y2='134'/><line x1='380' y1='186' x2='380' y2='176'/></g><g stroke='#41699b' stroke-width='1.4' marker-end='url(#co4-b)'><line x1='330' y1='150' x2='330' y2='140'/><line x1='290' y1='188' x2='290' y2='180'/></g><defs><marker id='co4-a' markerWidth='5' markerHeight='5' refX='4' refY='2.5' orient='auto'><path d='M0 0 L5 2.5 L0 5 z' fill='#b26a39'/></marker><marker id='co4-b' markerWidth='5' markerHeight='5' refX='4' refY='2.5' orient='auto'><path d='M0 0 L5 2.5 L0 5 z' fill='#41699b'/></marker></defs><text x='320' y='216' text-anchor='middle' font-size='10' fill='#9ba3a9'>图 1 · 三条分支沿不同层位布置，滑套开度决定各层产液分配；蓝色箭头为水相。</text></svg></figure>"
+        },
+        {
+          "no": 2,
+          "en": "INTERVENTION",
+          "title": "AI 能做什么：先反演，再优化，后复盘",
+          "html": "<p>滑套调控的难点不是“算最优开度”，而是<b>看不到每层在出什么</b>。所以第一步不是优化，是反演；优化只在反演出来的分层模型上做。</p><table class=\"dtable\"><thead><tr><th>工序</th><th>方法</th><th>在这一步做什么</th></tr></thead><tbody><tr><td>反演分层</td><td>TS · 时序反演</td><td>用总井产量、含水与历史开度序列反演各层贡献；有剖面测试的井直接标定，没有的只能靠反演，误差随含水上升放大</td></tr><tr><td>定策略</td><td>OPT · 滚动优化</td><td>每个调控周期按最新含水分层重算开度组合，形成“预测—决策—再预测”的闭环（MPC 思路）</td></tr><tr><td>管长期</td><td>OPT · 策略评估</td><td>用历史井做离线策略评估，避免每周期贪心把含水提前顶到上限</td></tr><tr><td>读作业</td><td>NLP · 事件抽取</td><td>从作业日报里抽出滑套动作、砂卡、洗井事件，解释“开度指令与实际开度对不上”的异常</td></tr></tbody></table><p>四种方法里，<b>反演</b>决定上限、<b>滚动</b>决定节奏、<b>NLP</b> 决定异常能不能解释清楚。只做优化不做反演，等于在错误的模型上求最优。</p><figure style='margin:12px 0 0'><svg viewBox='0 0 640 122' xmlns='http://www.w3.org/2000/svg' role='img'><rect x='0' y='0' width='640' height='122' fill='#ffffff'/><text x='14' y='18' font-size='8' fill='#9ba3a9' font-family='monospace' letter-spacing=\"1.2\">分层预测 + 约束优化 · 从开度组合到 30 天策略</text><rect x='14' y='30' width='112' height='68' rx='5' fill='#fbfaf6' stroke='#1e6f5c' stroke-width='1.1'/><text x='23' y='45' font-size='8' fill='#9ba3a9' font-family='monospace' letter-spacing=\".8\">01</text><text x='23' y='62' font-size='10.5' font-weight=\"500\" fill='#242b2e' font-family='sans-serif'>开度组合</text><text x='23' y='77' font-size='8.2' fill='#79828a' font-family='sans-serif'>三层 0—100%</text><path d='M128 64 h7 m-3 -3 l3 3 l-3 3' fill='none' stroke='#9ba3a9' stroke-width='1'/><rect x='139' y='30' width='112' height='68' rx='5' fill='#fbfaf6' stroke='#e6e0d2' stroke-width='.9'/><text x='148' y='45' font-size='8' fill='#9ba3a9' font-family='monospace' letter-spacing=\".8\">02</text><text x='148' y='62' font-size='10.5' font-weight=\"500\" fill='#242b2e' font-family='sans-serif'>分层产能</text><text x='148' y='77' font-size='8.2' fill='#79828a' font-family='sans-serif'>产油 + 产水</text><path d='M253 64 h7 m-3 -3 l3 3 l-3 3' fill='none' stroke='#9ba3a9' stroke-width='1'/><rect x='264' y='30' width='112' height='68' rx='5' fill='#fbfaf6' stroke='#e6e0d2' stroke-width='.9'/><text x='273' y='45' font-size='8' fill='#9ba3a9' font-family='monospace' letter-spacing=\".8\">03</text><text x='273' y='62' font-size='10.5' font-weight=\"500\" fill='#242b2e' font-family='sans-serif'>含水演化</text><text x='273' y='77' font-size='8.2' fill='#79828a' font-family='sans-serif'>逐日上升</text><path d='M378 64 h7 m-3 -3 l3 3 l-3 3' fill='none' stroke='#9ba3a9' stroke-width='1'/><rect x='389' y='30' width='112' height='68' rx='5' fill='#fbfaf6' stroke='#e6e0d2' stroke-width='.9'/><text x='398' y='45' font-size='8' fill='#9ba3a9' font-family='monospace' letter-spacing=\".8\">04</text><text x='398' y='62' font-size='10.5' font-weight=\"500\" fill='#242b2e' font-family='sans-serif'>约束寻优</text><text x='398' y='77' font-size='8.2' fill='#79828a' font-family='sans-serif'>产水最小</text><path d='M503 64 h7 m-3 -3 l3 3 l-3 3' fill='none' stroke='#9ba3a9' stroke-width='1'/><rect x='514' y='30' width='112' height='68' rx='5' fill='#fbfaf6' stroke='#1e6f5c' stroke-width='1.1'/><text x='523' y='45' font-size='8' fill='#9ba3a9' font-family='monospace' letter-spacing=\".8\">05</text><text x='523' y='62' font-size='10.5' font-weight=\"500\" fill='#242b2e' font-family='sans-serif'>30 天策略</text><text x='523' y='77' font-size='8.2' fill='#79828a' font-family='sans-serif'>逐日开度</text></svg><figcaption style='font-size:10.5px;color:#9ba3a9;margin-top:5px'>图 2 · 三层滑套各有 0—100% 开度，组合空间极大；优化的目标不是把今天的油做大，而是让 30 天的累产油最大、产水最少。</figcaption></figure>"
+        },
+        {
+          "no": 3,
+          "en": "DATA",
+          "title": "需要准备什么",
+          "html": "<p style=\"margin-bottom:14px\">立项前先对着这张清单打勾。<b>勾不满不代表不能做</b>，但每一项空缺都会在后期变成返工。清单可点击，勾选状态只在本页有效。</p><div class=\"checklist\"><div class=\"cl-head\"><span>数据准备清单 · 5 项</span><span class=\"cl-prog\"><span id=\"cl-txt\">0 / 5</span><span class=\"cl-bar\"><i id=\"cl-fill\"></i></span></span></div><div class=\"cl-item\" data-cl=\"0\"><span class=\"cl-box\"><svg width=\"10\" height=\"10\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"#fff\" stroke-width=\"4\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M4 12.5l5 5L20 6.5\"/></svg></span><span><span class=\"cl-t\">层段物性</span><span class=\"cl-s\">各层渗透率、厚度、初始含水、地层压力</span></span><span class=\"cl-n\">分层产能模型输入</span></div><div class=\"cl-item\" data-cl=\"1\"><span class=\"cl-box\"><svg width=\"10\" height=\"10\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"#fff\" stroke-width=\"4\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M4 12.5l5 5L20 6.5\"/></svg></span><span><span class=\"cl-t\">完井工具</span><span class=\"cl-s\">滑套数量、位置、开度级数、耐压耐温</span></span><span class=\"cl-n\">决定可调范围与动作次数</span></div><div class=\"cl-item\" data-cl=\"2\"><span class=\"cl-box\"><svg width=\"10\" height=\"10\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"#fff\" stroke-width=\"4\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M4 12.5l5 5L20 6.5\"/></svg></span><span><span class=\"cl-t\">生产历史</span><span class=\"cl-s\">日产油 / 水、井口压力、流压</span></span><span class=\"cl-n\">反演分层贡献</span></div><div class=\"cl-item\" data-cl=\"3\"><span class=\"cl-box\"><svg width=\"10\" height=\"10\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"#fff\" stroke-width=\"4\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M4 12.5l5 5L20 6.5\"/></svg></span><span><span class=\"cl-t\">产液剖面</span><span class=\"cl-s\">分层流量、含水测试</span></span><span class=\"cl-n\">校准分层模型的唯一硬数据</span></div><div class=\"cl-item\" data-cl=\"4\"><span class=\"cl-box\"><svg width=\"10\" height=\"10\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"#fff\" stroke-width=\"4\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M4 12.5l5 5L20 6.5\"/></svg></span><span><span class=\"cl-t\">地面约束</span><span class=\"cl-s\">液处理能力、集输回压、配产目标</span></span><span class=\"cl-n\">优化边界</span></div></div><p style=\"margin-top:18px\"><span class=\"kicker plain\" style=\"color:var(--ink-4)\">可参考的公开资料</span></p><div class=\"refs\"><span class=\"ref\">中海油“海龙”ICV：26 口井应用、含水降 10.8%</span><span class=\"ref\">ICC 智能完井：20 级、误差 <6%、寿命 2 万次</span><span class=\"ref\">智能完井井下流量控制器海试（西南石油大学）</span></div><p style=\"margin-top:14px\" class=\"small muted\">口径提醒：<b>含水率</b>要区分井口综合含水与分层含水；<b>开度</b>是节流级位而不是流通面积占比；<b>日产</b>统一为稳定生产制度下的日产。三处不统一，优化会算出“关小滑套反而多产液”的荒谬结论。</p><figure style='margin:12px 0 0'><svg viewBox='0 0 640 186' xmlns='http://www.w3.org/2000/svg' role='img'><rect x='0' y='0' width='640' height='186' fill='#ffffff'/><text x='14' y='18' font-size='8' fill='#9ba3a9' font-family='monospace' letter-spacing=\"1.2\">分层数据表结构 · 一行一个层段</text><rect x='14' y='28' width='612' height='22' fill='#f1ede2' stroke='#e6e0d2'/><text x='71' y='43' font-size='8.6' fill='#4d565b' font-family='monospace' text-anchor=\"middle\" letter-spacing=\".3\">层号</text><text x='185' y='43' font-size='8.6' fill='#4d565b' font-family='monospace' text-anchor=\"middle\" letter-spacing=\".3\">产液指数</text><text x='299' y='43' font-size='8.6' fill='#4d565b' font-family='monospace' text-anchor=\"middle\" letter-spacing=\".3\">初始含水</text><text x='432' y='43' font-size='8.6' fill='#4d565b' font-family='monospace' text-anchor=\"middle\" letter-spacing=\".3\">压力 (MPa)</text><text x='567' y='43' font-size='8.6' fill='#4d565b' font-family='monospace' text-anchor=\"middle\" letter-spacing=\".3\">滑套开度</text><rect x='14' y='50' width='612' height='24' fill='#ffffff' stroke='#f0ece1' stroke-width='.7'/><text x='71' y='66' font-size='9' fill='#4d565b' font-family='sans-serif' text-anchor=\"middle\">L1</text><text x='185' y='66' font-size='9' fill='#4d565b' font-family='sans-serif' text-anchor=\"middle\">2.4</text><text x='299' y='66' font-size='9' fill='#4d565b' font-family='sans-serif' text-anchor=\"middle\">32%</text><text x='432' y='66' font-size='9' fill='#4d565b' font-family='sans-serif' text-anchor=\"middle\">21.6</text><text x='567' y='66' font-size='9' fill='#4d565b' font-family='sans-serif' text-anchor=\"middle\">100%</text><rect x='14' y='74' width='612' height='24' fill='#fbfaf6' stroke='#f0ece1' stroke-width='.7'/><text x='71' y='90' font-size='9' fill='#4d565b' font-family='sans-serif' text-anchor=\"middle\">L2</text><text x='185' y='90' font-size='9' fill='#4d565b' font-family='sans-serif' text-anchor=\"middle\">1.7</text><text x='299' y='90' font-size='9' fill='#4d565b' font-family='sans-serif' text-anchor=\"middle\">58%</text><text x='432' y='90' font-size='9' fill='#4d565b' font-family='sans-serif' text-anchor=\"middle\">22.3</text><text x='567' y='90' font-size='9' fill='#4d565b' font-family='sans-serif' text-anchor=\"middle\">60%</text><rect x='14' y='98' width='612' height='24' fill='#ffffff' stroke='#f0ece1' stroke-width='.7'/><text x='71' y='114' font-size='9' fill='#4d565b' font-family='sans-serif' text-anchor=\"middle\">L3</text><text x='185' y='114' font-size='9' fill='#4d565b' font-family='sans-serif' text-anchor=\"middle\">0.9</text><text x='299' y='114' font-size='9' fill='#4d565b' font-family='sans-serif' text-anchor=\"middle\">74%</text><text x='432' y='114' font-size='9' fill='#4d565b' font-family='sans-serif' text-anchor=\"middle\">23.1</text><text x='567' y='114' font-size='9' fill='#4d565b' font-family='sans-serif' text-anchor=\"middle\">40%</text><line x1='128' y1='28' x2='128' y2='122' stroke='#f0ece1' stroke-width='.7'/><line x1='242' y1='28' x2='242' y2='122' stroke='#f0ece1' stroke-width='.7'/><line x1='356' y1='28' x2='356' y2='122' stroke='#f0ece1' stroke-width='.7'/><line x1='509' y1='28' x2='509' y2='122' stroke='#f0ece1' stroke-width='.7'/><rect x='14' y='137' width='7' height='7' rx='1.5' fill='#1e6f5c'/><text x='26' y='144' font-size='8' fill='#9ba3a9' font-family='monospace' letter-spacing=\".6\">样本量</text><text x='26' y='156' font-size='9.2' fill='#4d565b' font-family='sans-serif'>3 层 × 30 天 × 开度网格</text><rect x='218' y='137' width='7' height='7' rx='1.5' fill='#a9852f'/><text x='230' y='144' font-size='8' fill='#9ba3a9' font-family='monospace' letter-spacing=\".6\">标注成本</text><text x='230' y='156' font-size='9.2' fill='#4d565b' font-family='sans-serif'>需产液剖面复测</text><rect x='422' y='137' width='7' height='7' rx='1.5' fill='#a85249'/><text x='434' y='144' font-size='8' fill='#9ba3a9' font-family='monospace' letter-spacing=\".6\">口径风险</text><text x='434' y='156' font-size='9.2' fill='#4d565b' font-family='sans-serif'>分层贡献靠反演，非实测</text></svg><figcaption style='font-size:10.5px;color:#9ba3a9;margin-top:5px'>图 3 · 三层物性差异明显：L1 产液强但含水低，L3 含水已到 74%。开度怎么分配，取决于每层「多产一吨油要多产多少水」。</figcaption></figure>"
+        },
+        {
+          "no": 4,
+          "en": "DIFFICULTY",
+          "title": "技术难度与参考方向",
+          "html": "<div style=\"display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:2px\"><span class=\"dtag\" data-d=\"高\">难度 高</span><span class=\"small muted\">分层模型不准 + 动作次数受限，两件事叠在一起。</span></div><div class=\"meter\"><i class=\"on\"></i><i class=\"on\"></i><i class=\"on hi\"></i></div><p>难度按三档标注：<b>低</b> = 数据现成、任务边界清晰、错了代价小；<b>中</b> = 需要一个月量级的标注与清洗，效果依赖后处理规则；<b>高</b> = 标签稀缺或安全约束硬，通常要先做小范围可行性验证再立项。</p><p>这个案例落在<b>高</b>：分层产液剖面很少测，各层产液指数与含水上升速度很难单独标定，模型容易高估调控收益；而滑套的动作次数与作业窗口又不允许“试出来”。建议先做“固定周期 + 规则优化”的可解释策略，上线前用历史井做回放测试。</p><p style=\"margin-top:18px\"><span class=\"kicker plain\" style=\"color:var(--ink-4)\">可借鉴的通用技术</span></p><div class=\"refs\"><a class=\"ref\" href=\"#/method/opt\">约束优化<span class=\"ar\">↗</span></a><a class=\"ref\" href=\"#/method/opt\">滚动时域控制<span class=\"ar\">↗</span></a><a class=\"ref\" href=\"#/method/opt\">多目标优化<span class=\"ar\">↗</span></a><a class=\"ref\" href=\"#/method/opt\">强化学习（策略学习）<span class=\"ar\">↗</span></a></div><p style=\"margin-top:18px\"><span class=\"kicker plain\" style=\"color:var(--ink-4)\">本案例用到的现实依据</span></p><div class=\"refs\"><span class=\"ref\">渤海水平井：含水下降 10.8%</span><span class=\"ref\">3 口水平井：平均日增油 35 m³，最大含水降 25.4%</span><span class=\"ref\">月度调控 × 2 万次动作寿命 ≈ 10 年以上</span></div><p style=\"margin-top:18px\" class=\"small muted\">交叉环节：<a href=\"#/stage/completion\" style=\"color:var(--jade-d);font-weight:600\">完井</a> · <a href=\"#/stage/production\" style=\"color:var(--jade-d);font-weight:600\">采油</a></p>"
+        }
+      ]
+    },
+    "workflow": {
+      "label": "案例流程",
+      "title": "案例：E 井 3 层智能完井的 30 天调控",
+      "lead": [
+        "E 井是一口 3 层合采水平井，A 层产液强、含水低，C 层含水已到 72%。目标是在满足产油目标的前提下把产水压到最低，并让策略在 30 天内保持可执行。",
+        "流程按调控周期滚动：每个周期用最新含水率重算开度，而不是一次算完 30 天。示范为了在 30 天内看到差异压缩了周期，现场按月执行。"
+      ],
+      "stats": [
+        [
+          "层段",
+          "3 层",
+          true
+        ],
+        [
+          "模拟时长",
+          "30 天",
+          true
+        ],
+        [
+          "调控周期",
+          "7 天（示范）"
+        ],
+        [
+          "现场周期",
+          "约 30 天"
+        ],
+        [
+          "累产油",
+          "3401 t"
+        ],
+        [
+          "较固定开度",
+          "+280 t 油"
+        ]
+      ],
+      "steps": [
+        {
+          "name": "层段数据与产液剖面",
+          "role": "反演 · TS",
+          "do": "整理各层产液指数、初始含水、压力与滑套位置；用历史生产数据反演分层贡献，有剖面测试的井直接标定。",
+          "effect": "得到每层的产油能力与产水倾向曲线",
+          "trap": "把总井含水直接平均到各层，高含水层被低估，优化会过度开井。",
+          "input": "分层物性、生产历史、剖面测试",
+          "output": "分层产能 / 含水曲线",
+          "viz": "三层井身剖面 + 分层贡献堆叠条"
+        },
+        {
+          "name": "分层产能与含水预测",
+          "role": "建模 · TS",
+          "do": "按开度计算各层产油、产水，叠加井筒液量上限与井口回压影响。",
+          "effect": "任意开度组合都能给出产油、产水与含水率",
+          "trap": "忽略液量上限，“开度越大产量越高”的结论会失真。",
+          "input": "三层开度 0—100%",
+          "output": "产油 / 产水 / 含水",
+          "viz": "开度—产油 / 含水响应曲线族"
+        },
+        {
+          "name": "约束优化",
+          "role": "优化 · OPT",
+          "do": "在开度网格上搜索，满足产油目标且产水最小；不可行时给出最小偏差方案并标明缺口。",
+          "effect": "给出这一轮该开多大，以及做不到时差多少",
+          "trap": "目标定得过高，优化只能全开，含水失控。",
+          "input": "产油目标、含水上限、液量上限",
+          "output": "三层开度组合 + 偏差",
+          "viz": "三层开度热力网格 + 可行域边界"
+        },
+        {
+          "name": "滚动调控",
+          "role": "滚动 · OPT",
+          "do": "每个调控周期用最新含水率重算，形成策略序列；相邻两次开度变化超过阈值时提示“值不值得动这一下”。",
+          "effect": "策略随含水变化自适应，且动作次数可控",
+          "trap": "周期太短，滑套动作频繁；周期太长，含水已经上去了。",
+          "input": "最新含水 + 上期开度 + 周期",
+          "output": "逐周期开度策略",
+          "viz": "开度 / 产油 / 含水三线联动"
+        },
+        {
+          "name": "现场执行与复核",
+          "role": "人工 · NLP",
+          "do": "结合滑套调节能力、产液剖面复测与地面液处理能力确认策略；异常（砂卡、开度不到位）时人工干预。",
+          "effect": "策略落到井上，并留下可追溯的干预记录",
+          "trap": "只看模型推荐，忽略滑套实际开度反馈与砂堵。",
+          "input": "策略序列 + 工具反馈 + 复测剖面",
+          "output": "调控指令 + 干预预案",
+          "viz": "AI 策略 vs 固定开度逐日对比"
+        }
+      ],
+      "metrics": {
+        "title": "怎么算“控得好”",
+        "html": "<p>对比固定开度与动态调控的 30 天累产油、累产水、期末含水与达标天数；上线后用产液剖面复测验证分层预测。只报累产油会掩盖产水代价，必须把水一起算。</p><table class=\"dtable\"><thead><tr><th>指标</th><th>定义</th><th>本示范取值</th></tr></thead><tbody><tr><td>累产油</td><td>30 天累计产油</td><td>3401 t</td></tr><tr><td>累产水</td><td>30 天累计产水</td><td>较固定开度 −844 t</td></tr><tr><td>达标天数</td><td>日产油达到目标的井日数</td><td>24 / 30</td></tr><tr><td>动作次数</td><td>统计期内滑套实际动作次数</td><td>示范 5 次 / 30 天；现场 ≤ 12 次/年</td></tr></tbody></table>"
+      },
+      "fails": [
+        {
+          "name": "分层贡献失真",
+          "why": "没有产液剖面，只能按总井数据平均，优化会把水层当成油层。"
+        },
+        {
+          "name": "目标不可达",
+          "why": "目标产油量超过各层能力，优化全开仍不达标，含水却快速上升；应同时报缺口。"
+        },
+        {
+          "name": "调节过于频繁",
+          "why": "按天重算开度，滑套动作次数与砂卡风险无法承受；现场按月执行，示范的 7 天只是压缩演示。"
+        },
+        {
+          "name": "忽略回压",
+          "why": "只算分层产能、不算井筒回压与液量上限，开大高产层反而把低含水层憋住。"
+        }
+      ]
+    },
+    "demo": {
+      "__generated": true
+    }
+  }
+};
+  var key = "intelligent-sleeve-control";
+  def.tabs = def.tabs || {};
+  def.tabs.demo = {
+    label: "可运行示范",
+    intro: "调整三层滑套开度、产油目标、含水目标与调控周期，查看开度分配、30 天产油与含水曲线；播放动画可逐日观察 AI 滚动调控与固定开度的差异。",
+    mode: 'module',
+    mount: function (root) {
+      root.innerHTML = '';
+      if (true) root.style.minHeight = 780 + 'px';
+      var fn = window.__IQ_DEMOS__ && window.__IQ_DEMOS__[key];
+      if (typeof fn !== 'function') {
+        root.innerHTML = '<div class="iq-miss"><b>示范脚本未加载</b><br>请确认 index.html 中已引入 ' +
+          "intelligent-sleeve-control/demo/demo.js" + '，且位于 shell.js 之前。</div>';
+        return;
+      }
+      root.__iqLive = fn(root);
+    },
+    unmount: function () {
+      var root = document.getElementById('case-demo-root');
+      var live = root && root.__iqLive;
+      if (live && typeof live.unmount === 'function') { try { live.unmount(); } catch (e) { } }
+      if (root) root.__iqLive = null;
+    }
+  };
+  Cases.register(def);
+})();

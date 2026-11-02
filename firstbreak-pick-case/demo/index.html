@@ -13,6 +13,42 @@
   算法用短时窗能量除以长时窗能量，比值冲过阈值的位置就是拾取的初至。
   拖动滑杆，看它在什么条件下可靠、什么条件下失灵。</p>
 
+  <!-- 智能方法说明：方法与阈值效果均由下方模型实时计算 -->
+  <div class="smart">
+    <div class="smart-h">
+      <div><span class="kicker">SMART METHOD · STA/LTA</span><h2>STA/LTA 能量比法</h2></div>
+      <span class="tag">无监督 · 无需人工标注</span>
+    </div>
+    <div class="grid">
+      <div class="cell"><span>输入</span><b>单道地震波形，采样率 2 ms，采样点 360</b></div>
+      <div class="cell"><span>输出</span><b>初至采样点、能量比峰值与拾取判定</b></div>
+      <div class="cell"><span>解决的问题</span><b>逐道目视拾取慢、不同人结果差 2—4 个采样点</b></div>
+      <div class="cell"><span>为什么适合</span><b>能量比是幅度归一化量，噪声整体放大时比值形态基本不变</b></div>
+    </div>
+    <div class="flow">
+      <span>波形道集</span><em>→</em><span>STA / LTA 能量比</span><em>→</em><span>阈值触发</span><em>→</em><span>空间一致性约束</span><em>→</em><span>低置信度复核</span>
+    </div>
+    <div class="cmp" id="fb-cmp"></div>
+    <div class="sec">
+      <h4>为什么智能方法有效</h4>
+      <ul>
+        <li>短时窗 STA（8 点 ≈ 16 ms）跟踪“初至到达后”的局部能量，长时窗 LTA（60 点 ≈ 120 ms）跟踪背景噪声；两者之比在信号到达时突然抬升。</li>
+        <li>比值对整体振幅不敏感：噪声从 0.8 拖到 2.0 时，比值曲线仍能保持峰值形态，衰减的只是信噪比裕量。</li>
+        <li>触发阈值把连续曲线变成离散拾取点，阈值越高越保守（少误拾、易漏拾），阈值越低越敏感（易误拾、少漏拾），可量化权衡。</li>
+        <li>生产流程再叠加相邻道一致性约束，把偏离走时曲线的离群拾取拉回，并只复核置信度最低的 10% 道。</li>
+      </ul>
+    </div>
+    <div class="bound">
+      <b>适用边界与复核要求</b>
+      <ul>
+        <li>本示范是单道合成记录，噪声为固定种子的简化模型，不代表真实炮集的噪声类型与道间差异。</li>
+        <li>未实现相邻道一致性约束与逐点分类网络；低信噪比道可能假拾取或漏拾取，结果必须人工复核。</li>
+        <li>真实工区需按信噪比重新标定 STA/LTA 窗长与阈值，并用 5%—10% 人工拾取道统计误差分布。</li>
+        <li>拾取结果不能直接替代静校正与叠加的质量控制，最终处理参数仍需处理员确认。</li>
+      </ul>
+    </div>
+  </div>
+
   <div class="ctl">
     <label>噪声水平 <output id="out-noise">0.8</output></label>
     <input type="range" id="noise" min="0" max="3" step="0.1" value="0.8">

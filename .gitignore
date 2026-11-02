@@ -1,5 +1,8 @@
 # 本地 Agent 记忆与临时文件
 .workbuddy/
+.screenshots/
+.trae-html-share-packages/
+*.genie
 
 # 系统与编辑器
 Thumbs.db
@@ -8,4 +11,4 @@ Thumbs.db
 
 # 依赖与构建产物（本项目为纯静态站点，正常不会出现）
 node_modules/
-dist/
+# dist/ 为最终提交压缩包，需随项目保留，因此不忽略

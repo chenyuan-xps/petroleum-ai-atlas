@@ -52,11 +52,63 @@
 
   /* ---------- 30 秒判断 ---------- */
   function judge(cells) {
-    return '<div class="judge">' + cells.map(function (c) {
+    var five = cells.length === 5 ? ' five' : '';
+    return '<div class="judge' + five + '">' + cells.map(function (c) {
       return '<div class="jc"><div class="jl">' + esc(c.label) + '</div>' +
         '<div class="jv">' + (c.html || rich(c.value)) + '</div>' +
         (c.desc ? '<div class="jd">' + rich(c.desc) + '</div>' : '') + '</div>';
     }).join('') + '</div>';
+  }
+
+  /* ---------- 可信度条：分数 + 依据 + 三项检查 ---------- */
+  function credStrip(cred) {
+    cred = cred || {};
+    var score = Math.max(0, Math.min(100, Number(cred.score) || 0));
+    var lv = cred.level || (score >= 80 ? '较高' : score >= 65 ? '中' : '偏低');
+    var checks = (cred.checks || []).map(function (c) {
+      return '<div class="cred-item"><span class="ck">' + esc(c.k) + '</span><span class="cv">' + rich(c.v) + '</span></div>';
+    }).join('');
+    return '<div class="cred-strip">' +
+      '<div class="cred-main">' +
+      '<div class="cm-top"><span class="kicker plain">CONFIDENCE · 可信度</span><span class="lv">' + esc(lv) + '</span></div>' +
+      '<div class="cm-num"><b>' + score + '</b><small>/100</small></div>' +
+      '<div class="cred-bar"><i style="width:' + score + '%"></i></div>' +
+      (cred.basis ? '<p class="cm-note">' + rich(cred.basis) + '</p>' : '') +
+      '</div>' +
+      (checks ? '<div class="cred-side">' + checks + '</div>' : '') +
+      '</div>';
+  }
+
+  /* ---------- 决策链：输入 → 处理 → 判断 → 输出 ---------- */
+  function decisionChain(steps) {
+    if (!steps || !steps.length) return '';
+    var inner = steps.map(function (s, i) {
+      return '<div class="dc-step">' +
+        '<div class="dc-no">' + ('0' + (i + 1)).slice(-2) + '</div>' +
+        '<div class="dc-k">' + esc(s.k || '') + '</div>' +
+        '<div class="dc-t">' + esc(s.t || '') + '</div>' +
+        (s.d ? '<div class="dc-d">' + esc(s.d) + '</div>' : '') +
+        '</div>' +
+        (i < steps.length - 1 ? '<div class="dc-ar">→</div>' : '');
+    }).join('');
+    return '<div class="decision"><div class="decision-h">' +
+      '<span class="kicker plain">DECISION PATH · 决策链</span>' +
+      '<span class="mini">' + steps.length + ' 步</span></div>' +
+      '<div class="decision-scroll"><div class="decision-in">' + inner + '</div></div></div>';
+  }
+
+  /* ---------- 工程结论 + 模型边界 ---------- */
+  function verdictBlock(conclusion, limits) {
+    if (!conclusion && !(limits && limits.length)) return '';
+    var c = conclusion || {}, ls = limits || [];
+    return '<div class="case-end">' +
+      (conclusion ? '<div class="verdict"><div class="vk">VERDICT · 工程结论</div>' +
+        '<h4>' + esc(c.title || '结论') + '</h4>' + (c.html || '') + '</div>' : '') +
+      (ls.length ? '<div class="boundary"><div class="vk">BOUNDARY · 模型边界</div>' +
+        '<h4>这套结果在哪里会失效</h4><ul>' +
+        ls.map(function (l) { return '<li>' + rich(l) + '</li>'; }).join('') +
+        '</ul></div>' : '') +
+      '</div>';
   }
 
   /* ---------- 表格 ---------- */
@@ -122,11 +174,28 @@
   /* ---------- 流程步骤 ---------- */
   function pipeline(steps) {
     return '<div class="pipeline">' + steps.map(function (s, i) {
+      /* 四要素版：输入 → 处理 → 输出 画成横向流程图，再标注这一步适合的图形。
+         老模板只有 do/effect/trap，缺 input/output 时退回纯文字处理说明，保持向后兼容。 */
+      var hasIO = !!(s.input && s.output);
+      var io = '';
+      if (hasIO) {
+        io = '<div class="pio">' +
+          '<div class="pio-c"><span class="k">输入</span><span class="v">' + rich(s.input) + '</span></div>' +
+          '<div class="pio-ar">→</div>' +
+          '<div class="pio-c proc"><span class="k">处理</span><span class="v">' + rich(s.do) + '</span></div>' +
+          '<div class="pio-ar">→</div>' +
+          '<div class="pio-c is-out"><span class="k">输出</span><span class="v">' + rich(s.output) + '</span></div>' +
+          '</div>';
+      }
       return '<div class="pstep"><div class="pn">' + pad(i + 1) + '</div><div class="pc">' +
         '<h4>' + esc(s.name) + (s.role ? '<span class="role">' + esc(s.role) + '</span>' : '') + '</h4>' +
-        '<div class="pdo">' + rich(s.do) + '</div>' +
+        io +
+        (hasIO ? '' : '<div class="pdo">' + rich(s.do) + '</div>') +
         (s.effect ? '<div class="peff"><span class="k">预期效果</span><span>' + rich(s.effect) + '</span></div>' : '') +
         (s.trap ? '<div class="peff" style="border-top-color:rgba(176,90,81,.2)"><span class="k" style="color:var(--bad)">常见坑</span><span>' + rich(s.trap) + '</span></div>' : '') +
+        (s.viz ? '<div class="pviz"><span class="k">建议图示</span>' +
+          '<svg class="pvico" viewBox="0 0 16 12" aria-hidden="true"><rect x="1" y="7" width="3" height="4" fill="#3a352d"/><rect x="6" y="4" width="3" height="7" fill="#7ba99b"/><rect x="11" y="1" width="3" height="10" fill="#c9d9d3"/></svg>' +
+          '<span>' + rich(s.viz) + '</span></div>' : '') +
         '</div></div>';
     }).join('') + '</div>';
   }
@@ -182,6 +251,7 @@
     esc: esc, pad: pad, rich: rich,
     mtag: mtag, dtag: dtag,
     figure: figure, sec4: sec4, judge: judge,
+    credStrip: credStrip, decisionChain: decisionChain, verdictBlock: verdictBlock,
     dtable: dtable, checklist: checklist, refs: refs, meter: meter,
     cells: cells, pipeline: pipeline, fails: fails,
     callout: callout, code: code, tree: tree, highlight: highlight

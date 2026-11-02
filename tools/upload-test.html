@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>upload test</title>
+<style>body{margin:0;font:12px monospace}iframe{width:1200px;height:760px;border:0}pre{position:fixed;left:1210px;top:0;width:600px;height:100vh;overflow:auto;margin:0;padding:8px;background:#111;color:#0f0}</style>
+</head><body>
+<iframe id="f" src="/index.html"></iframe>
+<pre id="out">running…</pre>
+
+<script>
+var OUT = document.getElementById('out');
+function log(o) { OUT.textContent = (OUT.textContent === 'running…' ? '' : OUT.textContent) + '\n' + (typeof o === 'string' ? o : JSON.stringify(o, null, 1)); }
+function sleep(ms) { return new Promise(function (r) { setTimeout(r, ms); }); }
+
+var PKG = '/firstbreak-pick-case/';
+var NAMES = ['case.json', 'demo/index.html', 'demo/demo.css', 'demo/demo.js', 'README.txt'];
+
+var f = document.getElementById('f');
+
+f.addEventListener('load', function () {
+  var d = f.contentDocument, w = f.contentWindow;
+  setTimeout(function () { run(d, w); }, 900);
+});
+
+async function run(d, w) {
+  try {
+    /* 1. 打开「添加案例」弹窗 */
+    var opener = d.querySelector('[data-import]');
+    log('opener found: ' + !!opener);
+    opener.click();
+    await sleep(400);
+    var drop = d.querySelector('#imp-drop');
+    log('dropzone: ' + !!drop);
+    if (!drop) return;
+
+    /* 2. 构造同学案例包的文件（等同从磁盘拖入 firstbreak-pick-case 文件夹） */
+    var dt = new w.DataTransfer();
+    for (var i = 0; i < NAMES.length; i++) {
+      var n = NAMES[i];
+      var r = await fetch(PKG + n);
+      var txt = await r.text();
+      var base = n.split('/').pop();
+      var file = new w.File([txt], base, { type: 'text/plain' });
+      try {
+        Object.defineProperty(file, 'webkitRelativePath', {
+          value: 'firstbreak-pick-case/' + n, configurable: true
+        });
+      } catch (e) { log('relpath fail: ' + n); }
+      dt.items.add(file);
+    }
+    log('files built: ' + dt.files.length);
+
+    /* 3. 派发 drop */
+    var ev = new w.DragEvent('drop', { bubbles: true, cancelable: true, dataTransfer: dt });
+    drop.dispatchEvent(ev);
+    await sleep(1400);
+
+    /* 4. 读校验结果 */
+    var cnt = d.querySelector('#imp-count');
+    var res = d.querySelector('#imp-res');
+    log('--- validate ---');
+    log('count: ' + (cnt ? cnt.textContent.trim() : 'n/a'));
+    var rows = res ? [].slice.call(res.querySelectorAll('*')) : [];
+    var lines = [];
+    if (res) {
+      [].slice.call(res.children).forEach(function (c) {
+        var t = c.textContent.replace(/\s+/g, ' ').trim();
+        if (t) lines.push('[' + (c.className || '').replace('imp-item ', '') + '] ' + t.slice(0, 120));
+      });
+    }
+    log(lines.join('\n') || '(empty)');
+
+    /* 5. 点「校验并添加」 */
+    var ok = d.querySelector('#imp-ok');
+    log('add button disabled: ' + (ok ? ok.disabled : 'n/a'));
+    if (ok && !ok.disabled) {
+      ok.click();
+      await sleep(1200);
+      log('after add, hash = ' + w.location.hash);
+    }
+
+    /* 6. 打开同学的案例页，检查渲染 */
+    w.location.hash = '#/scene/s3';
+    await sleep(1200);
+    var title = d.querySelector('.ch-title');
+    var high = d.querySelector('.ch-high');
+    var meta = d.querySelector('.case-meta');
+    var thumb = d.querySelector('.ch-thumb svg');
+    var tabs = [].slice.call(d.querySelectorAll('#tabs button, #tabs .tab')).map(function (b) { return b.textContent.trim(); });
+    var hasChain = !!d.querySelector('.decision');
+    var hasCred = !!d.querySelector('.cred-strip');
+    var hasVerdict = !!d.querySelector('.case-end');
+    log('--- render ---');
+    log('title: ' + (title ? title.textContent : 'none'));
+    log('highlight: ' + (high ? high.textContent.slice(0, 60) : 'none'));
+    log('meta chips: ' + (meta ? meta.textContent.replace(/\s+/g, ' ').trim() : 'none'));
+    log('thumb svg children: ' + (thumb ? thumb.childElementCount : 'none'));
+    log('tabs: ' + tabs.join(' | '));
+    log('decision chain: ' + hasChain + ' / cred strip: ' + hasCred + ' / verdict: ' + hasVerdict);
+    log('DONE');
+  } catch (e) {
+    log('ERROR ' + e.message + '\n' + e.stack);
+  }
+}
+</script></body></html>

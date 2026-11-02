@@ -23,7 +23,7 @@
     gridSoft: '#f4f1e9',
     text: '#79828a',
     textDim: '#9ba3a9',
-    truth: '#2f7d6b',
+    truth: '#3a352d',
     det: '#b26a39',
     hover: '#b9c0c5',
     thin: '#f0dfa4'

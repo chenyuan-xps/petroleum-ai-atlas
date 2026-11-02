@@ -8,12 +8,30 @@
 
 window.ATLAS = {
   meta: {
-    title: '石油勘探开发的智能化可能性地图',
-    tagline: '按石油作业链条逐环节展示可被深度学习改造的候选场景，标注技术介入点、数据条件与难度等级。',
-    version: 'v1.0',
+    title: '石油勘探开发智能化案例平台',
+    tagline: '按石油作业链条逐环节展示可被深度学习改造的候选场景，并为完井段落提供可运行、可调参、可解释的智能决策示范。',
+    version: 'v2.0',
     updated: '2026-10',
     upstreamNote: '上游环节（地质勘察 → 采油）已详解；下游 4 个环节标注为「待扩展」。',
     email: 'atlas@example.com'
+  },
+
+  /* 学号任务映射：尾号 07 对应作业链第 07 环节「完井」。
+     首页、左栏、项目说明页与案例对比页都从这里读取，换学号只改这一处。 */
+  project: {
+    studentTail: '07',
+    stageId: 'completion',
+    stageName: '完井',
+    requiredIds: [
+      'completion-method-selection',
+      'perforation-parameter-design',
+      'completion-string-stress-analysis',
+      'intelligent-sleeve-control'
+    ],
+    extensionIds: [
+      'fracturing-parameter-optimization',
+      'production-forecasting'
+    ]
   },
 
   methods: {
@@ -492,7 +510,7 @@ window.ATLAS = {
       blurb: '决定井与储层怎么"接上"。方案选择强依赖经验与邻井案例，是知识图谱类方法最合适的入口。',
       scenes: [
         {
-          id: 'co1', name: '完井方式智能优选', methods: ['kg', 'opt'], diff: '中',
+          id: 'co1', name: '完井方式智能优选', methods: ['kg', 'opt'], diff: '中', demo: true,
           diffWhy: '决策是多目标权衡（产能、防砂、成本），"最优"没有统一定义，模型只能给候选排序。',
           point: '用知识图谱组织"储层特征—完井方式—生产表现"的关系，推荐候选方案并给出相似案例。',
           intro: '完井方式（裸眼、射孔、筛管、砾石充填）决定了井与储层的连通方式与后续措施空间，选择依据是储层类型、出砂倾向与出水风险。',
@@ -506,7 +524,7 @@ window.ATLAS = {
           cross: ['采油', '射孔']
         },
         {
-          id: 'co2', name: '射孔参数智能设计', methods: ['opt'], diff: '中',
+          id: 'co2', name: '射孔参数智能设计', methods: ['opt'], diff: '中', demo: true,
           diffWhy: '需要射孔产能的物理模型作代理训练集，纯数据驱动样本不足。',
           point: '用代理模型预测不同参数组合的产能与出砂风险，多目标优化给出帕累托方案集。',
           intro: '射孔参数（孔密、相位、穿深）影响产能与出砂风险，设计需在储层强度、完井方式与产能目标之间取平衡。',
@@ -520,7 +538,7 @@ window.ATLAS = {
           cross: ['射孔']
         },
         {
-          id: 'co3', name: '完井管柱受力智能分析', methods: ['opt'], diff: '中',
+          id: 'co3', name: '完井管柱受力智能分析', methods: ['opt'], diff: '中', demo: true,
           diffWhy: '可用机理模型批量生成训练集，真实失效样本仅用于校验。',
           point: '用代理模型快速预测多工况下的载荷与安全系数，识别高风险工况组合。',
           intro: '生产管柱在温度、压力变化下产生轴向力与变形，设计不当会导致管柱屈曲、接头泄漏甚至断脱。',
@@ -533,7 +551,7 @@ window.ATLAS = {
           refs: ['代理模型', '敏感性分析', '可靠性评估']
         },
         {
-          id: 'co4', name: '智能完井滑套控制策略', methods: ['opt'], diff: '高',
+          id: 'co4', name: '智能完井滑套控制策略', methods: ['opt'], diff: '高', demo: true,
           diffWhy: '需要可靠的储层模拟环境，策略在真实井上的验证成本高、周期长。',
           point: '用强化学习在储层模拟器上学习滑套控制策略，最大化累计产量并抑制含水上升。',
           intro: '智能完井通过多段滑套控制各段产液，理论上可抑制出水、均衡贡献，但滑套启闭时序的组合空间极大。',
@@ -631,7 +649,7 @@ window.ATLAS = {
           cross: ['修井']
         },
         {
-          id: 'pr2', name: '产量智能预测', methods: ['ts'], diff: '中',
+          id: 'pr2', name: '产量智能预测', methods: ['ts'], diff: '中', demo: true,
           diffWhy: '数据丰富，但措施干预造成的分布突变难以被纯时序模型捕捉。',
           point: '用时序模型（含协变量）预测短期产量，并对措施前后的产量变化做因果归因。',
           intro: '单井与区块产量预测是配产、措施选井与开发方案调整的基础，传统用递减曲线（Arps）与数值模拟。',
@@ -774,7 +792,7 @@ window.ATLAS = {
       blurb: '从"改造储层"到"改造流体"。方案试验周期长、成本高，代理模型的价值在这里最大。',
       scenes: [
         {
-          id: 'e1', name: '压裂参数智能优化', methods: ['opt'], diff: '高',
+          id: 'e1', name: '压裂参数智能优化', methods: ['opt'], diff: '高', demo: true,
           diffWhy: '需要可靠的压裂模拟器，代理模型精度受仿真保真度限制。',
           point: '用压裂模拟器生成样本训练代理模型，再用优化算法搜索最优参数组合。',
           intro: '压裂设计要确定段簇划分、排量、砂比与液体体系，目标是在给定地质条件下最大化改造体积与产能。',

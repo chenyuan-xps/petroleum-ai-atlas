@@ -1,0 +1,255 @@
+{
+  "id": "completion-method-selection",
+  "sceneId": "co1",
+  "methods": [
+    "kg",
+    "opt"
+  ],
+  "code": "CO1",
+  "title": "完井方式智能优选",
+  "status": "ready",
+  "version": "2.0.0",
+  "updated": "2026-11-02",
+  "highlight": "先硬筛“能不能用”，再排序“哪个更好”——两件事不能合成一张评分表。",
+  "preview": "输入 5 项储层与商务参数 → 输出五方案排序、推荐方案与权重敏感性",
+  "credibility": {
+    "score": 80,
+    "level": "中高",
+    "basis": "适用性硬筛按教材与行业规范的条件表；TOPSIS 结构自洽，但指标权重与产能类比由现场给定，未经本井试采标定。",
+    "checks": [
+      {
+        "k": "数据",
+        "v": "合成 5 方案 × 5 指标"
+      },
+      {
+        "k": "方法",
+        "v": "适用性硬筛 + TOPSIS + 敏感性"
+      },
+      {
+        "k": "验证",
+        "v": "10 组权重扰动，排序稳定 10/10"
+      }
+    ]
+  },
+  "conclusion": {
+    "title": "均衡权重下筛管完井排第一，但结论只在当前权重重成立",
+    "html": "<p>默认参数下，筛管完井综合得分 <b>71.3</b>，领先第二名砾石充填 10.4 分；按邻井采油指数类比的日产为 <b>41.5 t/d</b>、防砂 82/100、投资 <b>760 万元</b>。经验方案射孔完井得分 54.6、类比日产 38.8 t/d，风险等级为高。</p><p>这个排序回答的是“在当前权重下哪个方案更接近理想解”，不是“哪个方案一定最好”。若现场把投资权重置于首位，应重跑排序并核对射孔方案的追赶幅度。<b>更要紧的是</b>：41.5 t/d 是采油指数类比值，不是模型“算出来”的产量 —— 评分表本身不产生产量，产量项必须由邻井资料标定。</p>"
+  },
+  "limits": [
+    "适用性硬筛依据教材与行业规范的条件表，区块若有特殊约束（如强水敏、盐膏层）需在规则里补条目。",
+    "产能项为邻井采油指数类比，未经本井试采或地层测试标定；低渗与裂缝性储层外推会明显失真。",
+    "TOPSIS 只给排序，不给物理证明；方案可行性仍需井壁稳定、防砂工艺与完井工具复核。",
+    "方案库固定为五套，新增方案（如酸压完井、多级压裂完井）需补指标数据并重跑敏感性分析。"
+  ],
+  "concept": {
+    "title": "决策链",
+    "steps": [
+      {
+        "k": "INPUT",
+        "t": "储层与商务条件",
+        "d": "渗透率、压力、出砂、预算、目标"
+      },
+      {
+        "k": "SCREEN",
+        "t": "适用性硬筛",
+        "d": "气顶 / 底水 / 夹层 / 出砂 → 剔除"
+      },
+      {
+        "k": "SCORE",
+        "t": "五指标归一化",
+        "d": "产能（J×Δp）、防砂、经济、可靠、施工"
+      },
+      {
+        "k": "RANK",
+        "t": "TOPSIS 排序",
+        "d": "与理想解距离 + 权重敏感性"
+      },
+      {
+        "k": "OUTPUT",
+        "t": "推荐与复核",
+        "d": "排序、类比产量、风险、置信度"
+      }
+    ]
+  },
+  "tabs": {
+    "background": {
+      "label": "专业背景",
+      "judge": [
+        {
+          "label": "方法组合",
+          "value": "NLP · KG · TS · OPT",
+          "desc": "四种方法各管一段，不是一招吃遍"
+        },
+        {
+          "label": "第一步",
+          "value": "适用性硬筛",
+          "desc": "按地质条件先剔除“不能用”的方案"
+        },
+        {
+          "label": "输入",
+          "value": "5 项参数",
+          "desc": "渗透率、压力、出砂风险、预算、目标产能"
+        },
+        {
+          "label": "难度",
+          "value": "中",
+          "desc": "“最优”没有统一定义，只能给候选排序",
+          "html": "<span class=\"dtag\" data-d=\"中\">难度 中</span>"
+        },
+        {
+          "label": "关键权衡",
+          "value": "权重敏感",
+          "desc": "排序随权重变化；本示范 10 组扰动下稳定",
+          "html": "<b style=\"color:var(--clay-d);font-family:var(--mono)\">10 / 10</b>"
+        }
+      ],
+      "lede": "完井方式决定井与储层怎样“接上”。现场的做法其实是两步：先按地质条件筛掉不能用的方案 —— 有气顶、底水、含水夹层就不能裸眼；疏松出砂严重就得筛管或砾石充填；要大规模压裂只能射孔。这一步的判据写在教材和行业规范里，是硬条件。剩下的“哪个更好”才是多目标排序要回答的，而它依赖邻井资料与投资口径，很容易在会议室里争论不出结果。",
+      "sections": [
+        {
+          "no": 1,
+          "en": "PROBLEM",
+          "title": "当前做法与问题",
+          "html": "<p>完井设计会上，工程师先按储层类型给出两三个候选：砂岩弱胶结井通常筛管或砾石充填，低渗致密井倾向射孔加压裂，碳酸盐岩裸眼或裸眼分段。然后凭邻井产量、作业经验和预算做取舍。</p><p>这套判据本身是清楚的 —— 教材把五种方式的适用条件列成表：<b>裸眼</b>要求岩性坚硬致密、井壁稳定、无气顶底水夹层、单一厚储层；<b>射孔</b>适用于有气顶底水或含水夹层、需要分层测试与分层改造、以及要求大规模水力压裂的低渗储层；<b>割缝衬管</b>针对疏松的中粗砂粒储层；<b>砾石充填</b>针对疏松出砂严重的中细砂储层。射孔完井至今仍是国内外使用最广泛的方式。</p><p>问题出在第二步：<b>邻井不可迁移</b>、<b>多目标冲突</b>（防砂最好的方案往往产能最低、投资最高）、<b>决策依据不可追溯</b>。更隐蔽的一个坑是把“评分”当“产能” —— 打分表能排序，但产不出吨油，产量项必须另有来源。</p><figure style='margin:10px 0 0'><svg viewBox='0 0 640 196' xmlns='http://www.w3.org/2000/svg' role='img' aria-label='五种完井方式示意'><rect x='0' y='0' width='640' height='196' fill='#ffffff'/><rect x='14' y='44' width='612' height='16' fill='#f1ede2'/><rect x='14' y='60' width='612' height='34' fill='#e8dfc9'/><rect x='14' y='94' width='612' height='88' fill='#e3d6b8'/><text x='22' y='34' font-size='10' fill='#79828a' font-family='monospace'>井口</text><text x='22' y='76' font-size='10' fill='#8a744a' font-family='monospace'>上部地层</text><text x='22' y='112' font-size='10' fill='#8a744a' font-family='monospace'>储层</text><g stroke='#8d979d' stroke-width='2' fill='none'><line x1='90' y1='26' x2='90' y2='168'/><line x1='225' y1='26' x2='225' y2='168'/><line x1='360' y1='26' x2='360' y2='168'/><line x1='495' y1='26' x2='495' y2='168'/><line x1='590' y1='26' x2='590' y2='168'/></g><g stroke='#2f7d6b' stroke-width='3' fill='none'><line x1='90' y1='62' x2='90' y2='104'/><line x1='225' y1='26' x2='225' y2='104'/><line x1='360' y1='26' x2='360' y2='104'/><line x1='495' y1='26' x2='495' y2='110'/><line x1='590' y1='26' x2='590' y2='110'/></g><g fill='#b26a39'><circle cx='225' cy='118' r='2.4'/><circle cx='225' cy='130' r='2.4'/><circle cx='225' cy='142' r='2.4'/><circle cx='225' cy='154' r='2.4'/><circle cx='495' cy='126' r='2.4'/><circle cx='495' cy='138' r='2.4'/><circle cx='495' cy='150' r='2.4'/></g><g stroke='#41699b' stroke-width='2' fill='none'><line x1='360' y1='104' x2='360' y2='166' stroke-dasharray='3 2'/><path d='M352 112 L360 104 L368 112'/><path d='M352 126 L360 118 L368 126'/><path d='M352 140 L360 132 L368 140'/></g><g fill='#a9852f'><circle cx='590' cy='118' r='2'/><circle cx='582' cy='126' r='2'/><circle cx='598' cy='126' r='2'/><circle cx='590' cy='134' r='2'/><circle cx='582' cy='142' r='2'/><circle cx='598' cy='142' r='2'/><circle cx='590' cy='150' r='2'/></g><g stroke='#5d6a63' stroke-width='2'><line x1='82' y1='112' x2='98' y2='112'/><line x1='208' y1='112' x2='242' y2='112'/><line x1='344' y1='116' x2='376' y2='116'/><line x1='478' y1='118' x2='512' y2='118'/><line x1='574' y1='118' x2='606' y2='118'/></g><g font-size='10' fill='#4d565b' text-anchor='middle' font-family='sans-serif'><text x='90' y='188'>裸眼完井</text><text x='225' y='188'>射孔完井</text><text x='360' y='188'>筛管完井</text><text x='495' y='188'>砾石充填</text><text x='590' y='188'>压裂充填</text></g></svg><figcaption style='font-size:10.5px;color:#9ba3a9;margin-top:5px'>图 1 · 同一储层在五种完井方式下的井筒连通结构；颜色分别对应产能通道、防砂介质与射孔孔眼。</figcaption></figure>"
+        },
+        {
+          "no": 2,
+          "en": "INTERVENTION",
+          "title": "AI 能做什么：四种方法各管一段",
+          "html": "<p>这个决策要用的信息散在四个地方：井史报告里的文字、相似井的完井经验、邻井的产量曲线、以及互相冲突的评价指标。所以它不是“一个模型”，而是<b>一条方法链</b> —— 读文本、找参照、定产能、排方案，每一步换一种方法。</p><table class=\"dtable\"><thead><tr><th>工序</th><th>方法</th><th>在这一步做什么</th></tr></thead><tbody><tr><td>读井史</td><td>NLP · 信息抽取</td><td>从完井设计书、作业总结、事故报告里抽出井型、出砂、工具、措施、事故五类字段；这些内容占井史的大头，却是非结构化文本</td></tr><tr><td>找参照</td><td>KG · 知识图谱</td><td>以“井—层—完井方式—工具—效果”建图，按区块、岩性、出砂、压力检索相似井，把“邻井经验”变成可查询的候选集</td></tr><tr><td>定产能</td><td>TS · 时序分析</td><td>用邻井产量与含水时序标定采油指数随时间的衰减，而不是拿一个常数去乘</td></tr><tr><td>排方案</td><td>OPT · 多目标优化</td><td>TOPSIS 排序 + 权重扰动，给出前 2 名与排序稳定性，回答“换权重会不会翻盘”</td></tr></tbody></table><p>四种方法的分工很清楚：<b>NLP 把文字变成字段</b>，<b>KG 把字段变成候选</b>，<b>TS 把候选变成产量</b>，<b>OPT 把产量变成排序</b>。任何一环缺失，结论都站不住 —— 没有 NLP，井史进不了模型；没有 KG，候选集靠人拍；没有 TS，产能项就是凭空打分。</p><figure style='margin:12px 0 0'><svg viewBox='0 0 640 122' xmlns='http://www.w3.org/2000/svg' role='img'><rect x='0' y='0' width='640' height='122' fill='#ffffff'/><text x='14' y='18' font-size='8' fill='#9ba3a9' font-family='monospace' letter-spacing=\"1.2\">TOPSIS 决策链路 · 从参数表到方案排序</text><rect x='14' y='30' width='112' height='68' rx='5' fill='#fbfaf6' stroke='#1e6f5c' stroke-width='1.1'/><text x='23' y='45' font-size='8' fill='#9ba3a9' font-family='monospace' letter-spacing=\".8\">01</text><text x='23' y='62' font-size='10.5' font-weight=\"500\" fill='#242b2e' font-family='sans-serif'>决策矩阵</text><text x='23' y='77' font-size='8.2' fill='#79828a' font-family='sans-serif'>5 方案 × 5 指标</text><path d='M128 64 h7 m-3 -3 l3 3 l-3 3' fill='none' stroke='#9ba3a9' stroke-width='1'/><rect x='139' y='30' width='112' height='68' rx='5' fill='#fbfaf6' stroke='#e6e0d2' stroke-width='.9'/><text x='148' y='45' font-size='8' fill='#9ba3a9' font-family='monospace' letter-spacing=\".8\">02</text><text x='148' y='62' font-size='10.5' font-weight=\"500\" fill='#242b2e' font-family='sans-serif'>归一化</text><text x='148' y='77' font-size='8.2' fill='#79828a' font-family='sans-serif'>成本指标逆向</text><path d='M253 64 h7 m-3 -3 l3 3 l-3 3' fill='none' stroke='#9ba3a9' stroke-width='1'/><rect x='264' y='30' width='112' height='68' rx='5' fill='#fbfaf6' stroke='#e6e0d2' stroke-width='.9'/><text x='273' y='45' font-size='8' fill='#9ba3a9' font-family='monospace' letter-spacing=\".8\">03</text><text x='273' y='62' font-size='10.5' font-weight=\"500\" fill='#242b2e' font-family='sans-serif'>加权求和</text><text x='273' y='77' font-size='8.2' fill='#79828a' font-family='sans-serif'>权重可调</text><path d='M378 64 h7 m-3 -3 l3 3 l-3 3' fill='none' stroke='#9ba3a9' stroke-width='1'/><rect x='389' y='30' width='112' height='68' rx='5' fill='#fbfaf6' stroke='#e6e0d2' stroke-width='.9'/><text x='398' y='45' font-size='8' fill='#9ba3a9' font-family='monospace' letter-spacing=\".8\">04</text><text x='398' y='62' font-size='10.5' font-weight=\"500\" fill='#242b2e' font-family='sans-serif'>理想解距离</text><text x='398' y='77' font-size='8.2' fill='#79828a' font-family='sans-serif'>正解 / 负解</text><path d='M503 64 h7 m-3 -3 l3 3 l-3 3' fill='none' stroke='#9ba3a9' stroke-width='1'/><rect x='514' y='30' width='112' height='68' rx='5' fill='#fbfaf6' stroke='#1e6f5c' stroke-width='1.1'/><text x='523' y='45' font-size='8' fill='#9ba3a9' font-family='monospace' letter-spacing=\".8\">05</text><text x='523' y='62' font-size='10.5' font-weight=\"500\" fill='#242b2e' font-family='sans-serif'>贴近度排序</text><text x='523' y='77' font-size='8.2' fill='#79828a' font-family='sans-serif'>0—1 可比较</text></svg><figcaption style='font-size:10.5px;color:#9ba3a9;margin-top:5px'>图 2 · 五项指标先压到 0—1 同一量纲，再比较每个方案与「最理想点」的距离；排序结果对权重敏感，所以最后一步必须回到人。</figcaption></figure>"
+        },
+        {
+          "no": 3,
+          "en": "DATA",
+          "title": "需要准备什么",
+          "html": "<p style=\"margin-bottom:14px\">立项前先对着这张清单打勾。<b>勾不满不代表不能做</b>，但每一项空缺都会在后期变成返工。清单可点击，勾选状态只在本页有效。</p><div class=\"checklist\"><div class=\"cl-head\"><span>数据准备清单 · 5 项</span><span class=\"cl-prog\"><span id=\"cl-txt\">0 / 5</span><span class=\"cl-bar\"><i id=\"cl-fill\"></i></span></span></div><div class=\"cl-item\" data-cl=\"0\"><span class=\"cl-box\"><svg width=\"10\" height=\"10\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"#fff\" stroke-width=\"4\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M4 12.5l5 5L20 6.5\"/></svg></span><span><span class=\"cl-t\">储层与流体</span><span class=\"cl-s\">渗透率、地层压力、岩石强度、流体性质</span></span><span class=\"cl-n\">硬筛与产能类比</span></div><div class=\"cl-item\" data-cl=\"1\"><span class=\"cl-box\"><svg width=\"10\" height=\"10\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"#fff\" stroke-width=\"4\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M4 12.5l5 5L20 6.5\"/></svg></span><span><span class=\"cl-t\">出砂与防砂</span><span class=\"cl-s\">粒径分布 D50、出砂史、临界出砂压差</span></span><span class=\"cl-n\">筛管 / 砾石充填选型</span></div><div class=\"cl-item\" data-cl=\"2\"><span class=\"cl-box\"><svg width=\"10\" height=\"10\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"#fff\" stroke-width=\"4\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M4 12.5l5 5L20 6.5\"/></svg></span><span><span class=\"cl-t\">井身结构</span><span class=\"cl-s\">井深、井型、套管程序、固井质量</span></span><span class=\"cl-n\">判断能否裸眼与分段</span></div><div class=\"cl-item\" data-cl=\"3\"><span class=\"cl-box\"><svg width=\"10\" height=\"10\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"#fff\" stroke-width=\"4\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M4 12.5l5 5L20 6.5\"/></svg></span><span><span class=\"cl-t\">邻井生产</span><span class=\"cl-s\">采油指数、稳定日产、含水、作业反馈</span></span><span class=\"cl-n\">产能项标定</span></div><div class=\"cl-item\" data-cl=\"4\"><span class=\"cl-box\"><svg width=\"10\" height=\"10\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"#fff\" stroke-width=\"4\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M4 12.5l5 5L20 6.5\"/></svg></span><span><span class=\"cl-t\">商务约束</span><span class=\"cl-s\">预算、工期、甲方强制条款</span></span><span class=\"cl-n\">经济性与硬约束</span></div></div><p style=\"margin-top:18px\"><span class=\"kicker plain\" style=\"color:var(--ink-4)\">可参考的公开资料</span></p><div class=\"refs\"><span class=\"ref\">完井方式适用条件表（《油井完井与试油》表 1-2）</span><span class=\"ref\">中国石油科普：三种重要的完井方法</span><span class=\"ref\">顺北油气田矿保方案：酸压完井占 42%</span></div><p style=\"margin-top:14px\" class=\"small muted\">口径提醒：<b>投资</b>要说明含不含压裂、含不含后期修井；<b>日产</b>要用稳定期日产而不是投产初期日产；<b>渗透率</b>统一到 10⁻³ μm²（=1 mD）。三处口径不统一，排序就没有可比性。</p><figure style='margin:12px 0 0'><svg viewBox='0 0 640 186' xmlns='http://www.w3.org/2000/svg' role='img'><rect x='0' y='0' width='640' height='186' fill='#ffffff'/><text x='14' y='18' font-size='8' fill='#9ba3a9' font-family='monospace' letter-spacing=\"1.2\">决策表结构 · 一行一个候选方案</text><rect x='14' y='28' width='612' height='22' fill='#f1ede2' stroke='#e6e0d2'/><text x='51' y='43' font-size='8.6' fill='#4d565b' font-family='monospace' text-anchor=\"middle\" letter-spacing=\".3\">井号 / 方案</text><text x='191' y='43' font-size='8.6' fill='#4d565b' font-family='monospace' text-anchor=\"middle\" letter-spacing=\".3\">储层参数</text><text x='346' y='43' font-size='8.6' fill='#4d565b' font-family='monospace' text-anchor=\"middle\" letter-spacing=\".3\">流体参数</text><text x='442' y='43' font-size='8.6' fill='#4d565b' font-family='monospace' text-anchor=\"middle\" letter-spacing=\".3\">商务约束</text><text x='555' y='43' font-size='8.6' fill='#4d565b' font-family='monospace' text-anchor=\"middle\" letter-spacing=\".3\">指标得分</text><rect x='14' y='50' width='612' height='24' fill='#ffffff' stroke='#f0ece1' stroke-width='.7'/><text x='51' y='66' font-size='9' fill='#4d565b' font-family='sans-serif' text-anchor=\"middle\">A-12 裸眼</text><text x='191' y='66' font-size='9' fill='#4d565b' font-family='sans-serif' text-anchor=\"middle\">孔隙度 18% / 渗透率 45 mD</text><text x='346' y='66' font-size='9' fill='#4d565b' font-family='sans-serif' text-anchor=\"middle\">黏度 8 mPa·s</text><text x='442' y='66' font-size='9' fill='#4d565b' font-family='sans-serif' text-anchor=\"middle\">预算 320 万</text><text x='555' y='66' font-size='9' fill='#4d565b' font-family='sans-serif' text-anchor=\"middle\">0.41 / 0.55 …</text><rect x='14' y='74' width='612' height='24' fill='#fbfaf6' stroke='#f0ece1' stroke-width='.7'/><text x='51' y='90' font-size='9' fill='#4d565b' font-family='sans-serif' text-anchor=\"middle\">A-12 射孔</text><text x='191' y='90' font-size='9' fill='#4d565b' font-family='sans-serif' text-anchor=\"middle\">同上</text><text x='346' y='90' font-size='9' fill='#4d565b' font-family='sans-serif' text-anchor=\"middle\">同上</text><text x='442' y='90' font-size='9' fill='#4d565b' font-family='sans-serif' text-anchor=\"middle\">同上</text><text x='555' y='90' font-size='9' fill='#4d565b' font-family='sans-serif' text-anchor=\"middle\">0.62 / 0.71 …</text><rect x='14' y='98' width='612' height='24' fill='#ffffff' stroke='#f0ece1' stroke-width='.7'/><text x='51' y='114' font-size='9' fill='#4d565b' font-family='sans-serif' text-anchor=\"middle\">A-12 筛管</text><text x='191' y='114' font-size='9' fill='#4d565b' font-family='sans-serif' text-anchor=\"middle\">同上</text><text x='346' y='114' font-size='9' fill='#4d565b' font-family='sans-serif' text-anchor=\"middle\">同上</text><text x='442' y='114' font-size='9' fill='#4d565b' font-family='sans-serif' text-anchor=\"middle\">同上</text><text x='555' y='114' font-size='9' fill='#4d565b' font-family='sans-serif' text-anchor=\"middle\">0.58 / 0.83 …</text><line x1='89' y1='28' x2='89' y2='122' stroke='#f0ece1' stroke-width='.7'/><line x1='293' y1='28' x2='293' y2='122' stroke='#f0ece1' stroke-width='.7'/><line x1='400' y1='28' x2='400' y2='122' stroke='#f0ece1' stroke-width='.7'/><line x1='485' y1='28' x2='485' y2='122' stroke='#f0ece1' stroke-width='.7'/><rect x='14' y='137' width='7' height='7' rx='1.5' fill='#1e6f5c'/><text x='26' y='144' font-size='8' fill='#9ba3a9' font-family='monospace' letter-spacing=\".6\">样本量</text><text x='26' y='156' font-size='9.2' fill='#4d565b' font-family='sans-serif'>5 方案 × 5 指标 = 25 格</text><rect x='218' y='137' width='7' height='7' rx='1.5' fill='#a9852f'/><text x='230' y='144' font-size='8' fill='#9ba3a9' font-family='monospace' letter-spacing=\".6\">标注成本</text><text x='230' y='156' font-size='9.2' fill='#4d565b' font-family='sans-serif'>无需训练，只需口径确认</text><rect x='422' y='137' width='7' height='7' rx='1.5' fill='#a85249'/><text x='434' y='144' font-size='8' fill='#9ba3a9' font-family='monospace' letter-spacing=\".6\">口径风险</text><text x='434' y='156' font-size='9.2' fill='#4d565b' font-family='sans-serif'>渗透率 / 压力必须同基准</text></svg><figcaption style='font-size:10.5px;color:#9ba3a9;margin-top:5px'>图 3 · 决策表的每一行是一个候选方案，最后一组是算出来的指标；同一口井的三行共用储层与流体参数，只差完井方式。</figcaption></figure>"
+        },
+        {
+          "no": 4,
+          "en": "DIFFICULTY",
+          "title": "技术难度与参考方向",
+          "html": "<div style=\"display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:2px\"><span class=\"dtag\" data-d=\"中\">难度 中</span><span class=\"small muted\">算法不难，难在指标口径与权重的主观性。</span></div><div class=\"meter\"><i class=\"on\"></i><i class=\"on\"></i><i></i></div><p>难度按三档标注：<b>低</b> = 数据现成、任务边界清晰、错了代价小；<b>中</b> = 需要一个月量级的标注与清洗，效果依赖后处理规则；<b>高</b> = 标签稀缺或安全约束硬，通常要先做小范围可行性验证再立项。</p><p>这个案例落在<b>中</b>：数据量不大、方法成熟，但三项主观性必须显式处理 —— 产能项要类比标定而不是打分，成本要含作业与修井，权重必须做敏感性分析并告诉工程师“结论对哪项权重最敏感”。</p><p style=\"margin-top:18px\"><span class=\"kicker plain\" style=\"color:var(--ink-4)\">可借鉴的通用技术</span></p><div class=\"refs\"><a class=\"ref\" href=\"#/method/opt\">TOPSIS / AHP<span class=\"ar\">↗</span></a><a class=\"ref\" href=\"#/method/kg\">案例推理 CBR<span class=\"ar\">↗</span></a><a class=\"ref\" href=\"#/method/kg\">知识图谱<span class=\"ar\">↗</span></a><a class=\"ref\" href=\"#/method/opt\">权重敏感性分析<span class=\"ar\">↗</span></a></div><p style=\"margin-top:18px\"><span class=\"kicker plain\" style=\"color:var(--ink-4)\">本案例用到的现实依据</span></p><div class=\"refs\"><span class=\"ref\">五种完井方式的适用条件（教材表 1-2）</span><span class=\"ref\">射孔完井为国内外最广泛方式（中国石油）</span><span class=\"ref\">顺北：酸压完井占 42%，方案库需按区块定制</span></div><p style=\"margin-top:18px\" class=\"small muted\">交叉环节：<a href=\"#/stage/completion\" style=\"color:var(--jade-d);font-weight:600\">完井</a> · <a href=\"#/stage/production\" style=\"color:var(--jade-d);font-weight:600\">采油</a></p>"
+        }
+      ]
+    },
+    "workflow": {
+      "label": "案例流程",
+      "title": "案例：C 区块 24 口开发井的完井方式筛选",
+      "lead": [
+        "C 区块 24 口开发井，渗透率 15—120 mD、地层压力 28—36 MPa，其中 9 口有出砂史、3 口有底水。目标不是训练一个“万能模型”，而是把方案比较从会议桌上的争论，变成一张可复核、可追溯、可做敏感性的评分表。",
+        "第 1 步决定“能不能用”，第 4 步决定“哪个更好”，两者不能混在一起 —— 把硬约束折进权重里，出砂严重的井也会因为投资便宜而选出裸眼。"
+      ],
+      "stats": [
+        [
+          "候选方案",
+          "5",
+          true
+        ],
+        [
+          "评价指标",
+          "5",
+          true
+        ],
+        [
+          "历史回测井",
+          "24",
+          true
+        ],
+        [
+          "Top-2 命中",
+          "≥ 80%"
+        ],
+        [
+          "单井决策工时",
+          "3 h → 40 min"
+        ],
+        [
+          "投资口径",
+          "含作业不含压裂"
+        ]
+      ],
+      "steps": [
+        {
+          "name": "地质适用性硬筛",
+          "role": "筛选 · KG / NLP",
+          "do": "按适用条件表逐条判定：有无气顶底水、夹层厚度、出砂指数、是否需分层与大规模压裂；不满足即剔除并记录理由。",
+          "effect": "候选集从 5 套收敛到 2—3 套可施工方案，且剔除理由可追溯",
+          "trap": "把硬约束做成加权项，出砂严重的井也会因为投资低而选出裸眼。",
+          "input": "储层条件、出砂史、分层需求",
+          "output": "可行候选集 + 剔除理由",
+          "viz": "筛选漏斗：全部组合 → 可行集 → 推荐集"
+        },
+        {
+          "name": "产能项标定",
+          "role": "标定 · TS",
+          "do": "用邻井采油指数 J 与设计生产压差 Δp 估算稳定日产，按渗透率分档取 J，低渗段单独标定。",
+          "effect": "产能项有物理来源，不再由评分函数凭空生成",
+          "trap": "用中渗公式外推到低渗或裂缝性储层，预测产量明显失真。",
+          "input": "邻井 J、设计 Δp、渗透率分档",
+          "output": "各方案类比日产（t/d）",
+          "viz": "J—渗透率散点 + 类比产量条"
+        },
+        {
+          "name": "指标归一化",
+          "role": "归一化 · OPT",
+          "do": "五项指标压到 0—1，成本类逆向归一化；成本口径统一为全周期投资（管材 + 工具 + 作业 + 后续修井）。",
+          "effect": "五个量纲不同的指标可以同台比较",
+          "trap": "只算管材不算作业费，砾石充填会显得比实际便宜 20% 以上。",
+          "input": "原始指标表 + 投资口径",
+          "output": "0—1 决策矩阵",
+          "viz": "归一化前后并列条形"
+        },
+        {
+          "name": "TOPSIS 排序与敏感性",
+          "role": "排序 · OPT",
+          "do": "加权后求正负理想解，计算贴近度；改变权重做 4 组情景（均衡 / 防砂优先 / 投资优先 / 增产优先），检查排序是否翻转。",
+          "effect": "给出排序、推荐方案，以及“换权重会怎样”的结论",
+          "trap": "只报一个总分、不报第二名差距，无法判断推荐是否稳健。",
+          "input": "决策矩阵 + 权重情景",
+          "output": "贴近度排序 + 稳定性结论",
+          "viz": "五维雷达 + 贴近度条形 + 权重扰动箱线"
+        },
+        {
+          "name": "工程复核与签字",
+          "role": "人工",
+          "do": "工程师检查井壁稳定、防砂工艺、工具可得性与甲方条款，必要时回到候选集补充方案。",
+          "effect": "形成可签字的完井设计依据与备选方案",
+          "trap": "把模型排序当最终结论，忽略现场设备能力与强制条款。",
+          "input": "推荐方案 + 约束校核 + 邻井作业反馈",
+          "output": "完井设计依据 + 备选方案",
+          "viz": "方案卡三态（推荐 / 备选 / 不推荐）"
+        }
+      ],
+      "metrics": {
+        "title": "怎么算“推荐得对”",
+        "html": "<p>离线用历史井回测：把当时实际采用的完井方式当参照，看推荐前 2 名是否覆盖；在线看推荐方案投产后稳定期日产与预测的偏差，以及返工率。注意<b>不能只看命中率</b> —— 如果 24 口井里 20 口都用了射孔，一个“永远推荐射孔”的模型也能拿到 83% 的命中率。</p><table class=\"dtable\"><thead><tr><th>指标</th><th>定义</th><th>本示范取值</th></tr></thead><tbody><tr><td>Top-2 命中率</td><td>实际方案落在推荐前 2 名</td><td>目标 ≥ 80%</td></tr><tr><td>产量偏差</td><td>类比日产与稳定期实测日产之差</td><td>≤ ±15%</td></tr><tr><td>排序稳定性</td><td>权重 ±20% 扰动后第一名是否不变</td><td>本示范 10/10</td></tr><tr><td>方案可施工率</td><td>推荐方案中能实际采购与下入的比例</td><td>必须 100%</td></tr></tbody></table>"
+      },
+      "fails": [
+        {
+          "name": "权重压倒事实",
+          "why": "成本权重过高时砾石充填永远垫底，哪怕出砂风险极高。硬约束不能只靠加权，要单独设成门槛。"
+        },
+        {
+          "name": "候选集遗漏",
+          "why": "只列常规四套，漏掉酸压完井或压裂充填，低渗强出砂井就会给出偏保守的结论。"
+        },
+        {
+          "name": "打分当产能",
+          "why": "把评分表的输出直接读成“日产”，产量项没有物理来源，结论无法复核。"
+        },
+        {
+          "name": "成本口径不全",
+          "why": "只算管材与工具，不算作业、修井与后期措施，经济性项的排序会整体偏移。"
+        }
+      ]
+    },
+    "demo": {
+      "mode": "auto",
+      "html": "demo/index.html",
+      "js": "demo/demo.js",
+      "label": "可运行示范",
+      "intro": "拖动渗透率、地层压力、出砂风险与预算，观察五种完井方式的 TOPSIS 排序如何变化；点击“采用 AI 方案”对比经验方案与推荐方案。",
+      "height": 780,
+      "scroll": true
+    }
+  }
+}

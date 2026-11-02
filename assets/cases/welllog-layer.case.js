@@ -61,7 +61,7 @@
     var truth = [26, 46, 62, 70, 90];
     truth.forEach(function (p) {
       var y = yT + p / 100 * yH;
-      s += '<line x1="' + xL + '" y1="' + y + '" x2="' + (xL + xW + 30) + '" y2="' + y + '" stroke="#2f7d6b" stroke-width="1.4" stroke-dasharray="5 3"/>';
+      s += '<line x1="' + xL + '" y1="' + y + '" x2="' + (xL + xW + 30) + '" y2="' + y + '" stroke="#3a352d" stroke-width="1.4" stroke-dasharray="5 3"/>';
     });
 
     // 曲线
@@ -83,7 +83,7 @@
     s += '<text x="' + (xL + xW + 66) + '" y="' + ((yb1 + yb2) / 2 + 3.5) + '" font-size="10" fill="#b26a39">0.8 m 薄层 · 漏卡</text>';
 
     // 标注
-    s += '<text x="' + (xL + xW + 30) + '" y="' + (yT + 0.26 * yH - 7) + '" font-size="9.5" fill="#2f7d6b">真实界面</text>';
+    s += '<text x="' + (xL + xW + 30) + '" y="' + (yT + 0.26 * yH - 7) + '" font-size="9.5" fill="#3a352d">真实界面</text>';
     s += '<text x="' + (xL - 14) + '" y="' + (yT + 0.30 * yH - 7) + '" font-size="9.5" fill="#b26a39" text-anchor="end">人工卡层</text>';
 
     // 偏差标注
@@ -101,8 +101,8 @@
 
   function figAI() {
     var steps = [
-      ['原始曲线', '多井 GR / SP / RT', '#e6f1ec', '#2f7d6b'],
-      ['滑窗特征', '均值差 · 方差比 · 斜率', '#e7eef9', '#41699b'],
+      ['原始曲线', '多井 GR / SP / RT', '#f8f1e8', '#3a352d'],
+      ['滑窗特征', '均值差 · 方差比 · 斜率', '#e7eef9', '#a03d4f'],
       ['最优分段', '动态规划 + 惩罚项', '#efe9f4', '#7e5a8d'],
       ['规则后处理', '最小层厚 · 层序一致', '#f8ecdf', '#b26a39'],
       ['候选界面', '人工只做确认', '#f1f1dd', '#767a2e']
@@ -112,7 +112,7 @@
     steps.forEach(function (st, i) {
       s += '<rect x="' + x + '" y="' + y + '" width="' + w + '" height="72" rx="8" fill="' + st[2] + '" stroke="' + st[3] + '" stroke-opacity=".28"/>';
       s += '<rect x="' + x + '" y="' + y + '" width="3" height="72" rx="1.5" fill="' + st[3] + '"/>';
-      s += '<text x="' + (x + 13) + '" y="' + (y + 23) + '" font-size="11.5" font-weight="600" fill="#242b2e">' + st[0] + '</text>';
+      s += '<text x="' + (x + 13) + '" y="' + (y + 23) + '" font-size="11.5" font-weight="600" fill="#242a32">' + st[0] + '</text>';
       st[1].split(' · ').forEach(function (line, k) {
         s += '<text x="' + (x + 13) + '" y="' + (y + 43 + k * 14) + '" font-size="9" fill="#5d666d">' + line + '</text>';
       });
@@ -125,8 +125,8 @@
     // 人工边界说明
     s += '<text x="8" y="16" font-size="9.5" font-family="monospace" fill="#9ba3a9" letter-spacing="1">ALGORITHM</text>';
     s += '<text x="' + (8 + w + gap * 3) + '" y="16" font-size="9.5" font-family="monospace" fill="#b26a39" letter-spacing="1">HUMAN CORE</text>';
-    s += '<line x1="8" y1="112" x2="' + (8 + w + gap * 2 + w) + '" y2="112" stroke="#2f7d6b" stroke-width="1.4"/>';
-    s += '<text x="' + (8 + w + gap * 2 + w / 2) + '" y="126" text-anchor="middle" font-size="9.5" fill="#2f7d6b">算法负责把上千米曲线压缩成几十个候选</text>';
+    s += '<line x1="8" y1="112" x2="' + (8 + w + gap * 2 + w) + '" y2="112" stroke="#3a352d" stroke-width="1.4"/>';
+    s += '<text x="' + (8 + w + gap * 2 + w / 2) + '" y="126" text-anchor="middle" font-size="9.5" fill="#3a352d">算法负责把上千米曲线压缩成几十个候选</text>';
     s += '<line x1="' + (8 + w + gap * 3) + '" y1="112" x2="' + (8 + w * 5 + gap * 4) + '" y2="112" stroke="#b26a39" stroke-width="1.4"/>';
     s += '<text x="' + (8 + w * 4 + gap * 3.5) + '" y="126" text-anchor="middle" font-size="9.5" fill="#b26a39">人负责地质合理性</text>';
     s += '</svg>';
@@ -136,7 +136,7 @@
   function figTolerance() {
     var s = '<svg viewBox="0 0 620 186" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="容差匹配示意">';
     var cols = [
-      { x: 8, tag: 'TP · 命中', color: '#2f7d6b', bg: '#e6f1ec', det: 0.62, truth: 0.60, note: '落在 ±1 m 内' },
+      { x: 8, tag: 'TP · 命中', color: '#3a352d', bg: '#f8f1e8', det: 0.62, truth: 0.60, note: '落在 ±1 m 内' },
       { x: 214, tag: 'FP · 多检', color: '#b26a39', bg: '#f8ecdf', det: 0.30, truth: 0.68, note: '容差内没有真界面' },
       { x: 420, tag: 'FN · 漏检', color: '#b05a51', bg: '#f9e9e5', det: null, truth: 0.44, note: '真界面没被检出' }
     ];
@@ -153,8 +153,8 @@
       // 容差带
       var ty = yT + c.truth * yH;
       s += '<rect x="' + ax + '" y="' + (ty - 11) + '" width="' + aw + '" height="22" fill="' + c.bg + '"/>';
-      s += '<line x1="' + ax + '" y1="' + ty + '" x2="' + (ax + aw) + '" y2="' + ty + '" stroke="#2f7d6b" stroke-width="1.2" stroke-dasharray="4 3"/>';
-      s += '<text x="' + (ax + aw + 4) + '" y="' + (ty + 3.5) + '" font-size="8" font-family="monospace" fill="#2f7d6b">真</text>';
+      s += '<line x1="' + ax + '" y1="' + ty + '" x2="' + (ax + aw) + '" y2="' + ty + '" stroke="#3a352d" stroke-width="1.2" stroke-dasharray="4 3"/>';
+      s += '<text x="' + (ax + aw + 4) + '" y="' + (ty + 3.5) + '" font-size="8" font-family="monospace" fill="#3a352d">真</text>';
 
       // 检测线
       if (c.det !== null) {

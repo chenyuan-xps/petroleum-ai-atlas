@@ -42,7 +42,7 @@
 
   var BASE_CSS =
     '.cd-box{display:block;font-family:var(--sans,system-ui,sans-serif);' +
-    'font-size:13px;line-height:1.72;color:var(--ink,#242b2e);padding:2px 0 6px}' +
+    'font-size:13px;line-height:1.72;color:var(--ink,#242a32);padding:2px 0 6px}' +
     '.cd-err{border:1px solid var(--bad,#b05a51);background:var(--bad-bg,#f9e9e5);' +
     'color:var(--bad,#b05a51);border-radius:8px;padding:11px 13px;font-size:12px;line-height:1.7}' +
     '.cd-err b{display:block;margin-bottom:4px;font-size:12.5px}' +
@@ -167,12 +167,18 @@
       tail += '<script data-src="' + esc(f.name) + '">' + jsText(f.data) + '</script' + '>';
     });
 
-    /* 5. 注入资源表与高度上报 */
+    /* 5. 注入资源表与高度上报
+       demo.scroll = true 时：框架高度固定（不跟随内容自适应），
+       示范页自己滚动 —— 用于三栏「左右固定 + 中间独立滚动」的版式。
+       scroll 未设置时保持原行为，别的同学上传的包不受影响。 */
     var assetsJson = JSON.stringify(map).replace(/</g, '\\u003c');
+    var fixedFrame = !!(pkg.demo && pkg.demo.scroll);
     var head =
       '<script>window.__ASSETS__=' + assetsJson + ';' +
+      'window.__FIXED_FRAME__=' + (fixedFrame ? '1' : '0') + ';' +
       'window.caseAsset=function(n){return window.__ASSETS__[n]||""};' +
       '(function(){var last=-1;function send(){' +
+      'if(window.__FIXED_FRAME__)return;' +
       'var h=Math.max(document.body?document.body.scrollHeight:0,document.documentElement.scrollHeight);' +
       'h=Math.min(h,4200);if(Math.abs(h-last)>2){last=h;' +
       'try{parent.postMessage({__caseDemo:"' + token + '",h:h},"*")}catch(e){}}}' +
@@ -198,7 +204,10 @@
 
   function createPage(host, pkg, ctx) {
     var token = 'cd' + (++seq) + Date.now().toString(36);
-    var minH = Math.max(220, Number(pkg.demo && pkg.demo.height) || 520);
+    var fixedFrame = !!(pkg.demo && pkg.demo.scroll);
+    var minH = fixedFrame
+      ? Math.max(560, Number(pkg.demo.height) || 780)
+      : Math.max(220, Number(pkg.demo.height) || 520);
 
     var frame = document.createElement('iframe');
     frame.className = 'cd-iframe';
@@ -213,6 +222,7 @@
       if (e.source !== frame.contentWindow) return;
       var d = e.data;
       if (!d || d.__caseDemo !== token) return;
+      if (fixedFrame) return;   /* 固定高度模式下不跟随内容拉伸 */
       var h = Math.min(6200, Math.max(minH, Number(d.h) + 2));
       frame.style.height = h + 'px';
     }

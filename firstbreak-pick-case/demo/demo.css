@@ -1,7 +1,7 @@
 /* 示范页样式。运行在沙箱 iframe 里，随便写，不影响主站。 */
 :root{
-  --ink:#242b2e; --ink-2:#4d565b; --ink-3:#79828a;
-  --line:#e9e4d8; --jade:#2f7d6b; --jade-l:#e6f1ec;
+  --ink:#242a32; --ink-2:#4a545d; --ink-3:#79828a;
+  --line:#e9e4d8; --jade:#3a352d; --jade-l:#f8f1e8;
   --clay:#b26a39; --paper:#fbfaf6;
 }
 *{box-sizing:border-box}
@@ -31,3 +31,38 @@ svg{display:block;width:100%;height:auto;border:1px solid var(--line);border-rad
 .ro b.bad{color:var(--clay)}
 .note{margin:12px 0 0;font-size:12px;color:var(--ink-3);line-height:1.75}
 .note b{color:var(--ink)}
+
+/* ---------- 智能方法说明 ---------- */
+.smart{
+  border:1px solid var(--line);border-radius:10px;background:#fff;
+  padding:13px 15px 14px;margin:0 0 16px;
+}
+.smart-h{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap;
+  padding-bottom:9px;border-bottom:1px solid #f3f0e7}
+.smart-h .kicker{display:block;font-size:10px;letter-spacing:.14em;color:var(--ink-3);font-weight:600}
+.smart-h h2{font-size:15px;margin:3px 0 0;letter-spacing:-.01em}
+.smart .tag{display:inline-flex;align-items:center;font-size:10.5px;line-height:1;padding:4px 8px;
+  border-radius:99px;border:1px solid var(--line);background:#fbf9f3;color:var(--ink-2)}
+.smart .grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px;margin-top:9px}
+.smart .cell{background:#fbf9f3;border:1px solid #f3f0e7;border-radius:8px;padding:7px 9px;min-height:58px}
+.smart .cell span{display:block;font-size:9.5px;letter-spacing:.08em;color:var(--ink-3)}
+.smart .cell b{display:block;font-size:11.4px;line-height:1.55;color:var(--ink-2);font-weight:600;margin-top:2px}
+.smart .flow{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-top:9px}
+.smart .flow span{font-size:10.5px;line-height:1;padding:5px 8px;border:1px solid var(--line);border-radius:99px;background:#fff;color:var(--ink-2)}
+.smart .flow em{font-style:normal;color:#9ba3a9;font-size:10px}
+.smart .cmp{margin-top:10px;padding-top:9px;border-top:1px dashed var(--line)}
+.smart .cmp h4,.smart .sec h4{margin:0 0 5px;font-size:11px;letter-spacing:.06em;color:var(--ink-3);font-weight:600}
+.smart table{width:100%;border-collapse:collapse;font-size:11.5px}
+.smart th{font-size:10px;text-align:left;color:var(--ink-3);font-weight:600;padding:5px 6px;border-bottom:1px solid var(--line);background:#fdfcf9}
+.smart td{padding:5px 6px;border-bottom:1px solid #f3f0e7;color:var(--ink-2)}
+.smart td.num{font-family:ui-monospace,monospace;text-align:right;font-variant-numeric:tabular-nums}
+.smart td.ok{color:#35785a;font-weight:600}
+.smart td.bad{color:var(--clay);font-weight:600}
+.smart td:last-child,.smart th:last-child{text-align:right}
+.smart .sec{margin-top:10px;padding-top:9px;border-top:1px dashed var(--line)}
+.smart .sec ul,.smart .bound ul{margin:0;padding-left:16px}
+.smart .sec li,.smart .bound li{font-size:11.3px;line-height:1.65;color:var(--ink-2);margin-bottom:2px}
+.smart .bound{background:#fbf9f3;border:1px solid #f3f0e7;border-radius:8px;padding:8px 10px;margin-top:10px}
+.smart .bound b{font-size:10.5px;color:#9c6f18;letter-spacing:.04em}
+.smart .poll{font-size:10px;color:var(--ink-3);margin:5px 0 0}
+@media (max-width:720px){.smart .grid{grid-template-columns:1fr 1fr}}

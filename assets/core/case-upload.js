@@ -31,6 +31,11 @@
   var MAX_TOTAL = 6 * 1024 * 1024;
   var WARN_TOTAL = 1.6 * 1024 * 1024;
 
+  /* ZIP 导入限制：ZIP 本身、解压后总量、文件数量、单文件大小 */
+  var ZIP_MAX = 6 * 1024 * 1024;
+  var ZIP_MAX_FILES = 200;
+  var ZIP_MAX_ONE = 5 * 1024 * 1024;
+
   var TEXT_EXT = ['json', 'js', 'mjs', 'css', 'html', 'htm', 'svg', 'txt', 'csv', 'tsv', 'md', 'xml', 'yaml', 'yml', 'geojson'];
   var MIME = {
     png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg', gif: 'image/gif', webp: 'image/webp',
@@ -129,6 +134,322 @@
     });
   }
 
+  /* ---------------------------------------------------------
+     2.1 ZIP 导入：本地解压（无 CDN、无后端）
+     ---------------------------------------------------------
+     支持 store（method 0）与 deflate（method 8）两种压缩方式。
+     deflate 用内置的纯 JS 解压器完成，避免依赖第三方库；
+     解压前先检查路径、文件数量、声明大小，解压中再做输出上限。
+     --------------------------------------------------------- */
+  function readBuffer(file) {
+    return new Promise(function (resolve, reject) {
+      var fr = new FileReader();
+      fr.onload = function () { resolve(fr.result); };
+      fr.onerror = function () { reject(new Error('读取失败：' + file.name)); };
+      fr.readAsArrayBuffer(file);
+    });
+  }
+
+  function decodeUtf8(bytes) {
+    try {
+      if (typeof TextDecoder !== 'undefined') return new TextDecoder('utf-8').decode(bytes);
+    } catch (e) { }
+    var s = '', i;
+    for (i = 0; i < bytes.length; i++) s += String.fromCharCode(bytes[i]);
+    return s;
+  }
+
+  function toDataUrl(bytes, mime) {
+    var bin = '', chunk = 0x8000, i;
+    for (i = 0; i < bytes.length; i += chunk) {
+      bin += String.fromCharCode.apply(null, bytes.subarray(i, Math.min(i + chunk, bytes.length)));
+    }
+    return 'data:' + (mime || 'application/octet-stream') + ';base64,' + btoa(bin);
+  }
+
+  /* 纯 JS 解压 deflate 原始数据（ZIP method 8） */
+  function inflateRaw(src, start, compLen, outLen) {
+    if (outLen === 0 && compLen === 0) return new Uint8Array(0);
+    var pos = start, end = start + compLen;
+    var bitbuf = 0, bitcnt = 0;
+    var out, op = 0, cap;
+    if (outLen > 0) { out = new Uint8Array(outLen); cap = outLen; }
+    else { cap = 1 << 16; out = new Uint8Array(cap); }
+
+    function bits(n) {
+      while (bitcnt < n) {
+        if (pos >= end) throw new Error('压缩数据不完整');
+        bitbuf |= (src[pos++] << bitcnt);
+        bitcnt += 8;
+      }
+      var v = bitbuf & ((1 << n) - 1);
+      bitbuf = bitbuf >>> n;
+      bitcnt -= n;
+      return v;
+    }
+
+    function putByte(b) {
+      if (op >= cap) {
+        /* 声明长度已知时必须严格匹配；未知长度时也封顶 5 MB，防止 ZIP 炸弹 */
+        if (outLen > 0 || cap >= ZIP_MAX_ONE) throw new Error('解压后大小与声明不符');
+        cap = Math.min(cap * 2, ZIP_MAX_ONE);
+        var grown = new Uint8Array(cap);
+        grown.set(out);
+        out = grown;
+      }
+      out[op++] = b;
+    }
+
+    /* 由码长表构造 canonical Huffman 解码表 */
+    function buildTree(lengths, n) {
+      var counts = new Uint16Array(16), offs = new Uint16Array(16), syms = new Uint16Array(n);
+      var i;
+      for (i = 0; i < n; i++) {
+        if (lengths[i] > 15) throw new Error('压缩数据包含非法码长');
+        counts[lengths[i]]++;
+      }
+      counts[0] = 0;
+      for (i = 1; i < 15; i++) offs[i + 1] = offs[i] + counts[i];
+      for (i = 0; i < n; i++) if (lengths[i]) syms[offs[lengths[i]]++] = i;
+      return { counts: counts, syms: syms };
+    }
+
+    function decode(tree) {
+      var code = 0, first = 0, index = 0, len, count;
+      for (len = 1; len <= 15; len++) {
+        code |= bits(1);
+        count = tree.counts[len];
+        if (code - first < count) return tree.syms[index + (code - first)];
+        index += count;
+        first += count;
+        first <<= 1;
+        code <<= 1;
+      }
+      throw new Error('压缩数据包含非法 Huffman 码');
+    }
+
+    var LBASE = [3, 4, 5, 6, 7, 8, 9, 10, 11, 13, 15, 17, 19, 23, 27, 31, 35, 43, 51, 59, 67, 83, 99, 115, 131, 163, 195, 227, 258];
+    var LEXT = [0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 5, 0];
+    var DBASE = [1, 2, 3, 4, 5, 7, 9, 13, 17, 25, 33, 49, 65, 97, 129, 193, 257, 385, 513, 769, 1025, 1537, 2049, 3073, 4097, 6145, 8193, 12289, 16385, 24577];
+    var DEXT = [0, 0, 0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8, 8, 9, 9, 10, 10, 11, 11, 12, 12, 13, 13];
+    var ORDER = [16, 17, 18, 0, 8, 7, 9, 6, 10, 5, 11, 4, 12, 3, 13, 2, 14, 1, 15];
+    var fixedLit = null, fixedDist = null;
+
+    var last = 0, i, j;
+    while (!last) {
+      last = bits(1);
+      var type = bits(2);
+
+      if (type === 0) {
+        /* stored：对齐到字节边界后直接复制 */
+        bitbuf = 0; bitcnt = 0;
+        if (pos + 4 > end) throw new Error('压缩数据不完整');
+        var blen = src[pos] | (src[pos + 1] << 8);
+        var nlen = src[pos + 2] | (src[pos + 3] << 8);
+        pos += 4;
+        if (((blen ^ 0xffff) & 0xffff) !== nlen) throw new Error('压缩数据块长度校验失败');
+        if (pos + blen > end) throw new Error('压缩数据不完整');
+        for (i = 0; i < blen; i++) putByte(src[pos++]);
+        continue;
+      }
+
+      var litTree, distTree, hlit;
+      if (type === 1) {
+        if (!fixedLit) {
+          var fl = new Uint8Array(288);
+          for (i = 0; i < 288; i++) fl[i] = i < 144 ? 8 : i < 256 ? 9 : i < 280 ? 7 : 8;
+          var fd = new Uint8Array(32);
+          for (i = 0; i < 32; i++) fd[i] = 5;
+          fixedLit = buildTree(fl, 288);
+          fixedDist = buildTree(fd, 32);
+        }
+        litTree = fixedLit;
+        distTree = fixedDist;
+      } else if (type === 2) {
+        hlit = bits(5) + 257;
+        var hdist = bits(5) + 1;
+        var hclen = bits(4) + 4;
+        var cl = new Uint8Array(19);
+        for (i = 0; i < hclen; i++) cl[ORDER[i]] = bits(3);
+        var clTree = buildTree(cl, 19);
+        var lens = new Uint8Array(hlit + hdist);
+        var idx = 0;
+        while (idx < lens.length) {
+          var sym = decode(clTree);
+          if (sym < 16) { lens[idx++] = sym; }
+          else if (sym === 16) {
+            if (idx === 0) throw new Error('压缩数据重复码无前值');
+            var rep = bits(2) + 3, prev = lens[idx - 1];
+            while (rep--) { if (idx >= lens.length) throw new Error('压缩数据码长表越界'); lens[idx++] = prev; }
+          } else if (sym === 17) {
+            var rep2 = bits(3) + 3;
+            while (rep2--) { if (idx >= lens.length) throw new Error('压缩数据码长表越界'); lens[idx++] = 0; }
+          } else if (sym === 18) {
+            var rep3 = bits(7) + 11;
+            while (rep3--) { if (idx >= lens.length) throw new Error('压缩数据码长表越界'); lens[idx++] = 0; }
+          } else {
+            throw new Error('压缩数据码长表含非法符号');
+          }
+        }
+        litTree = buildTree(lens.subarray(0, hlit), hlit);
+        distTree = buildTree(lens.subarray(hlit), hdist);
+      } else {
+        throw new Error('压缩数据块类型非法');
+      }
+
+      for (; ;) {
+        var s = decode(litTree);
+        if (s < 256) { putByte(s); continue; }
+        if (s === 256) break;
+        var li = s - 257;
+        if (li < 0 || li > 28) throw new Error('压缩数据长度码非法');
+        var length = LBASE[li] + (LEXT[li] ? bits(LEXT[li]) : 0);
+        var ds = decode(distTree);
+        if (ds < 0 || ds > 29) throw new Error('压缩数据距离码非法');
+        var dist = DBASE[ds] + (DEXT[ds] ? bits(DEXT[ds]) : 0);
+        if (dist > op) throw new Error('压缩数据引用了窗口外数据');
+        for (j = 0; j < length; j++) putByte(out[op - dist]);
+      }
+    }
+
+    if (outLen > 0 && op !== outLen) throw new Error('解压后大小与声明不符');
+    return outLen > 0 ? out : out.subarray(0, op);
+  }
+
+  /* 路径安全检查：拒绝绝对路径、盘符、..\ 与空路径段 */
+  function safeZipName(raw) {
+    var n = String(raw == null ? '' : raw).replace(/\\/g, '/');
+    var isDir = n.slice(-1) === '/';
+    if (isDir) n = n.slice(0, -1);
+    while (n.slice(0, 2) === './') n = n.slice(2);
+    if (!n) throw new Error('压缩包结构不合法：存在空路径文件。');
+    if (n.charAt(0) === '/') throw new Error('压缩包结构不合法：不允许绝对路径：' + raw);
+    if (/^[A-Za-z]:/.test(n)) throw new Error('压缩包结构不合法：不允许盘符路径：' + raw);
+    var parts = n.split('/');
+    for (var i = 0; i < parts.length; i++) {
+      if (parts[i] === '') throw new Error('压缩包结构不合法：存在空路径段：' + raw);
+      if (parts[i] === '..') throw new Error('压缩包结构不合法：拒绝 ../ 路径穿越：' + raw);
+    }
+    return { name: n, dir: isDir };
+  }
+
+  /* 解析 ZIP：本地实现，支持 store / deflate，拒绝加密与 ZIP64 */
+  function unzipEntries(buffer) {
+    var u8 = new Uint8Array(buffer);
+    if (u8.length < 22) throw new Error('压缩包结构不合法：不是有效的 ZIP 文件。');
+
+    /* 从尾部找 EOCD（可能带注释，最多回看 65557 字节） */
+    var eocd = -1, floor = Math.max(0, u8.length - 65557);
+    for (var i = u8.length - 22; i >= floor; i--) {
+      if (u8[i] === 0x50 && u8[i + 1] === 0x4b && u8[i + 2] === 0x05 && u8[i + 3] === 0x06) { eocd = i; break; }
+    }
+    if (eocd < 0) throw new Error('压缩包结构不合法：找不到 ZIP 目录结尾。');
+
+    var dv = new DataView(u8.buffer, u8.byteOffset, u8.byteLength);
+    var count = dv.getUint16(eocd + 10, true);
+    var cdOff = dv.getUint32(eocd + 16, true);
+    var cdSize = dv.getUint32(eocd + 12, true);
+    if (count === 0xffff || cdOff === 0xffffffff || cdSize === 0xffffffff) {
+      throw new Error('暂不支持 ZIP64 格式，请用普通 ZIP 重新打包。');
+    }
+    if (count > ZIP_MAX_FILES) throw new Error('压缩包文件数量超限：' + count + ' 个，最多 ' + ZIP_MAX_FILES + ' 个。');
+    if (cdOff + cdSize > u8.length) throw new Error('压缩包结构不合法：中央目录越界。');
+
+    var entries = [], total = 0, p = cdOff;
+    for (var k = 0; k < count; k++) {
+      if (p + 46 > u8.length || dv.getUint32(p, true) !== 0x02014b50) {
+        throw new Error('压缩包结构不合法：中央目录条目损坏。');
+      }
+      var flags = dv.getUint16(p + 8, true);
+      var method = dv.getUint16(p + 10, true);
+      var comp = dv.getUint32(p + 20, true);
+      var uncomp = dv.getUint32(p + 24, true);
+      var nameLen = dv.getUint16(p + 28, true);
+      var extraLen = dv.getUint16(p + 30, true);
+      var cmtLen = dv.getUint16(p + 32, true);
+      var lho = dv.getUint32(p + 42, true);
+
+      if (flags & 0x1) throw new Error('压缩包包含加密文件，暂不支持。');
+      if (method !== 0 && method !== 8) throw new Error('压缩包使用了不支持的压缩算法（method ' + method + '）。');
+      if (comp === 0xffffffff || uncomp === 0xffffffff || lho === 0xffffffff) {
+        throw new Error('暂不支持 ZIP64 格式，请用普通 ZIP 重新打包。');
+      }
+
+      var rawName = decodeUtf8(u8.subarray(p + 46, p + 46 + nameLen));
+      var info = safeZipName(rawName);
+      p += 46 + nameLen + extraLen + cmtLen;
+
+      /* 目录条目、系统垃圾文件直接跳过 */
+      if (info.dir) continue;
+      var baseName = baseOf(info.name);
+      if (/__MACOSX/i.test(info.name) || baseName === '.DS_Store') continue;
+      if (uncomp > ZIP_MAX_ONE) {
+        throw new Error('压缩包内单个文件过大：' + info.name + '（' + kb(uncomp) + ' KB），上限 5 MB。');
+      }
+      total += uncomp;
+      if (total > ZIP_MAX) throw new Error('解压后文件总大小超限（超过 6 MB）。');
+
+      entries.push({
+        name: info.name, method: method, comp: comp, uncomp: uncomp, lho: lho
+      });
+    }
+
+    if (entries.length > ZIP_MAX_FILES) {
+      throw new Error('压缩包文件数量超限：' + entries.length + ' 个，最多 ' + ZIP_MAX_FILES + ' 个。');
+    }
+
+    /* 逐个取出内容并转成现有文件结构 */
+    return entries.map(function (e) {
+      if (e.lho + 30 > u8.length || dv.getUint32(e.lho, true) !== 0x04034b50) {
+        throw new Error('压缩包结构不合法：本地文件头损坏：' + e.name);
+      }
+      var ln = dv.getUint16(e.lho + 26, true);
+      var le = dv.getUint16(e.lho + 28, true);
+      var start = e.lho + 30 + ln + le;
+      if (start + e.comp > u8.length) throw new Error('压缩包结构不合法：文件数据越界：' + e.name);
+
+      var bytes = e.method === 0
+        ? u8.subarray(start, start + e.comp)
+        : inflateRaw(u8, start, e.comp, e.uncomp);
+
+      if (e.uncomp > 0 && bytes.length !== e.uncomp) {
+        throw new Error('解压后大小与声明不符：' + e.name);
+      }
+      var ext = extOf(e.name);
+      var text = isTextName(e.name);
+      var mime = MIME[ext] || (text ? 'text/plain' : 'application/octet-stream');
+      return {
+        name: e.name,
+        size: bytes.length,
+        mime: mime,
+        enc: text ? 'text' : 'dataurl',
+        data: text ? decodeUtf8(bytes) : toDataUrl(bytes, mime)
+      };
+    });
+  }
+
+  /* ZIP 内的目录结构规整：只允许一个 case.json，并自动去掉唯一顶层目录 */
+  function normalizeZipEntries(files) {
+    files = (files || []).slice();
+    var manifests = files.filter(function (f) { return /(^|\/)case\.json$/i.test(f.name); });
+    if (!manifests.length) throw new Error('压缩包内没有找到 case.json，请检查案例包结构。');
+    if (manifests.length > 1) throw new Error('一个压缩包只能包含一个案例，请每个案例单独打包。');
+
+    var mf = manifests[0];
+    var prefix = mf.name.slice(0, mf.name.length - 'case.json'.length);
+    if (prefix) {
+      var outside = files.filter(function (f) { return f.name.indexOf(prefix) !== 0; });
+      if (outside.length) {
+        throw new Error('压缩包结构不合法：case.json 必须位于根目录，或与全部文件处于同一个案例目录内。');
+      }
+      files.forEach(function (f) { f.name = f.name.slice(prefix.length); });
+    }
+
+    var stray = files.filter(function (f) { return f.name === 'case.json'; });
+    if (stray.length !== 1) throw new Error('压缩包结构不合法：需要且只能有一个根目录 case.json。');
+    return files;
+  }
+
   /* 整个文件夹上传时，路径里会带上顶层目录名，去掉它 */
   function stripRoot(files) {
     if (files.length < 2) return files;
@@ -218,7 +539,10 @@
           return {
             name: s.name || '未命名步骤',
             role: s.role || '',
+            input: s.input || '',
             do: s.do || '',
+            output: s.output || '',
+            viz: s.viz || '',
             effect: s.effect || '',
             trap: s.trap || ''
           };
@@ -273,6 +597,16 @@
       status: 'ready',
       imported: true,
       packFiles: files.length,
+      /* v2 展示字段：清单里有就带过来，没有就留空。
+         这样同学按基础模板做的包上传后，案例头 / 决策链 / 可信度条 / 结论边界
+         与内置案例走同一套版式，不会"上传就变简陋"。 */
+      code: pkg.code || '',
+      highlight: pkg.highlight || '',
+      preview: pkg.preview || '',
+      credibility: pkg.credibility || null,
+      conclusion: pkg.conclusion || null,
+      limits: Array.isArray(pkg.limits) ? pkg.limits.slice() : null,
+      concept: pkg.concept || null,
       tabs: tabs
     };
   }
@@ -350,7 +684,11 @@
         if (secs.length < 4) warn('只有 ' + secs.length + ' 段', '建议四段：当前做法与问题 / AI 能做什么 / 需要准备什么 / 难度与参考');
       }
       var j = t.background.judge;
-      if (j && j.length && j.length !== 4) warn('judge 有 ' + j.length + ' 项', '"30 秒判断"按四列排版，建议正好 4 项');
+      if (j && j.length && j.length !== 4 && j.length !== 5) {
+        warn('judge 有 ' + j.length + ' 项', '"30 秒判断"按四或五列排版，建议 4 项（四列）或 5 项（五列）');
+      } else if (j && j.length === 5) {
+        ok('judge：5 项（五列排版）');
+      }
     }
 
     /* 5 流程 */
@@ -363,6 +701,10 @@
         var badStep = steps.filter(function (s) { return !s || !s.name; });
         if (badStep.length) err('有步骤缺 name', '检查 steps 数组第 ' + (steps.indexOf(badStep[0]) + 1) + ' 项');
         else ok('案例流程：' + steps.length + ' 步');
+        var noIO = steps.filter(function (s) { return s && !s.input && !s.output; });
+        if (noIO.length) warn(noIO.length + ' 步没写 input / output', '四要素写法：input 输入 → do 处理 → output 输出 + viz 可视化方法，步骤本身也会变成可视化');
+        var noViz = steps.filter(function (s) { return s && !s.viz; });
+        if (noViz.length) warn(noViz.length + ' 步没标可视化方法', '每步写一句「用什么图表达这一步」，评审能直接看到可视化设计');
       }
     }
 
@@ -457,8 +799,10 @@
   function templateManifest() {
     return {
       _readme: '这是案例包清单模板。以 _ 开头的字段是说明文字，导入时会被忽略，可以删掉。',
-      _files: '同目录下可以放 demo/index.html、demo/demo.css、demo/demo.js 以及任意图片素材。上传时把整个文件夹拖进弹窗即可。',
-      _usage: '1) 改 id / sceneId / title；2) 填 tabs.background 与 tabs.workflow；3) 示范页放 demo/index.html（整页模式），或只放 demo/demo.js（模块模式）；4) 在网站「＋ 添加案例」里拖入整个文件夹。',
+      _files: '同目录下按需放 demo/index.html、demo/demo.css、demo/demo.js、demo/d3.v7.min.js、demo/iq-viz.js、demo/iq-smart.js 以及任意图片素材。站内标准案例包是 7 个文件，旧版 5 / 6 文件包仍兼容。上传时把整个文件夹或 ZIP 拖进弹窗即可。',
+      _usage: '1) 改 id / sceneId / title；2) 填 tabs.background 与 tabs.workflow；3) 示范页放 demo/index.html（整页模式），或只放 demo/demo.js（模块模式）；4) 在网站「＋ 添加案例」里拖入整个文件夹，或选择/拖入 ZIP 压缩包。',
+      _zip: 'ZIP 限制：一个压缩包只能包含一个案例，必须有 case.json；ZIP ≤ 6 MB、解压后 ≤ 6 MB、文件数 ≤ 200、单文件 ≤ 5 MB。解压在浏览器本地完成，不上传服务器。',
+      _demo: '有可运行示范时，必须说明：用了什么智能方法、输入/输出、为什么有效、经验方案 vs 智能方案的数值变化、适用边界与复核要求。',
       id: 'your-case-id',
       sceneId: 'w1',
       methods: ['ts'],
@@ -500,7 +844,7 @@
           ]
         },
         demo: {
-          _note: 'mode: auto 会自动判断：有 html 走整页模式，只有 js 走模块模式，都没有就看 builtin。',
+          _note: 'mode: auto 会自动判断：有 html 走整页模式，只有 js 走模块模式，都没有就看 builtin。有示范时必须展示智能方法、输入/输出、经验 vs 智能对比、为什么有效与适用边界。',
           mode: 'auto',
           html: 'demo/index.html',
           js: 'demo/demo.js',
@@ -541,9 +885,10 @@
     '</html>'
   ].join('\n');
 
+  /* 模板包里的样式与脚本只用于演示，不引用任何 CDN */
   var TPL_CSS = [
     '/* 示范页样式。运行在 iframe 里，可以随便写，不会影响主站。 */',
-    ':root{--ink:#242b2e;--ink-2:#4d565b;--ink-3:#79828a;--line:#e9e4d8;--jade:#2f7d6b;--paper:#fbfaf6}',
+    ':root{--ink:#242a32;--ink-2:#4a545d;--ink-3:#79828a;--line:#e9e4d8;--jade:#3a352d;--paper:#fbfaf6}',
     '*{box-sizing:border-box}',
     'body{margin:0;padding:18px 20px 24px;background:var(--paper);color:var(--ink);',
     '  font-family:"Inter","PingFang SC","Microsoft YaHei",system-ui,sans-serif;font-size:13px;line-height:1.7}',
@@ -618,7 +963,7 @@
     '        if (j - i >= 3) {',
     '          runs++;',
     '          s += \'<rect x="\' + x(i) + \'" y="\' + T + \'" width="\' + (x(j - 1) - x(i)) +',
-    '               \'" height="\' + (H - T - B) + \'" fill="#e6f1ec" opacity=".85"/>\';',
+    '               \'" height="\' + (H - T - B) + \'" fill="#f8f1e8" opacity=".85"/>\';',
     '        }',
     '        i = j;',
     '      } else i++;',
@@ -627,7 +972,7 @@
     '    /* 曲线 */',
     '    var d = "";',
     '    for (var k = 0; k < N; k++) d += (k ? "L" : "M") + x(k).toFixed(1) + " " + y(curve[k]).toFixed(1);',
-    '    s += \'<path d="\' + d + \'" fill="none" stroke="#2f7d6b" stroke-width="1.4" stroke-linejoin="round"/>\';',
+    '    s += \'<path d="\' + d + \'" fill="none" stroke="#3a352d" stroke-width="1.4" stroke-linejoin="round"/>\';',
     '',
     '    s += \'<text x="\' + (L + 2) + \'" y="\' + (H - 8) + \'" font-size="9.5" fill="#9ba3a9" \' +',
     '         \'font-family="monospace">0 m</text>\';',
@@ -660,8 +1005,12 @@
     '怎么用：',
     '',
     '  1. 解压这个包，用编辑器改 case.json 里的 id / sceneId / title 和两块正文。',
-    '  2. 打开网站首页右上角「＋ 添加案例」，把 my-case 整个文件夹拖进弹窗。',
+    '  2. 打开网站首页右上角「＋ 添加案例」，把 my-case 整个文件夹或 ZIP 拖进弹窗；',
+    '     也可以点「选择压缩包」直接选 .zip。',
     '  3. 右侧会逐项校验，红色错误改完再提交。',
+    '',
+    'ZIP 规则：一个压缩包只能包含一个案例，必须有 case.json；ZIP ≤ 6 MB、',
+    '解压后 ≤ 6 MB、文件数 ≤ 200、单文件 ≤ 5 MB；拒绝 ../ 与绝对路径。',
     '',
     '示范的两种写法：',
     '',
@@ -684,6 +1033,10 @@
     '',
     '  都没有的话，可以在 case.json 里写 tabs.demo.builtin = "welllog-layer"',
     '  复用系统已有的示范。',
+    '',
+    '可运行示范的要求：',
+    '  在明显位置说明用了什么智能方法、输入/输出、为什么有效、经验方案 vs',
+    '  智能方案的数值变化，以及合成数据/简化公式/现场标定/工程师复核等边界。',
     '',
     '注意：案例存在浏览器 localStorage 里，换电脑/换浏览器要重新上传。',
     '要永久发布给所有人看，请用开发者方式：把文件放进 assets/cases/ 并在 index.html 引一行 script。',
@@ -842,7 +1195,7 @@
       '<div class="mdl-b">' +
       '<ol class="imp-flow">' +
       '<li><b>01</b><span>下载模板，改内容与示范</span></li>' +
-      '<li><b>02</b><span>拖入整个案例文件夹</span></li>' +
+      '<li><b>02</b><span>拖入案例文件夹或 ZIP 压缩包</span></li>' +
       '<li><b>03</b><span>校验通过后添加</span></li>' +
       '</ol>' +
 
@@ -852,12 +1205,14 @@
       '<div class="imp-drop" id="imp-drop">' +
       '<input type="file" id="imp-file" multiple hidden>' +
       '<input type="file" id="imp-dir" webkitdirectory directory multiple hidden>' +
+      '<input type="file" id="imp-zip" accept=".zip,application/zip" hidden>' +
       '<span class="imp-ic">↑</span>' +
-      '<b>拖入案例文件夹，或点击选择</b>' +
-      '<span class="imp-sub">清单 case.json + 示范页 + 脚本 + 素材，上限 6 MB。推荐把整个文件夹<b>直接拖进虚线框</b>；若点按钮弹出的仍是文件选择框（浏览器不支持选文件夹），可点「选择文件」后 Ctrl+A 全选包内文件</span>' +
+      '<b>可拖入案例文件夹或 ZIP 压缩包，也可以点击选择。</b>' +
+      '<span class="imp-sub">清单 case.json + 示范页 + 脚本 + 素材，ZIP 本身与解压后总量均上限 6 MB、最多 200 个文件。一个 ZIP 只能包含一个案例；推荐把整个文件夹<b>直接拖进虚线框</b>，也可以直接拖入 ZIP。</span>' +
       '<span class="imp-choose">' +
       '<button class="btn sm" id="imp-pick-files" type="button">选择文件</button>' +
       '<button class="btn sm ghost" id="imp-pick-dir" type="button">选择文件夹</button>' +
+      '<button class="btn sm ghost" id="imp-pick-zip" type="button">选择压缩包</button>' +
       '</span>' +
       '</div>' +
 
@@ -1002,10 +1357,21 @@
     }).join('');
   }
 
+  function isZipFile(f) {
+    return !!f && (/\.zip$/i.test(f.name || '') || f.type === 'application/zip');
+  }
+
   /* ---- 载入一组文件 ---- */
   function loadFiles(fileList) {
     var files = [].slice.call(fileList || []).filter(function (f) { return f && f.name && f.name !== '.DS_Store'; });
     if (!files.length) return;
+
+    /* 用「选择文件」直接选中一个 ZIP 时，走 ZIP 流程 */
+    if (files.length === 1 && isZipFile(files[0])) { importZipFile(files[0]); return; }
+    if (files.some(isZipFile)) {
+      fail('一次只能导入一个 ZIP 压缩包', 'ZIP 请单独上传；多个文件请先解压成案例文件夹，再拖入文件夹。');
+      return;
+    }
 
     if (S.loading) return;
     S.loading = true;
@@ -1019,6 +1385,49 @@
       S.loading = false;
       paintResults([{ level: 'error', msg: '读取文件失败', hint: e.message }]);
       tip('读取失败，换一个文件夹再试', 'is-err');
+    });
+  }
+
+  /* ZIP 导入：读取 → 解压 → 安全检查 → 交给现有 adopt() 校验流程 */
+  function importZipFile(file) {
+    if (!file || S.loading) return;
+    if (!/\.zip$/i.test(file.name || '')) {
+      fail('请选择 .zip 压缩包', '也可以直接拖入案例文件夹，或点「选择文件夹」。');
+      return;
+    }
+    if (file.size > ZIP_MAX) {
+      fail('压缩包文件过大', 'ZIP 上限 6 MB；当前 ' + kb(file.size) + ' KB。请先删除视频、压缩图片后重新打包。');
+      return;
+    }
+    if (file.size === 0) {
+      fail('压缩包是空文件', '请重新导出 ZIP 后再上传。');
+      return;
+    }
+
+    S.loading = true;
+    tip('正在读取压缩包……', '');
+    paintResults([{ level: 'ok', msg: '正在读取压缩包……', hint: file.name + ' · ' + kb(file.size) + ' KB' }]);
+
+    readBuffer(file).then(function (buf) {
+      tip('正在解压压缩包……', '');
+      paintResults([{ level: 'ok', msg: '正在解压压缩包……', hint: '本地解压，不会发起网络请求' }]);
+      /* 让状态先渲染一帧，再执行同步解压 */
+      return new Promise(function (resolve, reject) {
+        setTimeout(function () {
+          try { resolve(unzipEntries(buf)); } catch (e) { reject(e); }
+        }, 40);
+      });
+    }).then(function (entries) {
+      tip('正在检查案例文件……', '');
+      paintResults([{ level: 'ok', msg: '正在检查案例文件……', hint: '共 ' + entries.length + ' 个文件' }]);
+      var arrs = normalizeZipEntries(entries);
+      S.loading = false;
+      tip('压缩包读取完成', 'is-ok');
+      adopt(arrs);
+    }).catch(function (e) {
+      S.loading = false;
+      var msg = (e && e.message) || '压缩包解压失败';
+      fail(msg, '请确认是完整、未加密的普通 ZIP，且内部只有一个 case.json。');
     });
   }
 
@@ -1195,7 +1604,7 @@
       if (e.target.closest('[data-close]')) { close(); }
     });
 
-    var drop = q('#imp-drop'), fileIn = q('#imp-file'), dirIn = q('#imp-dir');
+    var drop = q('#imp-drop'), fileIn = q('#imp-file'), dirIn = q('#imp-dir'), zipIn = q('#imp-zip');
 
     /* 有些环境（国产浏览器兼容模式等）解析 innerHTML 时会丢非标准属性，
        或压根不支持 webkitdirectory —— 弹出的仍是普通文件框。这里补一次属性，
@@ -1268,6 +1677,7 @@
        双保险：① 输入框层面拦截冒泡；② 虚线框只响应真实用户点击。 */
     fileIn.addEventListener('click', function (e) { e.stopPropagation(); });
     dirIn.addEventListener('click', function (e) { e.stopPropagation(); });
+    zipIn.addEventListener('click', function (e) { e.stopPropagation(); });
     drop.addEventListener('click', function (e) {
       if (!e.isTrusted) return;
       if (e.target.closest('.btn')) return;
@@ -1276,9 +1686,15 @@
     });
     q('#imp-pick-files').addEventListener('click', function (e) { e.stopPropagation(); fileIn.click(); });
     q('#imp-pick-dir').addEventListener('click', function (e) { e.stopPropagation(); pickDir(); });
+    q('#imp-pick-zip').addEventListener('click', function (e) { e.stopPropagation(); zipIn.click(); });
 
     fileIn.addEventListener('change', function () { loadFiles(fileIn.files); fileIn.value = ''; });
     dirIn.addEventListener('change', function () { loadFiles(dirIn.files); dirIn.value = ''; });
+    zipIn.addEventListener('change', function () {
+      var f = zipIn.files && zipIn.files[0];
+      zipIn.value = '';
+      if (f) importZipFile(f);   /* 用户取消时 files 为空，静默返回 */
+    });
 
     ['dragenter', 'dragover'].forEach(function (ev) {
       drop.addEventListener(ev, function (e) { e.preventDefault(); drop.classList.add('on'); });
@@ -1289,6 +1705,18 @@
     drop.addEventListener('drop', function (e) {
       var dt = e.dataTransfer;
       if (!dt) return;
+      var dropped = [].slice.call(dt.files || []);
+
+      /* 直接拖入 ZIP：优先走压缩包流程，不再递归读文件夹 */
+      if (dropped.some(isZipFile)) {
+        if (dropped.length !== 1) {
+          fail('一次只能导入一个 ZIP 压缩包', '请只拖入一个 ZIP；多个文件请先解压成案例文件夹。');
+          return;
+        }
+        importZipFile(dropped[0]);
+        return;
+      }
+
       /* 支持拖入文件夹：递归收集 */
       var items = dt.items ? [].slice.call(dt.items) : [];
       var entries = items.map(function (it) {
@@ -1392,6 +1820,7 @@
     S.pkg = null; S.manifest = null; S.files = []; S.raw = [];
     q('#imp-file').value = '';
     q('#imp-dir').value = '';
+    q('#imp-zip').value = '';
     q('#imp-pack').hidden = true;
     q('#imp-title-in').value = '';
     q('#imp-id').value = '';
@@ -1535,6 +1964,10 @@
     template: templateManifest,
     check: function (pkg, meta) { return checkAll(pkg, meta, S.files); },
     makeZip: makeZip,
+    /* 测试与调试用：暴露 ZIP 解析接口，不改变正常导入流程 */
+    unzip: unzipEntries,
+    normalizeZip: normalizeZipEntries,
+    importZip: importZipFile,
     templates: { manifest: TPL_README, html: TPL_HTML, css: TPL_CSS, js: TPL_JS }
   };
 
