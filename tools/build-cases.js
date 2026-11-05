@@ -296,6 +296,17 @@ CASES.forEach(function (item) {
     '        return;\n' +
     '      }\n' +
     '      root.__iqLive = fn(root);\n' +
+    '      /* 示范之后固定追加「工程结论 + 模型边界」与可信度条 */\n' +
+    '      if (window.K) {\n' +
+    '        var foot = window.K.verdictBlock(def.conclusion, def.limits) +\n' +
+    '          window.K.credStrip(def.credibility);\n' +
+    '        if (foot) {\n' +
+    '          var box = document.createElement(\'div\');\n' +
+    '          box.className = \'iq-case-foot\';\n' +
+    '          box.innerHTML = foot;\n' +
+    '          root.appendChild(box);\n' +
+    '        }\n' +
+    '      }\n' +
     '    },\n' +
     '    unmount: function () {\n' +
     '      var root = document.getElementById(\'case-demo-root\');\n' +

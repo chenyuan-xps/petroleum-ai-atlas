@@ -71,7 +71,6 @@
     home: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 10.5L12 4l8 6.5V20h-5.5v-5.5h-5V20H4z"/></svg>',
     chain: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="4.5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19.5" cy="12" r="2"/><path d="M6.5 12h3.5M14 12h3.5"/></svg>',
     cases: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><rect x="3" y="4.5" width="7.5" height="7" rx="1.2"/><rect x="13.5" y="4.5" width="7.5" height="7" rx="1.2"/><rect x="3" y="14.5" width="7.5" height="5" rx="1.2"/><rect x="13.5" y="14.5" width="7.5" height="5" rx="1.2"/></svg>',
-    compare: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M4 6h7M4 12h10M4 18h6"/><path d="M17 8v10M14.5 15.5L17 18l2.5-2.5"/></svg>',
     doc: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><path d="M6 3.5h8l4 4V20H6z"/><path d="M14 3.5V8h4M9 12h6M9 15.5h6"/></svg>',
     guide: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><path d="M4 5.5c2.6-.9 5.3-.9 8 0v14c-2.7-.9-5.4-.9-8 0z"/><path d="M12 5.5c2.7-.9 5.4-.9 8 0v14c-2.6-.9-5.3-.9-8 0"/></svg>',
     admin: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M12 3.5v2M12 18.5v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M3.5 12h2M18.5 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>'
@@ -98,7 +97,6 @@
       '<a class="' + (cur === 'home' ? 'on' : '') + '" href="#/">总览</a>' +
       '<a class="' + (cur === 'chain' || cur === 'stage' ? 'on' : '') + '" href="#/chain">作业链</a>' +
       '<a class="' + (cur === 'cases' || cur === 'scene' ? 'on' : '') + '" href="#/cases">案例库</a>' +
-      '<a class="' + (cur === 'compare' ? 'on' : '') + '" href="#/compare">对比</a>' +
       '<a class="' + (cur === 'project' ? 'on' : '') + '" href="#/project">项目说明</a>' +
       '<a class="' + (cur === 'guide' ? 'on' : '') + '" href="#/guide">接入指南</a>' +
       '</nav>';
@@ -138,7 +136,7 @@
       top === 'home' ? 'home' :
       (top === 'chain' || top === 'stage') ? 'chain' :
       (top === 'cases' || top === 'scene') ? 'cases' :
-      top === 'compare' ? 'compare' : top === 'project' ? 'project' :
+      top === 'project' ? 'project' :
       top === 'guide' ? 'guide' : top === 'admin' ? 'admin' : '';
 
     /* 方法反查子页：抽屉里列出五类方法，选中即跳转 */
@@ -172,7 +170,6 @@
       '<div class="rail-h">平台导航</div>' +
       railLink('#/chain', 'chain', '作业链', { on: navOn === 'chain', cnt: A.stages.length }) +
       railLink('#/cases', 'cases', '案例库', { on: navOn === 'cases', cnt: pc }) +
-      railLink('#/compare', 'compare', '案例对比', { on: navOn === 'compare', cnt: pc }) +
       railLink('#/project', 'doc', '项目说明', { on: navOn === 'project' }) +
       methodDrop +
 
@@ -194,26 +191,11 @@
     }).join('') + '</nav>';
   }
 
-  function methodChip(k) {
-    var ck = (M[k] && (M[k].colorKey || k)) || 'cv';
-    return '<span class="mtag" data-m="' + ck + '"><b>' + M[k].abbr + '</b>' + esc(M[k].name) + '</span>';
-  }
-
   function caseChip(k) {  /* 案例 methods 标签（小号） */
     var m = M[k];
     if (!m) return '';
     var ck = m.colorKey || k;
     return '<span class="mtag sm" data-m="' + ck + '"><b>' + esc(m.abbr) + '</b>' + esc(m.name) + '</span>';
-  }
-
-  function stageBar(stageId) {
-    var counts = A.countByStageMethod()[stageId];
-    var keys = Object.keys(counts).filter(function (k) { return counts[k] > 0; });
-    if (!keys.length) return '<div class="step-bar"><i class="empty"></i></div>';
-    return '<div class="step-bar">' + keys.map(function (k) {
-      var ck = (M[k] && (M[k].colorKey || k)) || 'cv';
-      return '<i style="flex:' + counts[k] + ';background:var(--c-' + ck + ')"></i>';
-    }).join('') + '</div>';
   }
 
   /* =========================================================
@@ -243,6 +225,42 @@
     'production-forecasting': {
       hot: '中深度交互', params: 6, charts: 4,
       blurb: '指数递减叠加注水与含水耦合，给出带置信区间的产量预测与配产制度建议。'
+    },
+    'geology-remote-sensing': {
+      hot: '中深度交互', params: 3, charts: 1,
+      blurb: '合成地物栅格给出三类岩性概率，阈值直接决定图层能交付多少、人工要复核多少。'
+    },
+    'seismic-firstbreak-pick': {
+      hot: '中深度交互', params: 3, charts: 1,
+      blurb: '炮集波形叠加噪声与面波，阈值拾取后按 ±8 ms 容差统计命中率与错拾道数。'
+    },
+    'drilling-rop-optimization': {
+      hot: '中深度交互', params: 3, charts: 1,
+      blurb: '钻压—转速二维钻速图，先按扭矩约束剔除不可行点，再给出带余量的参数建议。'
+    },
+    'mudlog-lithology-cuttings': {
+      hot: '中深度交互', params: 3, charts: 1,
+      blurb: '六类岩屑概率按混样与粒级变化，阈值决定自动入库还是转人工复核。'
+    },
+    'cement-bond-quality': {
+      hot: '中深度交互', params: 3, charts: 1,
+      blurb: '沿井深的胶结指数曲线按阈值分三级，自动圈出连续不合格段与挤水泥候选。'
+    },
+    'perforation-gun-selection': {
+      hot: '轻量交互', params: 3, charts: 1,
+      blurb: '六种弹型先过穿深、孔径、套管损伤三道硬约束，再在可行集里排序。'
+    },
+    'workover-plan-recommend': {
+      hot: '中深度交互', params: 3, charts: 1,
+      blurb: '按故障类型把失败返工折进预期费用，五套修井方案排序并给出备选。'
+    },
+    'pipeline-leak-detection': {
+      hot: '中深度交互', params: 3, charts: 1,
+      blurb: '压力残差曲线配报警阈值，实时看到检测延迟与误报次数的此消彼长。'
+    },
+    'fcc-product-prediction': {
+      hot: '中深度交互', params: 3, charts: 1,
+      blurb: '反应温度扫描出五类产品收率曲线，按产品价值找最优温度而非最高汽油收率。'
     }
   };
 
@@ -355,24 +373,478 @@
     return open + b + close;
   }
 
+  /* =========================================================
+     首页 13 环节 · 油田场景地图
+     ---------------------------------------------------------
+     作业要求「13 个阶段须在网站首页列出」。这一版不再用卡片网格，
+     而是画一张按作业顺序铺开的油田全景剖面：地表从地质勘察到加工
+     依次排开设备，地下是井筒与储层剖面；13 个编号标记用引线钉在
+     对应设备上，点击进入该环节的场景清单。所有图形为矢量绘制。
+     ========================================================= */
+
+  /* 每个环节的标注位置：
+     x / y  —— 编号钉在设备上的位置；
+     lx / ly —— 名称牌的中心 x 与顶部 y，按设备高度上下错落，避免挤成一排。 */
+  var FM_ANCHOR = {
+    geology: { x: 150, y: 505, lx: 150, ly: 428 },
+    seismic: { x: 320, y: 508, lx: 330, ly: 428 },
+    drilling: { x: 470, y: 360, lx: 470, ly: 244 },
+    mudlogging: { x: 625, y: 500, lx: 625, ly: 420 },
+    welllog: { x: 745, y: 500, lx: 772, ly: 386 },
+    cementing: { x: 875, y: 455, lx: 886, ly: 336 },
+    completion: { x: 1000, y: 490, lx: 1000, ly: 408 },
+    perforation: { x: 1130, y: 500, lx: 1132, ly: 336 },
+    production: { x: 1250, y: 480, lx: 1262, ly: 276 },
+    workover: { x: 1380, y: 480, lx: 1398, ly: 246 },
+    eor: { x: 1500, y: 500, lx: 1500, ly: 356 },
+    transport: { x: 1620, y: 510, lx: 1626, ly: 436 },
+    refining: { x: 1846, y: 425, lx: 1852, ly: 256 }
+  };
+
+  /* 井架：底宽 hb、顶宽 ht，按等分节点画横撑与斜撑 */
+  function fmDerrick(x, base, h, hb, ht) {
+    var g = '<g transform="translate(' + x + ',' + base + ')">';
+    g += '<rect x="' + (-hb - 6) + '" y="-18" width="' + (hb * 2 + 12) +
+      '" height="18" rx="2" fill="#bcb096" stroke="#3a352d" stroke-opacity=".35"/>';
+    g += '<line x1="-16" y1="-18" x2="-16" y2="0" stroke="#3a352d" stroke-opacity=".3"/>' +
+      '<line x1="16" y1="-18" x2="16" y2="0" stroke="#3a352d" stroke-opacity=".3"/>';
+    var seg = 8;
+    for (var i = 0; i < seg; i++) {
+      var t = i / seg, t2 = (i + 1) / seg;
+      var y1 = -18 - h * t, y2 = -18 - h * t2;
+      var xl1 = -hb + (hb - ht) * t, xr1 = hb - (hb - ht) * t;
+      var xl2 = -hb + (hb - ht) * t2, xr2 = hb - (hb - ht) * t2;
+      g += '<line x1="' + xl1.toFixed(1) + '" y1="' + y1.toFixed(1) + '" x2="' + xl2.toFixed(1) +
+        '" y2="' + y2.toFixed(1) + '" stroke="#3a352d" stroke-width="1.6"/>';
+      g += '<line x1="' + xr1.toFixed(1) + '" y1="' + y1.toFixed(1) + '" x2="' + xr2.toFixed(1) +
+        '" y2="' + y2.toFixed(1) + '" stroke="#3a352d" stroke-width="1.6"/>';
+      g += '<line x1="' + xl2.toFixed(1) + '" y1="' + y2.toFixed(1) + '" x2="' + xr2.toFixed(1) +
+        '" y2="' + y2.toFixed(1) + '" stroke="#3a352d" stroke-width="1" stroke-opacity=".75"/>';
+      g += i % 2
+        ? '<line x1="' + xl1.toFixed(1) + '" y1="' + y1.toFixed(1) + '" x2="' + xr2.toFixed(1) +
+        '" y2="' + y2.toFixed(1) + '" stroke="#3a352d" stroke-width="1" stroke-opacity=".45"/>'
+        : '<line x1="' + xr1.toFixed(1) + '" y1="' + y1.toFixed(1) + '" x2="' + xl2.toFixed(1) +
+        '" y2="' + y2.toFixed(1) + '" stroke="#3a352d" stroke-width="1" stroke-opacity=".45"/>';
+    }
+    g += '<rect x="-12" y="' + (-18 - h - 9) + '" width="24" height="9" rx="1" fill="#4a443a"/>' +
+      '<circle cx="0" cy="' + (-18 - h - 4) + '" r="2.4" fill="#b8622f"/>';
+    return g + '</g>';
+  }
+
+  function fmDefs() {
+    return '<defs>' +
+      '<linearGradient id="fmSky" x1="0" y1="0" x2="0" y2="1">' +
+      '<stop offset="0" stop-color="#fbf7ec"/><stop offset=".56" stop-color="#f5e9d3"/>' +
+      '<stop offset="1" stop-color="#ecd8b9"/></linearGradient>' +
+      '<linearGradient id="fmGround" x1="0" y1="0" x2="0" y2="1">' +
+      '<stop offset="0" stop-color="#d6c19b"/><stop offset=".55" stop-color="#c9b187"/>' +
+      '<stop offset="1" stop-color="#b89a70"/></linearGradient>' +
+      '<radialGradient id="fmSun">' +
+      '<stop offset="0" stop-color="#ffe4b6" stop-opacity=".9"/>' +
+      '<stop offset=".45" stop-color="#ffdCA6" stop-opacity=".34"/>' +
+      '<stop offset="1" stop-color="#ffdca6" stop-opacity="0"/></radialGradient>' +
+      '</defs>';
+  }
+
+  /* 远处地平线上的抽油机剪影：偶发几台，避免把地平线压成一条直线 */
+  function fmFarPumps() {
+    var xs = [1040, 1428, 1688];
+    var g = '<g fill="#b3a386" opacity=".4">';
+    for (var i = 0; i < xs.length; i++) {
+      g += '<g transform="translate(' + xs[i] + ',420) scale(.55)">' +
+        '<path d="M-11 0l7-24 6 0-7 24z"/>' +
+        '<path d="M-30-30l34-6 2 4-34 6z"/>' +
+        '<path d="M-34-34h5v12h-5z"/>' +
+        '<line x1="-31" y1="-22" x2="-31" y2="0" stroke="#b3a386" stroke-width="1.4"/>' +
+        '<rect x="-35" y="-5" width="9" height="5"/>' +
+        '</g>';
+    }
+    return g + '</g>';
+  }
+
+  function fmScene() {
+    var s = '';
+    var i, x;
+
+    /* ---------- 天空 / 远景 ---------- */
+    s += '<rect x="0" y="0" width="2000" height="452" fill="url(#fmSky)"/>' +
+      '<circle cx="1540" cy="336" r="250" fill="url(#fmSun)"/>' +
+      '<circle cx="1540" cy="336" r="26" fill="#ffeccb" opacity=".92"/>' +
+      '<g opacity=".6">' +
+      '<ellipse cx="286" cy="152" rx="196" ry="15" fill="#fdf6e8"/><ellipse cx="392" cy="140" rx="118" ry="9" fill="#fdf6e8"/>' +
+      '<ellipse cx="866" cy="214" rx="246" ry="13" fill="#f7ecd8"/><ellipse cx="1240" cy="122" rx="166" ry="11" fill="#fdf6e8"/>' +
+      '<ellipse cx="1756" cy="176" rx="150" ry="10" fill="#fdf6e8"/></g>' +
+      '<g fill="#e9d7bb" opacity=".45">' +
+      '<ellipse cx="640" cy="228" rx="300" ry="7"/><ellipse cx="1080" cy="92" rx="240" ry="6"/>' +
+      '<ellipse cx="1600" cy="242" rx="220" ry="6"/></g>';
+
+    /* 远山：左侧是地质勘察的山区，向右过渡成平原 */
+    s += '<path d="M0 452V392L34 362 62 334 92 348 126 308 158 338 192 320 222 352 256 366 ' +
+      '300 382 360 394 430 402 2000 408V452Z" fill="#d9ceb2"/>' +
+      '<path d="M0 452V420L120 412 260 418 420 412 620 418 820 412 1040 418 1240 412 ' +
+      '1440 418 1660 414 1900 420 2000 415V452Z" fill="#cdc0a1"/>' +
+      '<rect x="0" y="404" width="2000" height="26" fill="#f6e8cf" opacity=".3"/>';
+
+    /* 地平线上的抽油机剪影：把“油田”再往外推一层 */
+    s += fmFarPumps();
+
+    /* ---------- 地表 ---------- */
+    s += '<rect x="0" y="420" width="2000" height="152" fill="url(#fmGround)"/>';
+
+    var TUFT = [70, 148, 238, 300, 392, 528, 700, 800, 1010, 1080, 1180, 1300, 1420, 1560, 1660, 1780, 1930,
+      96, 268, 350, 452, 596, 664, 780, 846, 928, 1044, 1128, 1216, 1276, 1364, 1478, 1596, 1712, 1810, 1962];
+    for (i = 0; i < TUFT.length; i++) {
+      x = TUFT[i];
+      var ty = 556 - (i % 4) * 7;
+      s += '<path d="M' + x + ' ' + ty + 'l-4-7M' + x + ' ' + ty +
+        'l0-9M' + x + ' ' + ty + 'l5-6" fill="none" stroke="#a8906a" stroke-width="1" opacity=".7"/>';
+    }
+    s += '<g fill="#a08358" opacity=".45">' +
+      '<ellipse cx="120" cy="562" rx="9" ry="2.4"/><ellipse cx="672" cy="548" rx="12" ry="2.2"/>' +
+      '<ellipse cx="1332" cy="566" rx="10" ry="2"/><ellipse cx="1900" cy="558" rx="14" ry="2.6"/>' +
+      '<ellipse cx="404" cy="560" rx="7" ry="2"/><ellipse cx="996" cy="552" rx="8" ry="1.8"/>' +
+      '<ellipse cx="1156" cy="566" rx="9" ry="2"/><ellipse cx="1736" cy="560" rx="11" ry="2.4"/></g>' +
+      /* 沙脊与通往加工厂的车辙 */
+      '<g stroke="#a98b62" fill="none" opacity=".18">' +
+      '<path d="M0 536C220 528 380 542 560 534S880 540 1020 532" stroke-width="2"/>' +
+      '<path d="M120 552C320 544 520 558 720 548S980 556 1160 546" stroke-width="2"/></g>' +
+      '<path d="M1040 548C1230 540 1410 558 1590 546S1890 552 2000 546" stroke="#96794f" stroke-width="6" opacity=".15" fill="none"/>' +
+      '<path d="M1040 558C1230 550 1410 568 1590 556S1890 562 2000 556" stroke="#96794f" stroke-width="3" opacity=".12" fill="none"/>';
+
+    /* 集输管线（在设备之前画，设备地基会压住它） */
+    s += '<path d="M690 556H1746" stroke="#8a7f6b" stroke-width="4" opacity=".5"/>' +
+      '<path d="M690 549H1746" stroke="#b3a585" stroke-width="1.2" opacity=".7"/>';
+    for (i = 0; i < 10; i++) {
+      x = 740 + i * 120;
+      s += '<line x1="' + x + '" y1="556" x2="' + x + '" y2="567" stroke="#8a7f6b" stroke-width="2" opacity=".45"/>';
+    }
+
+    /* ---------- 地下剖面 ---------- */
+    s += '<rect x="0" y="570" width="2000" height="290" fill="#8f774f"/>' +
+      '<rect x="0" y="570" width="2000" height="50" fill="#c2ab80"/>' +
+      '<rect x="0" y="620" width="2000" height="56" fill="#b29a6e"/>' +
+      '<rect x="0" y="676" width="2000" height="54" fill="#a1885c"/>' +
+      '<rect x="0" y="730" width="2000" height="62" fill="#907a51"/>' +
+      '<rect x="0" y="792" width="2000" height="68" fill="#7c6844"/>' +
+      '<g stroke="#8d7750" stroke-width="1" opacity=".6">' +
+      '<line x1="0" y1="620" x2="2000" y2="620"/><line x1="0" y1="676" x2="2000" y2="676"/>' +
+      '<line x1="0" y1="730" x2="2000" y2="730"/><line x1="0" y1="792" x2="2000" y2="792"/></g>';
+
+    for (i = 0; i < 46; i++) {
+      s += '<ellipse cx="' + ((i * 97) % 1980 + 10) + '" cy="' + (600 + (i * 53) % 236) +
+        '" rx="' + (2 + i % 3) + '" ry="1.4" fill="#6f5c3c" opacity=".3"/>';
+    }
+
+    /* 含油储层：沿地层拉出一条连续砂体，而不是一块孤立的椭圆 */
+    s += '<path d="M742 748C880 736 1040 754 1200 744S1420 736 1540 748C1600 754 1636 748 1668 744' +
+      'L1668 790C1600 796 1520 790 1420 796S1200 800 1060 794C940 790 840 796 742 790Z" ' +
+      'fill="#9c7c48" stroke="#6b5637" stroke-width="1"/>' +
+      '<path d="M746 750C890 738 1040 756 1200 746S1420 738 1540 750C1600 756 1636 750 1662 746" ' +
+      'stroke="#d7bd8c" stroke-width="1" fill="none" opacity=".5"/>';
+    s += '<g fill="#3f301a" opacity=".45">';
+    for (i = 0; i < 30; i++) {
+      s += '<circle cx="' + (790 + (i * 67) % 840) + '" cy="' + (752 + (i * 29) % 36) + '" r="1.8"/>';
+    }
+    s += '</g>';
+
+    /* 剖面切口 */
+    s += '<line x1="0" y1="570" x2="2000" y2="570" stroke="#8b7a55" stroke-width="1.6" opacity=".55"/>';
+    for (i = 0; i < 40; i++) {
+      x = i * 50 + 25;
+      s += '<line x1="' + x + '" y1="570" x2="' + (x + 8) + '" y2="578" stroke="#8b7a55" stroke-width="1" opacity=".3"/>';
+    }
+
+    /* 井筒：钻井 / 完井 / 采油 / 注水 */
+    s += '<g>' +
+      '<rect x="461" y="560" width="18" height="28" fill="#cfc6b6" stroke="#8b7a55" stroke-opacity=".5"/>' +
+      '<line x1="470" y1="586" x2="470" y2="806" stroke="#5b5347" stroke-width="2"/>' +
+      '<polygon points="463,806 477,806 470,817" fill="#3a352d"/>' +
+      '<path d="M461 690c-7 9-7 19-5 28" stroke="#b8622f" stroke-width="1" fill="none" opacity=".45"/>' +
+      '</g>' +
+      '<g>' +
+      '<rect x="984" y="570" width="32" height="198" fill="#d6cdbd" stroke="#b9ae99"/>' +
+      '<rect x="992" y="570" width="16" height="198" fill="#eee4ce" stroke="#8a7f6b"/>' +
+      '<rect x="986" y="742" width="28" height="8" fill="#4a443a"/>' +
+      '<g stroke="#b8622f" stroke-width="1.6">' +
+      '<line x1="1000" y1="760" x2="976" y2="770"/><line x1="1000" y1="760" x2="1024" y2="770"/>' +
+      '<line x1="1000" y1="780" x2="972" y2="792"/><line x1="1000" y1="780" x2="1028" y2="792"/></g>' +
+      '<circle cx="1000" cy="760" r="3" fill="#b8622f"/>' +
+      '</g>' +
+      '<g>' +
+      '<rect x="1238" y="570" width="24" height="188" fill="#d6cdbd" stroke="#b9ae99"/>' +
+      '<rect x="1246" y="570" width="8" height="176" fill="#eee4ce" stroke="#8a7f6b"/>' +
+      '<g stroke="#97571a" stroke-width="1.4" opacity=".8">' +
+      '<line x1="1206" y1="748" x2="1234" y2="754"/><line x1="1206" y1="772" x2="1234" y2="776"/></g>' +
+      '</g>' +
+      '<g>' +
+      '<rect x="1488" y="570" width="24" height="204" fill="#d6cdbd" stroke="#b9ae99"/>' +
+      '<rect x="1496" y="570" width="8" height="192" fill="#eee4ce" stroke="#8a7f6b"/>' +
+      '<g stroke="#6f7430" stroke-width="1.5" opacity=".85">' +
+      '<line x1="1500" y1="752" x2="1472" y2="766"/><line x1="1500" y1="752" x2="1528" y2="766"/></g>' +
+      '</g>';
+
+    /* ---------- 01 地质勘察 ---------- */
+    s += '<g transform="translate(150,570)">' +
+      '<path d="M-172 0V-56l30-16 26 20 14 26 6 26z" fill="#c8b28a" stroke="#3a352d" stroke-opacity=".25"/>' +
+      '<g stroke="#a8916a" stroke-width="1" opacity=".8">' +
+      '<line x1="-168" y1="-36" x2="-106" y2="-32"/><line x1="-168" y1="-20" x2="-100" y2="-14"/></g>' +
+      '<polygon points="-96,0 -70,-42 -44,0" fill="#f6f0e2" stroke="#3a352d" stroke-opacity=".4"/>' +
+      '<polygon points="-76,0 -70,-42 -62,0" fill="#3a352d" opacity=".16"/>' +
+      '<g stroke="#3a352d" stroke-width="1.2">' +
+      '<line x1="14" y1="0" x2="0" y2="-54"/><line x1="14" y1="0" x2="30" y2="-54"/>' +
+      '<line x1="14" y1="0" x2="14" y2="-58"/></g>' +
+      '<rect x="6" y="-68" width="16" height="10" rx="2" fill="#4a443a"/>' +
+      '<circle cx="24" cy="-63" r="3" fill="#b8622f"/>' +
+      '<g fill="#3a352d">' +
+      '<circle cx="46" cy="-42" r="4.6"/>' +
+      '<path d="M44 -37v15M44 -22l-6 22M44 -22l6 22M44 -32l11 9" stroke="#3a352d" stroke-width="2.4" fill="none"/></g>' +
+      '<line x1="-112" y1="0" x2="-112" y2="-64" stroke="#3a352d" stroke-width="1.2"/>' +
+      '<path d="M-112-64l22 6-22 7z" fill="#b8622f"/>' +
+      '</g>';
+
+    /* ---------- 02 物探 ---------- */
+    s += '<g transform="translate(320,570)">' +
+      '<rect x="-86" y="-9" width="56" height="9" rx="2" fill="#6b6255"/>' +
+      '<rect x="-90" y="-26" width="82" height="10" fill="#8b8171"/>' +
+      '<rect x="-84" y="-54" width="58" height="28" rx="4" fill="#f3ecdc" stroke="#3a352d" stroke-opacity=".38"/>' +
+      '<rect x="-24" y="-50" width="34" height="24" rx="3" fill="#ece3cf" stroke="#3a352d" stroke-opacity=".38"/>' +
+      '<rect x="-18" y="-46" width="20" height="12" rx="2" fill="#bfb39a"/>' +
+      '<circle cx="-72" cy="-9" r="9" fill="#3a352d"/><circle cx="-34" cy="-9" r="9" fill="#3a352d"/>' +
+      '<circle cx="-72" cy="-9" r="3" fill="#8a8377"/><circle cx="-34" cy="-9" r="3" fill="#8a8377"/>' +
+      '<line x1="34" y1="0" x2="104" y2="0" stroke="#3a352d" stroke-width="1" opacity=".6"/>' +
+      '<g stroke="#3a352d" stroke-width="1" fill="#b8622f">' +
+      '<line x1="44" y1="0" x2="44" y2="-16"/><polygon points="44,-16 54,-12 44,-9"/>' +
+      '<line x1="68" y1="0" x2="68" y2="-16"/><polygon points="68,-16 78,-12 68,-9"/>' +
+      '<line x1="92" y1="0" x2="92" y2="-16"/><polygon points="92,-16 102,-12 92,-9"/></g>' +
+      '<g stroke="#b8622f" stroke-width="1" fill="none" opacity=".4" stroke-dasharray="3 4">' +
+      '<path d="M-30 8q30 34 60 0"/><path d="M-52 8q52 54 104 0"/><path d="M-74 8q74 74 148 0"/></g>' +
+      '</g>';
+
+    /* ---------- 03 钻井 ---------- */
+    s += fmDerrick(470, 570, 182, 30, 11) +
+      '<g transform="translate(470,570)">' +
+      '<line x1="-6" y1="-202" x2="-6" y2="-176" stroke="#3a352d" stroke-width="1"/>' +
+      '<rect x="-8" y="-176" width="16" height="16" rx="1" fill="#4a443a"/>' +
+      '<ellipse cx="0" cy="-18" rx="15" ry="4" fill="#8b8171" stroke="#3a352d" stroke-opacity=".35"/>' +
+      '<line x1="-36" y1="0" x2="-36" y2="-166" stroke="#4a443a" stroke-width="2.4" opacity=".8"/>' +
+      '<path d="M-12-198c-14 4-22 16-24 32" stroke="#4a443a" stroke-width="3" fill="none"/>' +
+      '<rect x="34" y="-14" width="54" height="5" rx="2" fill="#8b8171"/>' +
+      '<rect x="34" y="-22" width="54" height="5" rx="2" fill="#a2957c"/>' +
+      '</g>';
+
+    /* ---------- 04 录井 ---------- */
+    s += '<g transform="translate(625,570)">' +
+      '<rect x="-58" y="-56" width="62" height="44" rx="3" fill="#f2ebda" stroke="#3a352d" stroke-opacity=".38"/>' +
+      '<rect x="-58" y="-58" width="62" height="4" fill="#8b8171"/>' +
+      '<rect x="-52" y="-48" width="20" height="14" rx="2" fill="#cbbfa5"/>' +
+      '<rect x="-46" y="-45" width="12" height="8" rx="1" fill="#d8a33e" opacity=".85"/>' +
+      '<line x1="8" y1="-58" x2="8" y2="-78" stroke="#3a352d" stroke-width="1.2"/>' +
+      '<circle cx="8" cy="-79" r="2.4" fill="#b8622f"/>' +
+      '<rect x="8" y="-32" width="44" height="18" rx="2" fill="#8b8171" stroke="#3a352d" stroke-opacity=".3"/>' +
+      '<g stroke="#3a352d" stroke-width="1" opacity=".65">' +
+      '<line x1="12" y1="-28" x2="48" y2="-28"/><line x1="12" y1="-24" x2="48" y2="-24"/>' +
+      '<line x1="12" y1="-20" x2="48" y2="-20"/></g>' +
+      '<path d="M52-32c10 4 12 12 8 20" stroke="#8a7f6b" stroke-width="3" fill="none" opacity=".7"/>' +
+      '<rect x="-16" y="-14" width="46" height="4" rx="1" fill="#b9ad95"/>' +
+      '<g fill="#b8622f" opacity=".8">' +
+      '<rect x="-8" y="-22" width="5" height="8" rx="1"/><rect x="2" y="-22" width="5" height="8" rx="1"/>' +
+      '<rect x="12" y="-22" width="5" height="8" rx="1"/></g>' +
+      '</g>';
+
+    /* ---------- 05 测井 ---------- */
+    s += '<g transform="translate(745,570)">' +
+      '<rect x="-62" y="-24" width="14" height="24" fill="#cfc6b6" stroke="#8b7a55" stroke-opacity=".5"/>' +
+      '<rect x="-66" y="-32" width="22" height="9" rx="1" fill="#4a443a"/>' +
+      '<circle cx="-55" cy="-27" r="3" fill="#b8622f"/>' +
+      '<line x1="-52" y1="-32" x2="-52" y2="-88" stroke="#3a352d" stroke-width="1.2"/>' +
+      '<circle cx="-52" cy="-90" r="5" fill="none" stroke="#3a352d" stroke-width="1.2"/>' +
+      '<rect x="-8" y="-18" width="88" height="10" fill="#8b8171"/>' +
+      '<rect x="-4" y="-52" width="64" height="34" rx="3" fill="#f3ecdc" stroke="#3a352d" stroke-opacity=".38"/>' +
+      '<rect x="58" y="-46" width="30" height="30" rx="3" fill="#ece3cf" stroke="#3a352d" stroke-opacity=".38"/>' +
+      '<rect x="64" y="-42" width="16" height="12" rx="2" fill="#bfb39a"/>' +
+      '<circle cx="12" cy="-36" r="10" fill="#4a443a"/><circle cx="12" cy="-36" r="3" fill="#b8622f"/>' +
+      '<circle cx="14" cy="-8" r="9" fill="#3a352d"/><circle cx="74" cy="-8" r="9" fill="#3a352d"/>' +
+      '<path d="M12-46C-10-78-30-92-52-90" stroke="#3a352d" stroke-width="1" fill="none"/>' +
+      '<line x1="-52" y1="-90" x2="-52" y2="-34" stroke="#3a352d" stroke-width="1"/>' +
+      '</g>';
+
+    /* ---------- 06 固井 ---------- */
+    s += '<g transform="translate(875,570)">' +
+      '<rect x="-72" y="-110" width="40" height="66" rx="3" fill="#f1e9d8" stroke="#3a352d" stroke-opacity=".35"/>' +
+      '<polygon points="-72,-44 -32,-44 -40,0 -64,0" fill="#e6dcc6" stroke="#3a352d" stroke-opacity=".3"/>' +
+      '<line x1="-64" y1="-6" x2="-64" y2="0" stroke="#8b7a55" stroke-width="2"/>' +
+      '<line x1="-40" y1="-6" x2="-40" y2="0" stroke="#8b7a55" stroke-width="2"/>' +
+      '<g stroke="#a2957c" stroke-width="1"><line x1="-52" y1="-108" x2="-52" y2="-46"/>' +
+      '<line x1="-56" y1="-104" x2="-48" y2="-104"/><line x1="-56" y1="-88" x2="-48" y2="-88"/>' +
+      '<line x1="-56" y1="-72" x2="-48" y2="-72"/></g>' +
+      '<rect x="-66" y="-116" width="32" height="6" rx="2" fill="#b9ad95"/>' +
+      '<rect x="-6" y="-18" width="88" height="10" fill="#8b8171"/>' +
+      '<rect x="-2" y="-50" width="50" height="32" rx="3" fill="#f3ecdc" stroke="#3a352d" stroke-opacity=".38"/>' +
+      '<rect x="10" y="-42" width="26" height="18" rx="2" fill="#4a443a"/>' +
+      '<circle cx="23" cy="-33" r="6" fill="#8a8377"/>' +
+      '<rect x="50" y="-44" width="32" height="28" rx="3" fill="#ece3cf" stroke="#3a352d" stroke-opacity=".38"/>' +
+      '<rect x="56" y="-40" width="16" height="12" rx="2" fill="#bfb39a"/>' +
+      '<circle cx="8" cy="-8" r="9" fill="#3a352d"/><circle cx="72" cy="-8" r="9" fill="#3a352d"/>' +
+      '<path d="M82-28h40" stroke="#8a7f6b" stroke-width="4" opacity=".8"/>' +
+      '</g>';
+
+    /* ---------- 07 完井（主线，带光圈） ---------- */
+    s += '<g transform="translate(1000,570)">' +
+      '<ellipse cx="0" cy="-2" rx="58" ry="9" fill="#b8622f" opacity=".16"/>' +
+      '<rect x="-40" y="-5" width="80" height="5" rx="2" fill="#b9ad95"/>' +
+      '<rect x="-16" y="-26" width="32" height="26" fill="#cfc6b6" stroke="#3a352d" stroke-opacity=".45"/>' +
+      '<rect x="-13" y="-44" width="26" height="18" rx="2" fill="#4a443a"/>' +
+      '<rect x="-9" y="-60" width="18" height="16" rx="2" fill="#4a443a"/>' +
+      '<rect x="-18" y="-58" width="36" height="5" rx="2" fill="#b8622f"/>' +
+      '<circle cx="18" cy="-46" r="7" fill="none" stroke="#4a443a" stroke-width="2"/>' +
+      '<line x1="18" y1="-46" x2="22" y2="-50" stroke="#4a443a" stroke-width="1.6"/>' +
+      '<path d="M18-40h34" stroke="#8a7f6b" stroke-width="4" opacity=".8"/>' +
+      '<circle cx="0" cy="-72" r="6" fill="none" stroke="#4a443a" stroke-width="2"/>' +
+      '<line x1="0" y1="-66" x2="0" y2="-60" stroke="#4a443a" stroke-width="2"/>' +
+      '</g>';
+
+    /* ---------- 08 射孔 ---------- */
+    s += '<g transform="translate(1130,570)">' +
+      '<rect x="-70" y="-18" width="86" height="10" fill="#8b8171"/>' +
+      '<rect x="-66" y="-50" width="56" height="32" rx="3" fill="#f3ecdc" stroke="#3a352d" stroke-opacity=".38"/>' +
+      '<rect x="-8" y="-46" width="32" height="28" rx="3" fill="#ece3cf" stroke="#3a352d" stroke-opacity=".38"/>' +
+      '<rect x="-2" y="-42" width="18" height="12" rx="2" fill="#bfb39a"/>' +
+      '<circle cx="-52" cy="-38" r="9" fill="#4a443a"/><circle cx="-52" cy="-38" r="3" fill="#b8622f"/>' +
+      '<circle cx="-58" cy="-8" r="9" fill="#3a352d"/><circle cx="10" cy="-8" r="9" fill="#3a352d"/>' +
+      '<line x1="-18" y1="-50" x2="-18" y2="-96" stroke="#3a352d" stroke-width="1.4"/>' +
+      '<circle cx="-18" cy="-98" r="5" fill="none" stroke="#3a352d" stroke-width="1.2"/>' +
+      '<path d="M-42-47L-18-98" stroke="#3a352d" stroke-width="1" fill="none"/>' +
+      '<line x1="-18" y1="-98" x2="-18" y2="-28" stroke="#3a352d" stroke-width="1"/>' +
+      '<rect x="-26" y="-28" width="16" height="28" fill="#4a443a"/>' +
+      '<rect x="-30" y="-34" width="24" height="8" rx="2" fill="#b8622f"/>' +
+      '</g>';
+
+    /* ---------- 09 采油 ---------- */
+    s += '<g transform="translate(1250,570)">' +
+      '<rect x="-52" y="-7" width="112" height="7" rx="2" fill="#b9ad95"/>' +
+      '<g stroke="#3a352d" stroke-width="2" fill="none">' +
+      '<path d="M-20-7L8-86M34-7L8-86"/></g>' +
+      '<path d="M-58-106L46-92" stroke="#4a443a" stroke-width="7"/>' +
+      '<path d="M-58-106a24 24 0 0 0 0 46" stroke="#4a443a" stroke-width="9" fill="none"/>' +
+      '<line x1="-58" y1="-62" x2="-58" y2="-30" stroke="#3a352d" stroke-width="1.6"/>' +
+      '<line x1="-66" y1="-62" x2="-58" y2="-30" stroke="#3a352d" stroke-width="1"/>' +
+      '<rect x="-66" y="-22" width="16" height="22" fill="#cfc6b6" stroke="#8b7a55" stroke-opacity=".5"/>' +
+      '<rect x="-70" y="-29" width="24" height="8" rx="2" fill="#4a443a"/>' +
+      '<circle cx="42" cy="-97" r="16" fill="#4a443a"/>' +
+      '<path d="M42-97a16 16 0 0 1 0 16z" fill="#97571a" opacity=".65"/>' +
+      '<rect x="6" y="-60" width="28" height="20" rx="2" fill="#8b8171"/>' +
+      '<circle cx="20" cy="-50" r="4" fill="#4a443a"/>' +
+      '<rect x="30" y="-30" width="26" height="14" rx="2" fill="#8b8171"/>' +
+      '</g>';
+
+    /* ---------- 10 修井 ---------- */
+    s += fmDerrick(1380, 570, 132, 22, 9) +
+      '<g transform="translate(1380,570)">' +
+      '<rect x="-102" y="-18" width="62" height="10" fill="#8b8171"/>' +
+      '<rect x="-98" y="-44" width="46" height="28" rx="3" fill="#f3ecdc" stroke="#3a352d" stroke-opacity=".38"/>' +
+      '<rect x="-106" y="-42" width="24" height="28" rx="3" fill="#ece3cf" stroke="#3a352d" stroke-opacity=".38"/>' +
+      '<rect x="-100" y="-38" width="13" height="11" rx="2" fill="#bfb39a"/>' +
+      '<circle cx="-84" cy="-8" r="9" fill="#3a352d"/><circle cx="-52" cy="-8" r="9" fill="#3a352d"/>' +
+      '<line x1="0" y1="-150" x2="0" y2="-30" stroke="#3a352d" stroke-width="1.2"/>' +
+      '<rect x="-8" y="-30" width="16" height="30" fill="#4a443a"/>' +
+      '<rect x="-12" y="-37" width="24" height="8" rx="2" fill="#4a443a"/>' +
+      '</g>';
+
+    /* ---------- 11 增采 ---------- */
+    s += '<g transform="translate(1500,570)">' +
+      '<rect x="-80" y="-56" width="48" height="22" rx="4" fill="#f0e8d6" stroke="#3a352d" stroke-opacity=".35"/>' +
+      '<rect x="-80" y="-86" width="48" height="22" rx="4" fill="#f5eee0" stroke="#3a352d" stroke-opacity=".35"/>' +
+      '<g stroke="#8b7a55" stroke-width="2"><line x1="-72" y1="-34" x2="-72" y2="-6"/>' +
+      '<line x1="-42" y1="-34" x2="-42" y2="-6"/><line x1="-72" y1="-64" x2="-72" y2="-56"/></g>' +
+      '<path d="M-70-86c-6-10 6-18 0-28M-48-88c-6-10 6-18 0-28" stroke="#fffaf0" stroke-width="3" fill="none" opacity=".45"/>' +
+      '<rect x="-20" y="-28" width="36" height="22" rx="3" fill="#8b8171"/>' +
+      '<circle cx="-6" cy="-40" r="8" fill="#6f7430"/>' +
+      '<path d="M-8-56h56" stroke="#8a7f6b" stroke-width="3"/>' +
+      '<path d="M48-56v34" stroke="#8a7f6b" stroke-width="3"/>' +
+      '<rect x="44" y="-26" width="16" height="26" fill="#4a443a"/>' +
+      '<rect x="40" y="-34" width="24" height="9" rx="2" fill="#6f7430"/>' +
+      '</g>';
+
+    /* ---------- 12 运输 ---------- */
+    s += '<g transform="translate(1620,570)">' +
+      '<rect x="-64" y="-54" width="76" height="24" rx="11" fill="#e8dfcb" stroke="#3a352d" stroke-opacity=".38"/>' +
+      '<rect x="-64" y="-46" width="76" height="3" fill="#b9ad95" opacity=".7"/>' +
+      '<rect x="16" y="-48" width="32" height="28" rx="3" fill="#f3ecdc" stroke="#3a352d" stroke-opacity=".38"/>' +
+      '<rect x="22" y="-44" width="17" height="12" rx="2" fill="#bfb39a"/>' +
+      '<circle cx="-46" cy="-10" r="9" fill="#3a352d"/><circle cx="-6" cy="-10" r="9" fill="#3a352d"/>' +
+      '<circle cx="34" cy="-10" r="9" fill="#3a352d"/>' +
+      '<circle cx="98" cy="-17" r="7" fill="none" stroke="#b8622f" stroke-width="2"/>' +
+      '<path d="M98-24v14" stroke="#b8622f" stroke-width="2"/>' +
+      '</g>';
+
+    /* ---------- 13 加工 ---------- */
+    s += '<g opacity=".95">' +
+      '<rect x="1712" y="392" width="44" height="178" rx="4" fill="#cfc3ac" stroke="#8a7f6b"/>' +
+      '<ellipse cx="1734" cy="392" rx="22" ry="7" fill="#ddd2ba" stroke="#8a7f6b"/>' +
+      '<rect x="1770" y="360" width="36" height="210" rx="4" fill="#d5cab4" stroke="#8a7f6b"/>' +
+      '<ellipse cx="1788" cy="360" rx="18" ry="6" fill="#e1d7c0" stroke="#8a7f6b"/>' +
+      '<rect x="1822" y="430" width="28" height="140" rx="3" fill="#cfc3ac" stroke="#8a7f6b"/>' +
+      '<g stroke="#8a7f6b" stroke-width="1" opacity=".8">' +
+      '<line x1="1700" y1="470" x2="1860" y2="470"/><line x1="1700" y1="512" x2="1860" y2="512"/></g>' +
+      '<circle cx="1888" cy="524" r="30" fill="#e2d8c2" stroke="#8a7f6b"/>' +
+      '<path d="M1858 524h60" stroke="#8a7f6b" stroke-width="1"/>' +
+      '<rect x="1928" y="466" width="42" height="104" rx="3" fill="#e2d8c2" stroke="#8a7f6b"/>' +
+      '<ellipse cx="1949" cy="466" rx="21" ry="7" fill="#efe7d3" stroke="#8a7f6b"/>' +
+      '<line x1="1986" y1="570" x2="1986" y2="352" stroke="#8a7f6b" stroke-width="4"/>' +
+      '<path d="M1986 352c-8-10-6-22 0-30 6 8 8 20 0 30z" fill="#d8a33e" opacity=".9"/>' +
+      '<path d="M1700 556h296" stroke="#8a7f6b" stroke-width="3" opacity=".7"/>' +
+      '<g fill="#d8a33e" opacity=".75">' +
+      '<circle cx="1724" cy="418" r="2"/><circle cx="1724" cy="452" r="2"/><circle cx="1782" cy="392" r="2"/>' +
+      '<circle cx="1794" cy="440" r="2"/><circle cx="1949" cy="520" r="2"/></g>' +
+      '</g>';
+
+    /* 设备落影 + 统一放大：给每个设备组补一片贴地阴影，
+       并按基础点放大到 1.3 倍，让设备在全景里占住分量。 */
+    s = s.replace(/<g transform="translate\((\d+),570\)">/g, function (m, x) {
+      return '<g transform="translate(' + x + ',570) scale(1.3)">' +
+        '<ellipse cx="-14" cy="-2" rx="56" ry="8" fill="#3a2a12" opacity=".13"/>';
+    });
+
+    return s;
+  }
+
+  /* 13 个标注：编号钉在设备上，名称牌按设备高度上下错落并由引线相连。
+     13 个环节一律同款样式，不做任何突出。 */
+  function fmPins() {
+    return A.stages.map(function (st) {
+      var a = FM_ANCHOR[st.id] || { x: 100, y: 500, lx: 100, ly: 400 };
+      var w = st.name.length * 24 + 30;
+      var px = a.lx - w / 2;
+      var py = a.ly;
+      var pyb = py + 40;
+      return '<a class="of-pin" href="#/stage/' + st.id + '"' +
+        ' aria-label="第 ' + pad(st.idx) + ' 环节 ' + esc(st.name) + '，' + st.scenes.length + ' 个场景">' +
+        '<title>' + esc(st.name) + ' · ' + st.scenes.length + ' 个场景，点击进入清单</title>' +
+        '<path class="pin-lead" d="M' + a.lx + ' ' + pyb + 'L' + a.x + ' ' + (a.y - 13) + '"/>' +
+        '<rect class="pin-pill" x="' + px + '" y="' + py + '" width="' + w + '" height="40" rx="6"/>' +
+        '<text class="pin-t" x="' + (px + 15) + '" y="' + (py + 28) + '">' +
+        '<tspan class="pin-n">' + esc(st.name) + '</tspan>' +
+        '</text>' +
+        '<circle class="pin-halo" cx="' + a.x + '" cy="' + a.y + '" r="22"/>' +
+        '<circle class="pin-pin" cx="' + a.x + '" cy="' + a.y + '" r="14"/>' +
+        '<text class="pin-num" x="' + a.x + '" y="' + (a.y + 5) + '">' + pad(st.idx) + '</text>' +
+        '</a>';
+    }).join('');
+  }
+
+  function homeFieldMap() {
+    return '<div class="of-frame"><div class="of-scroll"><div class="of-scene">' +
+      '<svg class="of-svg" viewBox="0 0 2000 860" aria-label="石油勘探开发 13 个环节的油田场景地图">' +
+      fmDefs() + fmScene() + fmPins() + '</svg>' +
+      '</div></div>' +
+      '<div class="of-foot"><span>地表按作业顺序排开 13 个环节 · 地下是井筒与储层剖面 —— ' +
+      '点击编号进入该环节的 <b>场景清单</b></span>' +
+      '<span class="of-swipe">← 左右滑动查看整条作业链 →</span></div>' +
+      '</div>';
+  }
+
   function homeHTML() {
     var total = A.allScenes.length;
-    var proj = A.project || {};
-    var projStage = proj.stageId || 'completion';
-
-    /* 13 个阶段是作业的第一条硬性要求：必须在首页列出来。
-       用专用的 .hs-grid 而不是作业链页的 .chain —— 后者的 13 列网格在
-       首页宽度下会被撑成横向超宽行，只能看到前几个环节。 */
-    var stageCells = A.stages.map(function (st) {
-      var isMine = st.id === projStage;
-      return '<a class="hs-cell' + (isMine ? ' on' : '') + '" href="#/stage/' + st.id + '"' +
-        (isMine ? ' aria-current="true"' : '') + '>' +
-        '<span class="hs-dot"></span>' +
-        '<span class="hs-idx">' + pad(st.idx) + (isMine ? ' 必做' : '') + '</span>' +
-        '<span class="hs-name">' + esc(st.name) + '</span>' +
-        '<span class="hs-n">' + st.scenes.length + '<i>场景</i></span>' +
-        stageBar(st.id) + '</a>';
-    }).join('');
 
     return '<main>' +
       /* ---------- Hero（深色主视觉） ---------- */
@@ -380,11 +852,11 @@
       '<div class="wrap hh-in">' +
       '<span class="hh-kicker"><i></i>PETRO × AI ATLAS<span class="sep">/</span>07 COMPLETION</span>' +
       '<h1>石油勘探开发的<em>智能化</em>案例实验平台</h1>' +
-      '<p class="hh-lead">把 13 个作业环节拆成 ' + total + ' 个可判断的智能化场景；完井段落的 4 个必做案例与 2 个扩展案例，都配有能在浏览器里直接调参、看结果、读风险的示范。不展示结论，而是把结论的生成过程摊开给你。</p>' +
+      '<p class="hh-lead">把 13 个作业环节拆成 ' + total + ' 个可判断的智能化场景；完井段落 4 个必做案例，加上 11 个跨环节扩展（覆盖其余 9 个环节），共 15 个案例都配有能在浏览器里直接调参、看结果、读风险的示范。不展示结论，而是把结论的生成过程摊开给你。</p>' +
       '<div class="hh-points">' +
       '<span><i></i>13 环节 · ' + total + ' 场景</span>' +
       '<span><i></i>5 类方法交叉索引</span>' +
-      '<span><i></i>6 个可运行示范</span>' +
+      '<span><i></i>' + ownedCaseCount() + ' 个可运行示范</span>' +
       '<span><i></i>纯前端 · 离线可用</span>' +
       '</div>' +
       '<div class="hh-acts">' +
@@ -392,20 +864,6 @@
       '<a class="btn ghost" href="#/project">项目说明</a>' +
       '</div>' +
       '<div class="hh-note"><p><b>数据声明：</b>本站所有曲线、指标与结论均由前端合成数据生成，用于教学与方法演示，不代表任何真实井的产能、受力或风险判断。案例包可离线运行，不依赖后端与外部接口。</p></div>' +
-      '</div>' +
-      '</section>' +
-
-      /* ---------- 13 个阶段：作业链地图必须在首页可见 ---------- */
-      '<section class="section" id="home-chain" style="padding-top:26px">' +
-      '<div class="wrap">' +
-      '<div class="sec-head">' +
-      '<div class="sec-rail"><span class="sec-num">01</span><span class="kicker">13 STAGES</span></div>' +
-      '<h2>13 个阶段，一条从勘探到加工的链</h2>' +
-      '<p>石油勘探开发按作业顺序拆成 13 个环节，共 ' + total + ' 个可智能化场景。第 ' +
-      pad(A.index.byStage[projStage] ? A.index.byStage[projStage].idx : 7) + ' 环节「' +
-      esc(proj.stageName || '完井') + '」是本次作业的主线，已标为<b>必做</b>；点任一环节进入它的场景清单。</p>' +
-      '</div>' +
-      '<div class="hs-scroll"><div class="hs-grid">' + stageCells + '</div></div>' +
       '</div>' +
       '</section>' +
       '</main>';
@@ -438,7 +896,7 @@
       '<div class="page-head"><div class="ph-top"><div>' +
       '<div class="ph-idx">PROJECT · 学号尾号 07 · 完井</div>' +
       '<h1>从选方式到控滑套：完井段落的四个决策点<span class="en">Completion Intelligence</span></h1>' +
-      '<p class="blurb">本平台以石油作业链第 07 环节「完井」为主线，交付 4 个必做案例；再以压裂优化与产量预测作为跨阶段扩展，验证同一套案例结构能否迁移到增采与采油。</p>' +
+      '<p class="blurb">本平台以石油作业链第 07 环节「完井」为主线，交付 4 个必做案例；再以压裂优化、产量预测与 9 个跨环节案例作为扩展，验证同一套案例结构能否覆盖整条作业链。</p>' +
       '</div><div class="ph-stat">' +
       '<div><div class="n">' + cases.length + '</div><div class="l">可运行案例</div></div>' +
       '<div><div class="n">' + (reqIds.length + extIds.length) + '</div><div class="l">交付总数</div></div>' +
@@ -457,7 +915,7 @@
       '</ul></div>' +
 
       '<div class="project-card"><h3>交付范围</h3>' +
-      '<p>必做 4 个案例全部完成；扩展 2 个案例分别落在增采与采油环节，用来检验案例结构、D3 组件与构建流程的复用性。</p>' +
+      '<p>必做 4 个案例全部完成；扩展 11 个案例覆盖其余作业环节（含增采与采油），用来检验案例结构、图表组件与构建流程的复用性。</p>' +
       '<div class="project-ver">' +
       '<div><span>必做案例</span><b>' + reqIds.filter(function (id) { return !!Cases.get(id); }).length + ' / ' + reqIds.length + '</b></div>' +
       '<div><span>扩展案例</span><b>' + extIds.filter(function (id) { return !!Cases.get(id); }).length + ' / ' + extIds.length + '</b></div>' +
@@ -468,15 +926,14 @@
       '</div>' +
       '<div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">' +
       '<a class="btn primary sm" href="#/stage/' + esc(proj.stageId || 'completion') + '">进入完井环节 →</a>' +
-      '<a class="btn sm" href="#/compare">案例对比</a>' +
       '<a class="btn sm ghost" href="#/cases">案例库</a>' +
       '</div></div>' +
       '</div>' +
 
       '<div class="section tight"><div class="sec-head">' +
       '<div class="sec-rail"><span class="sec-num">01</span><span class="kicker">TASK MAP</span></div>' +
-      '<h2>学号 07 → 六个案例</h2>' +
-      '<p>前四行是必做任务，后两行是扩展。每行都能直接打开对应示范。</p></div>' +
+      '<h2>学号 07 → ' + (reqIds.length + extIds.length) + ' 个案例</h2>' +
+      '<p>前四行是必做任务，其余为跨环节扩展。每行都能直接打开对应示范。</p></div>' +
       '<div class="matrix-wrap"><table class="sys-table"><thead><tr>' +
       '<th>编号</th><th>案例 / 场景</th><th>类型</th><th>难度</th><th>状态</th><th></th>' +
       '</tr></thead><tbody>' + rows + '</tbody></table></div></div>' +
@@ -522,7 +979,7 @@
       '<div class="project-card"><h3>平台侧</h3><ul>' +
       '<li>哈希路由 + 案例插件注册表：新增案例不改外壳。</li>' +
       '<li>统一案例详情：头部、判断卡、决策链、可信度与结论边界。</li>' +
-      '<li>全局搜索与案例对比：把 61 个场景与 6 个案例放在同一检索面。</li>' +
+      '<li>全局搜索：把 61 个场景与 ' + cases.length + ' 个案例放在同一检索面。</li>' +
       '<li>本地 D3 组件层：作业链、方法分布、热力、等高线、区间带。</li>' +
       '</ul></div>' +
       '</div></div>' +
@@ -530,112 +987,12 @@
   }
 
   /* =========================================================
-     五、案例对比页
-     ========================================================= */
-  function compareHTML(q) {
-    var cases = ownedCases();
-    if (!cases.length) {
-      return '<main class="wrap"><div class="empty"><b>还没有可对比的案例</b>先在案例库接入案例。</div></main>';
-    }
-    /* ?ids=co1,co2 由案例库勾选传入；未指定或匹配不足 2 个时展示全部 */
-    var picked = String((q && q.ids) || '').split(',').filter(Boolean).map(function (x) {
-      return x.trim().toLowerCase();
-    });
-    var selected = picked.length ? cases.filter(function (c) {
-      return picked.indexOf(String(c.sceneId).toLowerCase()) >= 0 ||
-        picked.indexOf(String(c.code || '').toLowerCase()) >= 0 ||
-        picked.indexOf(String(c.id).toLowerCase()) >= 0;
-    }) : [];
-    var isPick = selected.length >= 2;
-    if (isPick) cases = selected;
-    var head = '<tr><th>对比维度</th>' + cases.map(function (c) {
-      return '<th><span class="cc">' + esc(String(c.sceneId).toUpperCase()) + '</span>' +
-        '<a href="#/scene/' + esc(c.sceneId) + '?tab=demo">' + esc(c.title) + '</a></th>';
-    }).join('') + '</tr>';
-
-    function row(label, fn) {
-      return '<tr><th>' + label + '</th>' + cases.map(function (c) {
-        var sc = A.index.byScene[c.sceneId] || {};
-        return '<td>' + fn(c, sc) + '</td>';
-      }).join('') + '</tr>';
-    }
-
-    var body =
-      row('所属阶段', function (c, sc) { return esc(sc.stageName || '—'); }) +
-      row('方法', function (c, sc) {
-        return (c.methods && c.methods.length ? c.methods : (sc.methods || [])).map(caseChip).join('') || '—';
-      }) +
-      row('难度', function (c, sc) { return sc.diff ? K.dtag(sc.diff) : '—'; }) +
-      row('可调参数', function (c) { return '<b>' + esc(String(caseSpec(c).params)) + '</b> 个'; }) +
-      row('图表数量', function (c) { return '<b>' + esc(String(caseSpec(c).charts)) + '</b> 张'; }) +
-      row('核心交互', function (c) { return esc(caseSpec(c).hot); }) +
-      row('一句话价值', function (c) { return esc(caseSpec(c).blurb); }) +
-      row('版本 / 更新', function (c) {
-        return esc(c.version || '—') + '<br><span class="mono" style="font-size:9.5px;color:var(--ink-4)">' + esc(c.updated || '—') + '</span>';
-      }) +
-      row('打开', function (c) {
-        return '<a class="btn sm" href="#/scene/' + esc(c.sceneId) + '?tab=demo">示范 →</a>';
-      });
-
-    return '<main class="wrap">' +
-      crumb([['#/', '总览'], ['#/compare', '案例对比']]) +
-      '<div class="page-head"><div class="ph-top"><div>' +
-      '<div class="ph-idx">CASE COMPARISON · ' + cases.length + ' 个案例' + (isPick ? ' · 自案例库勾选' : '') + '</div>' +
-      '<h1>' + (isPick ? '勾选案例横向对比' : '六个案例放在一张表里') + '</h1>' +
-      '<p class="blurb">' + (isPick
-        ? '只展示你在案例库勾选的 ' + cases.length + ' 个案例。换一组：回案例库重新勾选，或'
-        : '同样一套案例结构，分别落在完井、增采、采油三个阶段。对比参数规模、图表数量与核心交互，可以看出“深度交互案例”与“中深度案例”的差别在哪里。想只看其中几个：') +
-      '<a href="#/cases" style="color:var(--jade-d)">去案例库勾选</a>。</p>' +
-      '</div><div class="ph-stat">' +
-      '<div><div class="n">' + cases.length + '</div><div class="l">案例</div></div>' +
-      '<div><div class="n">' + cases.filter(function (c) { return (A.project.requiredIds || []).indexOf(c.id) >= 0; }).length + '</div><div class="l">必做</div></div>' +
-      '<div><div class="n">' + cases.filter(function (c) { return (A.project.extensionIds || []).indexOf(c.id) >= 0; }).length + '</div><div class="l">扩展</div></div>' +
-      '</div></div></div>' +
-      '<div class="compare-wrap"><table class="compare"><thead>' + head + '</thead><tbody>' + body +
-      '</tbody></table></div>' +
-      '<div class="compare-actions">' +
-      '<a class="btn" href="#/cases">案例库与校验 →</a>' +
-      '<a class="btn ghost" href="#/project">看项目说明</a>' +
-      '</div></main>';
-  }
-
-  /* =========================================================
      六、链条总览页
      ========================================================= */
   function chainHTML() {
-    var rows = A.stages.map(function (st) {
-      var top = st.scenes.slice(0, 5).map(function (s) { return s.name; }).join('、');
-      /* 汇总全环节涉及的方法并去重，避免同一方法胶囊重复出现（只取前 3 种） */
-      var mseen = [];
-      st.scenes.forEach(function (s) {
-        (s.methods || []).forEach(function (k) {
-          if (mseen.indexOf(k) < 0) mseen.push(k);
-        });
-      });
-      var chips = mseen.slice(0, 3).map(function (k) { return methodChip(k); }).join('');
-      return '<a class="scene-row" href="#/stage/' + st.id + '" style="grid-template-columns:52px 1fr auto">' +
-        '<div class="sr-n" style="padding-top:9px">' + pad(st.idx) + '</div>' +
-        '<div><div class="sr-name">' + esc(st.name) +
-        '<span class="mono" style="font-size:9.5px;color:var(--ink-4);letter-spacing:.14em">' + esc(st.en).toUpperCase() + '</span>' +
-        '<span class="arrow">→</span></div>' +
-        '<div class="sr-point">' + esc(st.blurb) + '</div>' +
-        '<div class="sr-meta">' + chips +
-        '<span class="tag" style="margin-left:4px">' + esc(top) + (st.scenes.length > 5 ? '…' : '') + '</span></div></div>' +
-        '<div class="sr-right"><span class="mono" style="font-size:19px;color:var(--ink-2)">' + st.scenes.length + '</span>' +
-        '<span class="small muted">场景</span></div></a>';
-    }).join('');
-
     return '<main class="wrap">' +
       crumb([['#/', '总览'], ['#/chain', '作业链']]) +
-      '<div class="page-head"><div class="ph-top"><div>' +
-      '<div class="ph-idx">CHAIN · ' + A.stages.length + ' 个环节</div>' +
-      '<h1>从地质勘察到加工的全链条</h1>' +
-      '<p class="blurb">上游到下游按作业顺序排列。每个环节标注可智能化的场景数量与方法构成，点进去看清单。</p>' +
-      '</div><div class="ph-stat">' +
-      '<div><div class="n">' + A.stages.length + '</div><div class="l">环节</div></div>' +
-      '<div><div class="n">' + A.allScenes.length + '</div><div class="l">场景</div></div>' +
-      '</div></div></div>' +
-      '<div class="scenes">' + rows + '</div></main>';
+      homeFieldMap() + '</main>';
   }
 
   /* =========================================================
@@ -845,6 +1202,7 @@
       if (c.tabs.background) tabs.push({ key: 'bg', num: '01', name: c.tabs.background.label || '专业背景' });
       if (c.tabs.workflow) tabs.push({ key: 'flow', num: '02', name: c.tabs.workflow.label || '案例流程' });
       if (c.tabs.demo) tabs.push({ key: 'demo', num: '03', name: c.tabs.demo.label || '可运行示范' });
+      if (c.ai && global.IQAI) tabs.push({ key: 'ai', num: '04', name: 'AI 解释' });
     }
 
     var tabBtns = tabs.map(function (t, i) {
@@ -857,6 +1215,7 @@
       if (c.tabs.background) panels += '<div class="panel on" data-panel="bg">' + renderBackground(sc, c) + '</div>';
       if (c.tabs.workflow) panels += '<div class="panel" data-panel="flow">' + renderWorkflow(sc, c) + '</div>';
       if (c.tabs.demo) panels += '<div class="panel" data-panel="demo">' + renderDemoShell(sc, c) + '</div>';
+      if (c.ai && global.IQAI) panels += '<div class="panel" data-panel="ai">' + global.IQAI.block(c) + '</div>';
     }
 
     var cBadge = allCases.length
@@ -896,7 +1255,7 @@
         (c.preview ? '<p class="ch-pre">' + esc(c.preview) + '</p>' : '') +
         '<div class="case-meta">' +
         (spec.params ? '<span class="cm"><b>参数</b>' + esc(String(spec.params)) + ' 个可调</span>' : '') +
-        (spec.charts ? '<span class="cm"><b>图表</b>' + esc(String(spec.charts)) + ' 张 D3</span>' : '') +
+        (spec.charts ? '<span class="cm"><b>图表</b>' + esc(String(spec.charts)) + ' 张</span>' : '') +
         '<span class="cm"><b>难度</b>' + esc(sc.diff) + '</span>' +
         '<span class="cm ok"><b>示范</b>可运行</span>' +
         '<span class="cm"><b>版本</b>v' + esc(c.version || '—') + ' · ' + esc(c.updated || '') + '</span>' +
@@ -904,7 +1263,7 @@
         '<div class="ch-acts">' +
         '<a class="btn primary sm" href="#/scene/' + sc.id + '?tab=demo">打开可运行示范 →</a>' +
         '<a class="btn sm ghost" href="#/scene/' + sc.id + '?tab=flow">看案例流程</a>' +
-        (allCases.length > 1 ? '<a class="btn sm ghost" href="#/scene/' + sc.id + '?tab=background">切换其他案例（' + allCases.length + '）</a>' : '<a class="btn sm ghost" href="#/compare">与其他案例对比</a>') +
+        (allCases.length > 1 ? '<a class="btn sm ghost" href="#/scene/' + sc.id + '?tab=background">切换其他案例（' + allCases.length + '）</a>' : '') +
         '</div></div>' +
         '<div class="ch-thumb">' + caseThumb(c) +
         '<div class="ch-thumb-f"><span>' + esc(String(c.sceneId).toUpperCase()) + '</span><span>' + esc(spec.hot) + '</span></div>' +
@@ -1238,7 +1597,16 @@
       [].forEach.call(document.querySelectorAll('.panel'), function (p) {
         p.classList.toggle('on', p.dataset.panel === key);
       });
+      /* 窄屏下 tab 条可横向滚动：把当前 tab 滚到可视区中间 */
+      var tb = tabsEl.querySelector('[data-tab="' + key + '"]');
+      if (tb && tabsEl.scrollWidth > tabsEl.clientWidth) {
+        tabsEl.scrollTo({
+          left: Math.max(0, tb.offsetLeft - (tabsEl.clientWidth - tb.offsetWidth) / 2),
+          behavior: 'smooth'
+        });
+      }
       if (key === 'demo') mountDemo(sc, c);
+      if ((key === 'bg' || key === 'ai') && global.IQAI) global.IQAI.bind(view);
       if (scroll) {
         var y = tabsEl.getBoundingClientRect().top + window.scrollY - 62;
         window.scrollTo({ top: y, behavior: 'smooth' });
@@ -1309,10 +1677,8 @@
     var s = Cases.stats();
     var pending = A.allScenes.filter(function (sc) { return !Cases.bySceneAll(sc.id).length; });
 
-    var ownedIds = ownedCaseIds();
     var rows = list.map(function (c) {
       var sc = A.index.byScene[c.sceneId];
-      var canPick = ownedIds.indexOf(c.id) >= 0;
       var ck = checks[c.id] || [];
       var errs = ck.filter(function (x) { return x.level === 'error'; }).length;
       var warns = ck.filter(function (x) { return x.level === 'warn'; }).length;
@@ -1327,9 +1693,6 @@
       return '<tr data-lib-row data-code="' + esc(String(c.code || c.sceneId)) + '" data-id="' + esc(c.id) + '"' +
         ' data-stage="' + esc(sc ? sc.stageId : '') + '" data-methods="' + esc((c.methods || (sc && sc.methods) || []).join(' ')) + '"' +
         ' data-ready="' + (c.tabs.demo ? '1' : '0') + '">' +
-        '<td class="pickcell"><input type="checkbox" class="lib-pick" value="' + esc(c.sceneId) + '"' +
-        (canPick ? '' : ' disabled title="示例案例不参与案例对比"') +
-        ' aria-label="选择 ' + esc(c.title || c.id) + ' 参与对比"></td>' +
         '<td class="id">' + esc(c.id) + '</td>' +
         '<td><div class="nm">' + esc(c.title || sc && sc.name) +
         (c.imported ? '<span class="badge-local">本地导入</span>' : '') + '</div>' +
@@ -1410,12 +1773,11 @@
         '<label class="lib-chk"><input type="checkbox" id="lib-ready"> 只看可运行</label>' +
         '<span class="sp"></span>' +
         '<span class="lib-count" id="lib-count">' + list.length + ' 个案例</span>' +
-        '<button class="btn sm primary" id="lib-compare" disabled>对比所选（0）</button>' +
       '</div>' +
       '<div class="matrix-wrap" style="box-shadow:var(--sh-1)">' +
       '<table class="sys-table"><thead><tr>' +
-      '<th class="pickcell" title="勾选 2 个及以上可横向对比">选</th><th>案例 id</th><th>绑定场景</th><th>涉及技术</th><th>版本</th><th>更新</th><th>三块内容</th><th>校验</th><th></th>' +
-      '</tr></thead><tbody>' + (rows || '<tr><td colspan="9" class="empty">还没有任何案例注册</td></tr>') + '</tbody></table></div>' +
+      '<th>案例 id</th><th>绑定场景</th><th>涉及技术</th><th>版本</th><th>更新</th><th>三块内容</th><th>校验</th><th></th>' +
+      '</tr></thead><tbody>' + (rows || '<tr><td colspan="8" class="empty">还没有任何案例注册</td></tr>') + '</tbody></table></div>' +
       '<p class="small muted" style="margin-top:9px">三块内容依次为 background / workflow / demo，● 已提供、○ 未提供。技术标签可在导入时勾选，不选则继承场景；同一个场景支持挂多个案例，场景页顶部会出现切换器。删除上传案例会清掉本机存档；删除插件案例只是隐藏，文件不动，可随时恢复。</p>' +
 
       blockedBlock +
@@ -1583,7 +1945,7 @@
         ['demo/demo.css', '可选', '示范页样式，只在沙箱里生效'],
         ['demo/demo.js', '可选', '示范脚本；无 html 时走模块模式，需导出 mount'],
         ['demo/d3.v7.min.js', '可选', '本地离线 D3。缺失时示范会提示「D3 未加载」'],
-        ['demo/iq-viz.js', '可选', '共享可视化组件；只有首页/对比用到时才需要'],
+        ['demo/iq-viz.js', '可选', '共享可视化组件；只在需要图表组件时引入'],
         ['id', '必填', '小写字母 / 数字 / 连字符，全站唯一'],
         ['sceneId', '必填', '绑定场景，等于选定分类（环节 + 方法自动带出）'],
         ['title', '必填', '案例名称，页头与列表都用它'],
@@ -1592,7 +1954,7 @@
         ['tabs.workflow.steps[]', '可选', '每步 { name, input, do, output, viz, effect, trap }'],
         ['tabs.demo.mode', '可选', 'auto（默认）/ page / module / builtin，一般不用写'],
         ['tabs.demo.builtin', '可选', '复用某个已有案例的示范（填它的 id）'],
-        ['code', '可选', '展示编号 CO1 / E1 / PR2，用于案例头与对比页'],
+        ['code', '可选', '展示编号 CO1 / E1 / PR2，用于案例头'],
         ['highlight', '可选', '案例头的一句话亮点，比 title 更适合当副标题'],
         ['preview', '可选', '交付预览：说明示范里能操作什么、能出什么图'],
         ['credibility', '可选', '可信度 { score, level, basis, checks[] }，案例头与页尾都会用到'],
@@ -1719,7 +2081,6 @@
     if (!p.length) html = homeHTML();
     else if (p[0] === 'chain') html = chainHTML();
     else if (p[0] === 'project') html = projectHTML();
-    else if (p[0] === 'compare') html = compareHTML(r.q);
     else if (p[0] === 'cases') html = casesHTML();
     else if (p[0] === 'guide') html = guideHTML();
     else if (p[0] === 'admin') html = global.Admin ? global.Admin.route(p, r.q) : notFound('管理模块未加载');
@@ -1741,6 +2102,7 @@
       (isHome ? '' : railHTML()) +
       '<div class="plat-body">' + html + '</div></div>';
 
+    if (global.IQAI) global.IQAI.bind(view);
     revealInit();
     markScroll();
 
@@ -1775,7 +2137,7 @@
     if (p[0] === 'stage') { var t = A.index.byStage[p[1]]; return t ? t.name : '环节'; }
     if (p[0] === 'method') return M[p[1]] ? M[p[1]].name : '方法';
     if (p[0] === 'admin') return global.Admin && global.Admin.loggedIn() ? '管理后台' : '管理员登录';
-    return { chain: '作业链', cases: '案例库', guide: '接入指南', project: '项目说明', compare: '案例对比' }[p[0]] || '地图';
+    return { chain: '作业链', cases: '案例库', guide: '接入指南', project: '项目说明' }[p[0]] || '地图';
   }
 
   function notFound(msg) {
@@ -1784,7 +2146,7 @@
   }
 
   /* =========================================================
-     十、案例库筛选与对比勾选
+     十、案例库筛选
      ========================================================= */
   function bindLibrary() {
     var rows = [].slice.call(document.querySelectorAll('[data-lib-row]'));
@@ -1794,22 +2156,6 @@
     var method = document.getElementById('lib-method');
     var ready = document.getElementById('lib-ready');
     var count = document.getElementById('lib-count');
-    var btn = document.getElementById('lib-compare');
-
-    function picked() {
-      return rows.filter(function (r) {
-        var cb = r.querySelector('.lib-pick');
-        return cb && cb.checked;
-      });
-    }
-
-    function syncPick() {
-      var ps = picked();
-      if (btn) {
-        btn.disabled = ps.length < 2;
-        btn.textContent = '对比所选（' + ps.length + '）';
-      }
-    }
 
     function apply() {
       var kw = (q && q.value || '').trim().toLowerCase();
@@ -1827,25 +2173,12 @@
         if (hit) n++;
       });
       if (count) count.textContent = n + ' / ' + rows.length + ' 个案例';
-      syncPick();
     }
 
     if (q) q.addEventListener('input', apply);
     if (stage) stage.addEventListener('change', apply);
     if (method) method.addEventListener('change', apply);
     if (ready) ready.addEventListener('change', apply);
-    [].forEach.call(document.querySelectorAll('.lib-pick'), function (cb) {
-      cb.addEventListener('change', syncPick);
-    });
-    if (btn) {
-      btn.addEventListener('click', function () {
-        var ids = picked().map(function (r) {
-          var cb = r.querySelector('.lib-pick');
-          return cb ? cb.value : '';
-        }).filter(Boolean);
-        if (ids.length >= 2) go('#/compare?ids=' + ids.join(','));
-      });
-    }
     apply();
   }
 
@@ -1877,7 +2210,6 @@
       { t: '页面', name: '总览', sub: '驾驶舱与案例展厅', href: '#/' },
       { t: '页面', name: '作业链', sub: '13 个环节的方法构成', href: '#/chain' },
       { t: '页面', name: '案例库', sub: '案例包与校验结果', href: '#/cases' },
-      { t: '页面', name: '案例对比', sub: '六个案例并排', href: '#/compare' },
       { t: '页面', name: '项目说明', sub: '学号 07 · 完井', href: '#/project' },
       { t: '页面', name: '接入指南', sub: '如何新增一个案例', href: '#/guide' }
     ];

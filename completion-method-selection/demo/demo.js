@@ -283,20 +283,31 @@
       '<div class="iq-grid">' +
         '<div class="iq-figure">' +
           '<div class="iq-card">' +
-            '<div class="iq-card-h"><h4><i class="iq-dot"></i>井筒结构</h4><span class="iq-mini" id="co1-figlabel">—</span></div>' +
-            '<div id="co1-figure"></div>' +
-            '<div class="iq-legend">' +
-              '<span><i style="background:#3a352d"></i>套管 / 完井段</span>' +
-              '<span><i style="background:#b26a39"></i>射孔 / 充填</span>' +
-              '<span><i style="background:#a9852f"></i>支撑剂</span>' +
-            '</div>' +
+            '<div class="iq-card-h"><h4><i class="iq-dot"></i>完井方式选择</h4><span class="iq-mini" id="co1-figlabel">—</span></div>' +
+            '<div id="co1-picks"></div>' +
           '</div>' +
           '<div class="iq-card">' +
-            '<div class="iq-card-h"><h4>方案细节</h4><span class="iq-mini" id="co1-detail-rank">—</span></div>' +
-            '<div id="co1-detail"></div>' +
+            '<div class="iq-card-h"><h4>工程图例 · 井筒符号</h4><span class="iq-mini">co1</span></div>' +
+            '<div class="iq-legend" style="flex-direction:column;align-items:flex-start;gap:6px">' +
+              '<span><i style="background:#d4d0c8"></i>套管 / 水泥环</span>' +
+              '<span><i style="background:#3a352d"></i>油管 / 完井管柱</span>' +
+              '<span><i style="background:#b26a39"></i>射孔孔眼 / 工具</span>' +
+              '<span><i style="background:#a9852f"></i>砾石 / 支撑剂</span>' +
+              '<span><i style="background:#cfe3d9"></i>推荐生产段</span>' +
+              '<span><i style="background:#e5b6ae"></i>不适用段（斜线）</span>' +
+            '</div>' +
+            '<div class="iq-note slim" id="co1-figure-note">点击方案卡片或得分柱形，井筒结构与工程维度评分同步切换。</div>' +
           '</div>' +
         '</div>' +
         '<div class="iq-main">' +
+          '<div class="iq-card">' +
+            '<div class="iq-card-h"><h4>井筒剖面 · 完井方式对比</h4><span class="iq-mini" id="co1-compare-mini">—</span></div>' +
+            '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px;align-items:start">' +
+              '<div id="co1-figure"></div>' +
+              '<div><div class="iq-card-h" style="padding:0 0 4px"><h4>工程维度评分</h4><span class="iq-mini" id="co1-detail-rank">—</span></div><div id="co1-detail"></div></div>' +
+            '</div>' +
+            '<div class="iq-note slim" id="co1-compare-note">—</div>' +
+          '</div>' +
           '<div class="iq-card"><div class="iq-card-h"><h4>前 3 名方案 · 五维雷达</h4><span class="iq-mini">0—100 分</span></div><div id="co1-radar"></div><div class="iq-legend" id="co1-radar-legend"></div></div>' +
           '<div class="iq-card"><div class="iq-card-h"><h4>TOPSIS 综合得分</h4><span class="iq-mini">越接近 100 越优</span></div><div id="co1-bar"></div></div>' +
           '<div class="iq-card"><div class="iq-card-h"><h4>推荐理由分解</h4><span class="iq-mini">加权贡献</span></div><div id="co1-reasons"></div></div>' +
@@ -390,72 +401,140 @@
     }
     function tipHide() { tip.classList.remove('on'); }
 
-    /* ---------------- 井筒示意 ---------------- */
-    function completionSvg(id) {
-      var s = '<svg viewBox="0 0 220 300" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="完井井筒示意">';
-      s += '<rect x="0" y="0" width="220" height="300" fill="#fff"/>';
-      s += '<rect x="10" y="46" width="200" height="106" fill="#efe9dc"/>';
-      s += '<rect x="10" y="152" width="200" height="68" fill="#e3d6b8"/>';
-      s += '<rect x="10" y="220" width="200" height="66" fill="#efe9dc"/>';
-      s += '<line x1="10" y1="46" x2="210" y2="46" stroke="#d8d2c4"/>';
-      s += '<line x1="10" y1="152" x2="210" y2="152" stroke="#cbbd99" stroke-dasharray="3 3"/>';
-      s += '<line x1="10" y1="220" x2="210" y2="220" stroke="#d8d2c4"/>';
-      s += '<text x="16" y="64" font-size="9" fill="#9ba3a9">上部地层</text>';
-      s += '<text x="16" y="170" font-size="9.5" fill="#8a744a">储层</text>';
-      s += '<text x="16" y="238" font-size="9" fill="#9ba3a9">下部地层</text>';
-      /* 井口与套管 */
-      s += '<rect x="99" y="32" width="22" height="12" rx="2" fill="#d4d0c8" stroke="#8d979d"/>';
-      var shoe = (id === 'open') ? 152 : 238;
-      s += '<line x1="104" y1="44" x2="104" y2="' + shoe + '" stroke="#8d979d" stroke-width="3"/>';
-      s += '<line x1="116" y1="44" x2="116" y2="' + shoe + '" stroke="#8d979d" stroke-width="3"/>';
+    /* ---------------- 井筒剖面示意 ---------------- */
+    function dimsOf(row, id) {
+      var stim = { open: 38, perf: 72, screen: 62, gravel: 78, frac: 96 }[id] || 50;
+      return [
+        { k: '井壁稳定性', v: clamp(row.rel, 0, 100), low: false, note: '可靠性评分 ' + row.rel.toFixed(0) },
+        { k: '出砂风险', v: clamp(100 - row.sand, 0, 100), low: true, note: '防砂能力 ' + row.sand + ' 分' },
+        { k: '改造适应性', v: stim, low: false, note: stim >= 70 ? '可压裂 / 可酸化改造' : '改造空间有限' },
+        { k: '施工复杂度', v: clamp(100 - row.easy, 0, 100), low: true, note: '施工便利 ' + row.easy + ' 分' },
+        { k: '产能潜力', v: clamp(row.prod, 0, 100), low: false, note: '预测日产 ' + row.q.toFixed(1) + ' t/d' }
+      ];
+    }
+
+    function dimColor(v, low) {
+      var good = low ? v <= 30 : v >= 70;
+      var mid = low ? v <= 55 : v >= 45;
+      return good ? '#35785a' : (mid ? '#b26a39' : '#b05a51');
+    }
+
+    function completionSvg(id, row, res) {
+      var g = [];
+      var cx = 198, resT = 272, resB = 336, td = 356, ground = 44;
+      var isBest = id === res.best.id;
+      g.push('<svg viewBox="0 0 400 484" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="' + esc(row.name) + '完井井筒剖面">');
+      g.push('<rect width="400" height="484" fill="#fff"/>');
+      g.push('<defs>' +
+        '<marker id="co1-flow" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0 0 L6 3 L0 6 z" fill="#a03d4f"/></marker>' +
+        '<marker id="co1-up" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0 0 L6 3 L0 6 z" fill="#a03d4f"/></marker>' +
+        '<pattern id="co1-hatch" width="6" height="6" patternUnits="userSpaceOnUse"><path d="M0 6 L6 0" stroke="#b05a51" stroke-width="1.1" opacity=".5"/></pattern>' +
+        '</defs>');
+      /* 地层 */
+      g.push('<rect x="16" y="44" width="368" height="228" fill="#efe9dc"/>');
+      g.push('<rect x="16" y="272" width="368" height="64" fill="#e9dfc7"/>');
+      g.push('<rect x="16" y="336" width="368" height="112" fill="#efe9dc"/>');
+      g.push('<line x1="16" y1="272" x2="384" y2="272" stroke="#cbbd99" stroke-dasharray="4 3"/>');
+      g.push('<line x1="16" y1="336" x2="384" y2="336" stroke="#cbbd99" stroke-dasharray="4 3"/>');
+      g.push('<text x="24" y="62" font-size="8.5" fill="#9ba3a9">上部地层</text>');
+      g.push('<text x="24" y="354" font-size="8.5" fill="#9ba3a9">下部地层</text>');
+      g.push('<text x="24" y="290" font-size="9" fill="#8a744a">目的层 · 储层</text>');
+      for (var po = 0; po < 26; po++) {
+        g.push('<circle cx="' + (32 + (po % 13) * 27 + (po % 5)) + '" cy="' + (294 + Math.floor(po / 13) * 26 + (po % 3)) + '" r="1.5" fill="#b26a39" opacity=".5"/>');
+      }
+      /* 地面与深度标注 */
+      g.push('<rect x="16" y="36" width="368" height="8" fill="#f3efe3" stroke="#e3ddcd"/>');
+      g.push('<text x="24" y="30" font-size="8" fill="#9ba3a9">地面 · 井口</text>');
+      g.push('<path d="M' + (cx - 10) + ',36 L' + (cx - 4) + ',16 L' + (cx + 4) + ',16 L' + (cx + 10) + ',36" fill="none" stroke="#9ba3a9" stroke-width="1.2"/>');
+      g.push('<text x="388" y="48" text-anchor="end" font-size="8" fill="#9ba3a9" font-family="ui-monospace,monospace">0 m</text>');
+      g.push('<text x="388" y="264" text-anchor="end" font-size="8" fill="#9ba3a9" font-family="ui-monospace,monospace">2850 m</text>');
+      g.push('<text x="388" y="350" text-anchor="end" font-size="8" fill="#8a744a" font-family="ui-monospace,monospace">2860 m</text>');
+
+      /* 生产段与不适用段 */
+      g.push('<rect x="' + (cx - 34) + '" y="' + resT + '" width="68" height="' + (resB - resT) + '" fill="#cfe3d9" opacity=".6"/>');
+      g.push('<text x="' + (cx + 40) + '" y="' + (resT + 14) + '" font-size="8.5" fill="#35785a">' + (isBest ? 'AI 推荐生产段' : '生产段（对比）') + '</text>');
+      var bad = [];
+      if (id === 'open' && state.sandRisk >= 0.45) bad.push('出砂风险偏高，裸眼段不宜长期裸露');
+      if (row.rel < 50) bad.push('可靠性评分低于 50');
+      if (row.cost > state.budget) bad.push('投资超出预算 ' + Math.round(row.cost - state.budget) + ' 万元');
+      if (row.sand < state.sandRisk * 100 && (id === 'open' || id === 'perf')) bad.push('防砂能力低于需求 ' + Math.round(state.sandRisk * 100) + ' 分');
+      if (bad.length) {
+        g.push('<rect x="16" y="' + resT + '" width="' + (cx - 34 - 16) + '" height="64" fill="url(#co1-hatch)"/>');
+        g.push('<rect x="' + (cx + 34) + '" y="' + resT + '" width="' + (384 - cx - 34) + '" height="64" fill="url(#co1-hatch)"/>');
+        g.push('<text x="24" y="' + (resT + 12) + '" font-size="8" fill="#b05a51">不适用段</text>');
+      }
+
+      /* 井口、水泥环、套管、油管 */
+      g.push('<rect x="' + (cx - 11) + '" y="30" width="22" height="8" rx="1.5" fill="#b26a39"/>');
+      g.push('<rect x="' + (cx - 19) + '" y="' + ground + '" width="38" height="' + (resT - ground) + '" fill="#e6e1d3" stroke="#ddd6c6"/>');
+      g.push('<rect x="' + (cx - 12) + '" y="' + ground + '" width="24" height="' + (resT - ground) + '" fill="#d4d0c8" stroke="#b7b3a8"/>');
+      g.push('<rect x="' + (cx - 6) + '" y="' + ground + '" width="12" height="' + (resT - ground) + '" fill="#fbfaf6"/>');
+      g.push('<line x1="' + (cx - 4) + '" y1="' + ground + '" x2="' + (cx - 4) + '" y2="' + (resT - 8) + '" stroke="#3a352d" stroke-width="1.6"/>');
+      g.push('<line x1="' + (cx + 4) + '" y1="' + ground + '" x2="' + (cx + 4) + '" y2="' + (resT - 8) + '" stroke="#3a352d" stroke-width="1.6"/>');
+      g.push('<text x="' + (cx - 26) + '" y="132" text-anchor="end" font-size="8" fill="#9ba3a9">套管 + 水泥环</text>');
+
       if (id === 'open') {
-        s += '<line x1="104" y1="152" x2="104" y2="238" stroke="#3a352d" stroke-width="1.6"/>';
-        s += '<line x1="116" y1="152" x2="116" y2="238" stroke="#3a352d" stroke-width="1.6"/>';
-        s += '<path d="M104 238 Q110 244 116 238" fill="none" stroke="#3a352d" stroke-width="1.6"/>';
-        s += '<rect x="104" y="150" width="12" height="4" fill="#3a352d"/>';
+        g.push('<rect x="' + (cx - 10) + '" y="' + resT + '" width="20" height="' + (td - resT) + '" fill="#fbfaf6" stroke="#d8d2c4" stroke-dasharray="3 2"/>');
+        g.push('<path d="M' + (cx - 10) + ',' + resT + ' l4,4 l-4,5 l4,5 l-4,5 l4,5 l-4,5 l4,5" fill="none" stroke="#cbbd99" stroke-width="1"/>');
+        g.push('<path d="M' + (cx + 10) + ',' + resT + ' l-4,4 l4,5 l-4,5 l4,5 l-4,5 l4,5 l-4,5" fill="none" stroke="#cbbd99" stroke-width="1"/>');
+        g.push('<text x="' + (cx + 22) + '" y="310" font-size="8" fill="#3a352d">裸眼段</text>');
+        g.push('<text x="' + (cx + 22) + '" y="322" font-size="8" fill="#9ba3a9">无套管遮挡</text>');
       }
+
       if (id === 'perf') {
-        var y;
-        s += '<rect x="102" y="150" width="16" height="5" fill="#3a352d"/>';
-        for (y = 160; y <= 226; y += 8) {
-          s += '<circle cx="101" cy="' + y + '" r="1.9" fill="#b26a39"/><circle cx="119" cy="' + y + '" r="1.9" fill="#b26a39"/>';
+        g.push('<rect x="' + (cx - 19) + '" y="' + resT + '" width="38" height="' + (resB - resT) + '" fill="#e6e1d3"/>');
+        g.push('<rect x="' + (cx - 12) + '" y="' + resT + '" width="24" height="' + (resB - resT) + '" fill="#d4d0c8" stroke="#b7b3a8"/>');
+        g.push('<rect x="' + (cx - 6) + '" y="' + resT + '" width="12" height="' + (resB - resT) + '" fill="#fbfaf6"/>');
+        for (var py = resT + 10; py <= resB - 6; py += 8) {
+          g.push('<line x1="' + (cx - 12) + '" y1="' + py + '" x2="' + (cx - 21) + '" y2="' + py + '" stroke="#b26a39" stroke-width="1.4"/>');
+          g.push('<line x1="' + (cx + 12) + '" y1="' + py + '" x2="' + (cx + 21) + '" y2="' + py + '" stroke="#b26a39" stroke-width="1.4"/>');
+          g.push('<circle cx="' + (cx - 22) + '" cy="' + py + '" r="1.4" fill="#b26a39"/>');
+          g.push('<circle cx="' + (cx + 22) + '" cy="' + py + '" r="1.4" fill="#b26a39"/>');
         }
+        g.push('<text x="' + (cx + 26) + '" y="300" font-size="8" fill="#b26a39">射孔孔道</text>');
+        g.push('<text x="' + (cx + 26) + '" y="312" font-size="8" fill="#9ba3a9">相位 60°</text>');
       }
+
       if (id === 'screen' || id === 'gravel' || id === 'frac') {
-        s += '<rect x="102" y="150" width="16" height="5" fill="#3a352d"/>';
-        s += '<line x1="106" y1="155" x2="106" y2="234" stroke="#3a352d" stroke-width="1.4" stroke-dasharray="2 2"/>';
-        s += '<line x1="114" y1="155" x2="114" y2="234" stroke="#3a352d" stroke-width="1.4" stroke-dasharray="2 2"/>';
-        var k;
-        for (k = 160; k <= 232; k += 6) {
-          s += '<line x1="106" y1="' + k + '" x2="114" y2="' + k + '" stroke="#3a352d" stroke-width=".8" opacity=".7"/>';
+        g.push('<rect x="' + (cx - 17) + '" y="' + (resT - 4) + '" width="34" height="9" fill="#3a352d"/>');
+        g.push('<text x="' + (cx + 22) + '" y="' + (resT + 2) + '" font-size="8" fill="#3a352d">封隔器</text>');
+        g.push('<rect x="' + (cx - 8) + '" y="' + resT + '" width="16" height="' + (resB - resT + 8) + '" fill="#fbfaf6" stroke="#3a352d" stroke-width="1"/>');
+        var ky;
+        for (ky = resT + 4; ky <= resB + 4; ky += 5) {
+          g.push('<line x1="' + (cx - 8) + '" y1="' + ky + '" x2="' + (cx + 8) + '" y2="' + ky + '" stroke="#3a352d" stroke-width=".8" opacity=".75"/>');
         }
+        g.push('<text x="' + (cx + 22) + '" y="325" font-size="8" fill="#3a352d">筛管</text>');
       }
       if (id === 'gravel') {
-        var gx, gy;
-        for (gy = 158; gy <= 232; gy += 7) {
-          for (gx = 92; gx <= 128; gx += 6) {
-            if (gx > 101 && gx < 119) continue;
-            s += '<circle cx="' + gx + '" cy="' + gy + '" r="1.4" fill="#a9852f" opacity=".85"/>';
-          }
+        for (var gy = resT + 6; gy <= resB - 4; gy += 7) {
+          g.push('<circle cx="' + (cx - 15) + '" cy="' + gy + '" r="1.3" fill="#a9852f"/>');
+          g.push('<circle cx="' + (cx + 15) + '" cy="' + gy + '" r="1.3" fill="#a9852f"/>');
+          g.push('<circle cx="' + (cx - 12) + '" cy="' + (gy + 3) + '" r="1.2" fill="#a9852f"/>');
+          g.push('<circle cx="' + (cx + 12) + '" cy="' + (gy + 3) + '" r="1.2" fill="#a9852f"/>');
         }
+        g.push('<text x="' + (cx + 22) + '" y="337" font-size="8" fill="#a9852f">砾石充填</text>');
       }
       if (id === 'frac') {
-        s += '<path d="M110 192 C84 184 58 174 34 166 C50 186 76 194 110 200 Z" fill="#3a352d" opacity=".18" stroke="#3a352d" stroke-width="1.1"/>';
-        s += '<path d="M110 192 C136 184 162 174 186 166 C170 186 144 194 110 200 Z" fill="#3a352d" opacity=".18" stroke="#3a352d" stroke-width="1.1"/>';
-        var fx;
-        for (fx = -1; fx <= 1; fx += 2) {
-          for (var fy = 170; fy <= 194; fy += 6) {
-            s += '<circle cx="' + (110 + fx * (16 + (fy - 170) * 2.1)) + '" cy="' + fy + '" r="1.3" fill="#a9852f"/>';
-          }
+        g.push('<path d="M' + (cx - 8) + ',300 C' + (cx - 40) + ',292 ' + (cx - 70) + ',286 24,282 C36,296 60,306 ' + (cx - 8) + ',308 Z" fill="#3a352d" opacity=".2" stroke="#3a352d" stroke-width="1"/>');
+        g.push('<path d="M' + (cx + 8) + ',300 C' + (cx + 40) + ',292 ' + (cx + 70) + ',286 376,282 C364,296 340,306 ' + (cx + 8) + ',308 Z" fill="#3a352d" opacity=".2" stroke="#3a352d" stroke-width="1"/>');
+        var fs;
+        for (fs = 1; fs <= 4; fs++) {
+          g.push('<circle cx="' + (cx - 8 - fs * 15) + '" cy="' + (296 + (fs % 2) * 8) + '" r="1.3" fill="#a9852f"/>');
+          g.push('<circle cx="' + (cx + 8 + fs * 15) + '" cy="' + (296 + (fs % 2) * 8) + '" r="1.3" fill="#a9852f"/>');
         }
+        g.push('<text x="' + (cx + 22) + '" y="286" font-size="8" fill="#a9852f">压裂缝</text>');
       }
-      /* 流体流入箭头 */
-      if (id !== 'open') {
-        s += '<path d="M84 198 L100 192" stroke="#a03d4f" stroke-width="1.2" marker-end="url(#co1-arr)"/>';
-        s += '<defs><marker id="co1-arr" markerWidth="5" markerHeight="5" refX="4" refY="2.5" orient="auto"><path d="M0 0 L5 2.5 L0 5 z" fill="#a03d4f"/></marker></defs>';
-      }
-      s += '<text x="110" y="284" font-size="9" fill="#9ba3a9" text-anchor="middle">' + ({ open: '裸眼段直接与储层接触', perf: '套管射孔建立通道', screen: '筛管挡砂', gravel: '砾石层挡砂', frac: '压裂充填改造储层' }[id] || '') + '</text>';
-      return s + '</svg>';
+
+      /* 流体流入与上升 */
+      var ay = 314;
+      g.push('<line x1="' + (cx - 52) + '" y1="' + ay + '" x2="' + (cx - 22) + '" y2="' + ay + '" stroke="#a03d4f" stroke-width="1.4" marker-end="url(#co1-flow)"/>');
+      g.push('<line x1="' + (cx + 52) + '" y1="' + ay + '" x2="' + (cx + 22) + '" y2="' + ay + '" stroke="#a03d4f" stroke-width="1.4" marker-end="url(#co1-flow)"/>');
+      g.push('<line x1="' + (cx + 28) + '" y1="245" x2="' + (cx + 28) + '" y2="' + (ground + 30) + '" stroke="#a03d4f" stroke-width="1.2" stroke-dasharray="4 3" marker-end="url(#co1-up)"/>');
+      g.push('<text x="' + (cx + 34) + '" y="150" font-size="8" fill="#a03d4f">油气流向地面</text>');
+      g.push('<text x="200" y="466" text-anchor="middle" font-size="9" fill="#4a545d">' +
+        ({ open: '裸眼完井：储层直接裸露，无套管遮挡', perf: '套管射孔完井：套管 + 射孔孔道建立通道', screen: '筛管完井：筛管挡砂，封隔器分段', gravel: '砾石充填完井：筛管外充填砾石层挡砂', frac: '压裂充填完井：裂缝 + 充填改造储层' }[id] || '') + '</text>');
+      g.push('<text x="200" y="478" text-anchor="middle" font-size="8" fill="#9ba3a9">井深 2850—2860 m · 合成数据示意</text>');
+      return g.join('') + '</svg>';
     }
 
     /* ---------------- 学习层：漏斗与三态卡 ---------------- */
@@ -802,19 +881,64 @@
       }
     }
 
+    function renderPicks(res) {
+      var box = $('co1-picks');
+      if (!box) return;
+      box.innerHTML = res.ranked.map(function (r, i) {
+        var cls = r.id === res.best.id ? 'reco' : (i < 3 ? 'alt' : 'no');
+        return '<div class="iq-tcard ' + cls + (r.id === selectedId ? ' on' : '') + '" data-id="' + r.id + '" style="padding:7px 9px;margin-bottom:6px">' +
+          '<div class="cap">' + (i === 0 ? '推荐' : (i < 3 ? '备选' : '参考')) + ' · 第 ' + (i + 1) + '</div>' +
+          '<div class="nm" style="font-size:12.5px">' + esc(r.name) + '</div>' +
+          '<div style="display:flex;justify-content:space-between;align-items:baseline">' +
+            '<span class="val" style="font-size:12px">' + r.score.toFixed(1) + '<small>分</small></span>' +
+            '<span style="font-size:10px;color:#9ba3a9">日产 ' + r.q.toFixed(1) + '</span></div></div>';
+      }).join('') + '<p class="iq-poll">点击任一方案查看井筒结构与工程维度评分。</p>';
+    }
+
     function renderFigure(res) {
       var id = selectedId || res.best.id;
       var row = res.rows.filter(function (r) { return r.id === id; })[0];
-      $('co1-figure').innerHTML = completionSvg(id);
-      $('co1-figlabel').textContent = row.name + (id === res.best.id ? ' · 推荐' : ' · 对比');
+      var isBest = id === res.best.id;
+      $('co1-figure').innerHTML = completionSvg(id, row, res);
+      $('co1-figlabel').textContent = '第 ' + row.rank + ' 名';
+      $('co1-compare-mini').textContent = row.name + ' · ' + (isBest ? 'AI 推荐' : '对比方案');
       $('co1-detail-rank').textContent = '第 ' + row.rank + ' 名';
-      $('co1-detail').innerHTML =
-        '<table class="iq-table"><tr><td>综合得分</td><td class="num">' + row.score.toFixed(1) + '</td></tr>' +
-        '<tr><td>预测日产</td><td class="num">' + row.q.toFixed(1) + ' t/d</td></tr>' +
-        '<tr><td>防砂能力</td><td class="num">' + row.sand + ' / 100</td></tr>' +
-        '<tr><td>投资</td><td class="num">' + row.cost + ' 万元</td></tr>' +
-        '<tr><td>可靠性</td><td class="num">' + row.rel.toFixed(0) + ' / 100</td></tr></table>' +
-        '<p class="iq-poll" style="margin-top:6px">点击得分柱形可切换查看其他方案。</p>';
+      var dims = dimsOf(row, id);
+      $('co1-detail').innerHTML = dims.map(function (d) {
+        return '<div style="margin-bottom:7px">' +
+          '<div style="display:flex;justify-content:space-between;font-size:11px;color:#4a545d">' +
+            '<span>' + d.k + '</span><b style="font-family:ui-monospace,monospace;font-weight:600">' + d.v.toFixed(0) + '</b></div>' +
+          '<div style="height:6px;background:#f1eee6;border-radius:3px;margin-top:3px">' +
+            '<i style="display:block;height:6px;width:' + d.v.toFixed(0) + '%;background:' + dimColor(d.v, d.low) + ';border-radius:3px"></i></div>' +
+          '<div style="font-size:9.5px;color:#9ba3a9;margin-top:2px">' + d.note + '</div></div>';
+      }).join('') +
+      '<div class="iq-kpis" style="grid-template-columns:1fr 1fr 1fr;margin-top:8px">' +
+        '<div class="iq-kpi"><span>综合得分</span><b>' + row.score.toFixed(1) + '</b></div>' +
+        '<div class="iq-kpi"><span>预测日产</span><b>' + row.q.toFixed(1) + '<small>t/d</small></b></div>' +
+        '<div class="iq-kpi"><span>投资</span><b>' + row.cost + '<small>万</small></b></div>' +
+      '</div>' +
+      '<p class="iq-poll">风险类指标（出砂风险、施工复杂度）越低越好，绿色 = 安全区间。</p>';
+
+      var reasons = CRIT.map(function (c, i) { return { n: c.name, v: row.vals[i] / 100 * res.weights[i] }; })
+        .sort(function (a, b) { return b.v - a.v; }).slice(0, 2).map(function (x) { return x.n; }).join('、');
+      var msgs = [];
+      if (id === 'open' && state.sandRisk >= 0.45) msgs.push('出砂风险指数 ' + state.sandRisk.toFixed(2) + ' 偏高，裸眼段不宜长期裸露');
+      if (row.rel < 50) msgs.push('可靠性评分 ' + row.rel.toFixed(0) + ' 低于 50');
+      if (row.cost > state.budget) msgs.push('投资 ' + row.cost + ' 万元超出预算 ' + state.budget + ' 万元');
+      if (row.sand < state.sandRisk * 100 && (id === 'open' || id === 'perf')) msgs.push('防砂能力 ' + row.sand + ' 分低于需求 ' + Math.round(state.sandRisk * 100) + ' 分');
+      var note = $('co1-compare-note');
+      if (isBest) {
+        note.className = 'iq-note slim';
+        note.innerHTML = '<b>为什么推荐 ' + row.name + '：</b>它在「' + reasons + '」上的加权贡献最大，综合得分 ' +
+          row.score.toFixed(1) + '，领先第 2 名 ' + res.gap.toFixed(1) + ' 分；10 组权重扰动中 ' + res.stable +
+          ' 组仍排第一，置信度 ' + res.conf + '%。井筒图中绿色区间为推荐生产段。' +
+          (msgs.length ? '<br><b>现场约束：</b>' + msgs.join('；') + '。' : '');
+      } else {
+        note.className = 'iq-note slim' + (msgs.length ? ' clay' : '');
+        note.innerHTML = '<b>当前查看 ' + row.name + '（第 ' + row.rank + ' 名 · ' + row.score.toFixed(1) + ' 分）：</b>' +
+          (msgs.length ? '图中红色斜线为不适用段——' + msgs.join('；') + '。' : '当前参数与权重下满足约束，可作为备选方案。') +
+          '<br>AI 推荐 <b>' + res.best.name + '</b>（' + res.best.score.toFixed(1) + ' 分），点击方案卡片可对比井筒结构。';
+      }
     }
 
     function renderTable(res) {
@@ -931,6 +1055,7 @@
       renderReasons(res);
       renderKpis(res);
       renderFigure(res);
+      renderPicks(res);
       renderTable(res);
       renderStress(res);
       renderFunnel(res);
@@ -988,6 +1113,13 @@
     });
 
     listen($('co1-tri'), 'click', function (ev) {
+      var c = ev.target.closest ? ev.target.closest('.iq-tcard') : null;
+      if (!c) return;
+      selectedId = c.getAttribute('data-id');
+      renderAll();
+    });
+
+    listen($('co1-picks'), 'click', function (ev) {
       var c = ev.target.closest ? ev.target.closest('.iq-tcard') : null;
       if (!c) return;
       selectedId = c.getAttribute('data-id');

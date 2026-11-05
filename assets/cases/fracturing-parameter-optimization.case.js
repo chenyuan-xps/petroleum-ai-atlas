@@ -266,6 +266,17 @@
         return;
       }
       root.__iqLive = fn(root);
+      /* 示范之后固定追加「工程结论 + 模型边界」与可信度条 */
+      if (window.K) {
+        var foot = window.K.verdictBlock(def.conclusion, def.limits) +
+          window.K.credStrip(def.credibility);
+        if (foot) {
+          var box = document.createElement('div');
+          box.className = 'iq-case-foot';
+          box.innerHTML = foot;
+          root.appendChild(box);
+        }
+      }
     },
     unmount: function () {
       var root = document.getElementById('case-demo-root');

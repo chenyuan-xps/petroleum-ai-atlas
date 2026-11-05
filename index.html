@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿﻿<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
@@ -6,13 +6,13 @@
 <title>石油勘探开发智能化案例平台</title>
 <meta name="description" content="按石油作业链条逐环节展示可被深度学习改造的候选场景，并为完井段落提供可运行、可调参、可解释的智能决策示范。">
 
-<link rel="stylesheet" href="assets/core/tokens.css?v=20261102b">
-<link rel="stylesheet" href="assets/core/layout.css?v=20261102b">
-<link rel="stylesheet" href="assets/core/ui.css?v=20261102b">
-<link rel="stylesheet" href="assets/core/platform.css?v=20261102q">
-<link rel="stylesheet" href="assets/cases/iq-demo.css?v=20261102q">
+<link rel="stylesheet" href="assets/core/tokens.css?v=20261103ad">
+<link rel="stylesheet" href="assets/core/layout.css?v=20261103ad">
+<link rel="stylesheet" href="assets/core/ui.css?v=20261103ad">
+<link rel="stylesheet" href="assets/core/platform.css?v=20261103ad">
+<link rel="stylesheet" href="assets/cases/iq-demo.css?v=20261103ad">
 <!-- 视觉升级层：必须最后加载，只覆盖外观不改变结构 -->
-<link rel="stylesheet" href="assets/core/theme.css?v=20261102b">
+<link rel="stylesheet" href="assets/core/theme.css?v=20261103ad">
 </head>
 <body>
 
@@ -39,25 +39,27 @@
      6. case-upload     案例包导入（读 localStorage，必须在 shell 前）
      7. shell.js        外壳，必须最后
      ========================================================= -->
-<script src="assets/data.js?v=20261102b"></script>
-<script src="assets/core/registry.js?v=20261102b"></script>
-<script src="assets/core/kit.js?v=20261102b"></script>
-<script src="assets/vendor/d3.v7.min.js?v=20261102b"></script>
-<script src="assets/cases/iq-viz.js?v=20261102b"></script>
-<script src="assets/cases/iq-smart.js?v=20261102b"></script>
+<script src="assets/data.js?v=20261103ad"></script>
+<script src="assets/core/registry.js?v=20261103ad"></script>
+<script src="assets/core/kit.js?v=20261103ad"></script>
+<script src="assets/vendor/d3.v7.min.js?v=20261103ad"></script>
+<script src="assets/cases/iq-viz.js?v=20261103ad"></script>
+<script src="assets/cases/iq-smart.js?v=20261103ad"></script>
+<script src="assets/cases/iq-ai.js?v=20261103ad"></script>
+<script src="assets/cases/iq-gen-demo.js?v=20261103ad"></script>
 
-<script src="assets/cases/welllog-layer.case.js?v=20261102b"></script>
-<script src="assets/cases/welllog-layer.demo.js?v=20261102b"></script>
+<script src="assets/cases/welllog-layer.case.js?v=20261103ad"></script>
+<script src="assets/cases/welllog-layer.demo.js?v=20261103ad"></script>
 
 <script>window.__IQ_CSS_SHARED__ = true;</script>
-<script src="assets/cases/completion-method-selection.case.js?v=20261102b"></script>
-<script src="completion-method-selection/demo/demo.js?v=20261102b"></script>
-<script src="assets/cases/perforation-parameter-design.case.js?v=20261102b"></script>
-<script src="perforation-parameter-design/demo/demo.js?v=20261102b"></script>
-<script src="assets/cases/completion-string-stress-analysis.case.js?v=20261102b"></script>
-<script src="completion-string-stress-analysis/demo/demo.js?v=20261102b"></script>
-<script src="assets/cases/intelligent-sleeve-control.case.js?v=20261102b"></script>
-<script src="intelligent-sleeve-control/demo/demo.js?v=20261102b"></script>
+<script src="assets/cases/completion-method-selection.case.js?v=2026110335"></script>
+<script src="completion-method-selection/demo/demo.js?v=2026110330"></script>
+<script src="assets/cases/perforation-parameter-design.case.js?v=2026110335"></script>
+<script src="perforation-parameter-design/demo/demo.js?v=2026110330"></script>
+<script src="assets/cases/completion-string-stress-analysis.case.js?v=2026110335"></script>
+<script src="completion-string-stress-analysis/demo/demo.js?v=2026110330"></script>
+<script src="assets/cases/intelligent-sleeve-control.case.js?v=2026110335"></script>
+<script src="intelligent-sleeve-control/demo/demo.js?v=2026110330"></script>
 
 <!-- 案例流程页：co1—co4 统一使用与测井案例一致的「单列步骤」版式。
      原先「左说明 + 右逐步动态图」的分栏渲染器保留在 assets/cases/iq-workflow-co*.js 里，
@@ -69,19 +71,58 @@
 <script src="assets/cases/iq-workflow-co4.js?v=20261102"></script>
 -->
 
-<script src="assets/cases/fracturing-parameter-optimization.case.js?v=20261102b"></script>
-<script src="fracturing-parameter-optimization/demo/demo.js?v=20261102b"></script>
-<script src="assets/cases/production-forecasting.case.js?v=20261102b"></script>
-<script src="production-forecasting/demo/demo.js?v=20261102b"></script>
+<script src="assets/cases/fracturing-parameter-optimization.case.js?v=2026110335"></script>
+<script src="fracturing-parameter-optimization/demo/demo.js?v=20261103ad"></script>
+<script src="assets/cases/production-forecasting.case.js?v=2026110335"></script>
+<script src="production-forecasting/demo/demo.js?v=20261103ad"></script>
+
+<!-- 跨环节案例：除完井外，每个作业环节各接入一个，补齐 13 个环节的覆盖。
+     这些是新式插件案例（不打包），删掉某一行即回到该场景的“待接入”状态。 -->
+<script src="assets/cases/geology-remote-sensing.case.js?v=20261103ad"></script>
+<script src="assets/cases/seismic-firstbreak-pick.case.js?v=20261103ad"></script>
+<script src="assets/cases/drilling-rop-optimization.case.js?v=20261103ad"></script>
+<script src="assets/cases/mudlog-lithology-cuttings.case.js?v=20261103ad"></script>
+<script src="assets/cases/cement-bond-quality.case.js?v=20261103ad"></script>
+<script src="assets/cases/perforation-gun-selection.case.js?v=20261103ad"></script>
+<script src="assets/cases/workover-plan-recommend.case.js?v=20261103ad"></script>
+<script src="assets/cases/pipeline-leak-detection.case.js?v=20261103ad"></script>
+<script src="assets/cases/fcc-product-prediction.case.js?v=20261103ad"></script>
 <!-- ↑ 新案例加在这里（示例：assets/cases/你的案例.case.js） -->
 
 <!-- 上传的案例包（localStorage）在这里恢复注册，必须在 shell.js 之前 -->
-<script src="assets/core/case-demo-host.js?v=20261102b"></script>
-<script src="assets/core/case-upload.js?v=20261102b"></script>
+<script src="assets/core/case-demo-host.js?v=20261103ad"></script>
+<script src="assets/core/case-upload.js?v=20261103ad"></script>
 
-<script src="assets/core/admin.js?v=20261102b"></script>
+<script src="assets/core/admin.js?v=20261103ad"></script>
 
-<script src="assets/core/shell.js?v=20261102q"></script>
+<script src="assets/core/shell.js?v=20261103ad"></script>
 
 </body>
 </html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

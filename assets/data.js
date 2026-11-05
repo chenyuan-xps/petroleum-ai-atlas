@@ -17,7 +17,7 @@ window.ATLAS = {
   },
 
   /* 学号任务映射：尾号 07 对应作业链第 07 环节「完井」。
-     首页、左栏、项目说明页与案例对比页都从这里读取，换学号只改这一处。 */
+     首页、左栏与项目说明页都从这里读取，换学号只改这一处。 */
   project: {
     studentTail: '07',
     stageId: 'completion',
@@ -30,7 +30,18 @@ window.ATLAS = {
     ],
     extensionIds: [
       'fracturing-parameter-optimization',
-      'production-forecasting'
+      'production-forecasting',
+      /* 跨环节扩展：除完井外，其余 9 个环节各接入一个案例，
+         用于验证同一套案例结构可以覆盖整条作业链。 */
+      'geology-remote-sensing',
+      'seismic-firstbreak-pick',
+      'drilling-rop-optimization',
+      'mudlog-lithology-cuttings',
+      'cement-bond-quality',
+      'perforation-gun-selection',
+      'workover-plan-recommend',
+      'pipeline-leak-detection',
+      'fcc-product-prediction'
     ]
   },
 
@@ -69,7 +80,7 @@ window.ATLAS = {
       blurb: '从区域到圈闭，先把地下"看清楚"。遥感、化探、历史图件与露头构成地下信息的第一次采样，成果是后续所有工程的底图。',
       scenes: [
         {
-          id: 'g1', name: '地质剖面遥感解译', methods: ['cv'], diff: '中',
+          id: 'g1', name: '地质剖面遥感解译', methods: ['cv'], diff: '中', demo: true,
           diffWhy: '公开影像充足，但地质标签稀缺，跨气候区、跨岩性组合的迁移能力差。',
           point: '用语义分割逐像素判别岩性与构造线，输出可直接入库的矢量图层，替代人工勾绘。',
           intro: '遥感影像是区域地质调查的第一手资料。多光谱、高光谱与 SAR 影像记录了地表岩性、构造与蚀变的差异，解释员据此勾绘岩性界线、断层与褶皱。',
@@ -164,7 +175,7 @@ window.ATLAS = {
           cross: ['测井']
         },
         {
-          id: 's3', name: '初至波自动拾取', methods: ['ts'], diff: '中',
+          id: 's3', name: '初至波自动拾取', methods: ['ts'], diff: '中', demo: true,
           diffWhy: '数据量巨大、推理成本高；低信噪比道与强能量干扰（面波、折射）容易误拾。',
           point: '用序列模型在炮集波形上回归初至时刻，替代逐道人工拾取。',
           intro: '初至拾取是地震资料处理的第一步，决定静校正与叠加成像的质量。常规做法是在炮集上逐道人工拾取初至时间。',
@@ -212,7 +223,7 @@ window.ATLAS = {
       blurb: '把设计轨迹变成井眼。实时性强、安全约束硬，是"时序预测 + 优化"的主战场，也是闭环最难的一环。',
       scenes: [
         {
-          id: 'd1', name: '钻速预测与参数优化', methods: ['ts', 'opt'], diff: '高',
+          id: 'd1', name: '钻速预测与参数优化', methods: ['ts', 'opt'], diff: '高', demo: true,
           diffWhy: '闭环涉及井下安全，模型外推风险高；不同钻机与地层的分布漂移显著。',
           point: '用时序模型建立"参数—工况—钻速"映射，在扭矩、泵压、井壁稳定约束内推荐下一段参数。',
           intro: '机械钻速受岩性、钻压、转速、排量与钻井液性能多因素耦合影响，司钻主要凭经验与邻井资料调整参数，是钻井提效最直接的抓手。',
@@ -289,7 +300,7 @@ window.ATLAS = {
       blurb: '跟着钻头取回第一手岩性与流体信息。样品密集但噪声大、标注贵，是"小样本细粒度识别"的典型战场。',
       scenes: [
         {
-          id: 'm1', name: '岩屑岩性自动识别', methods: ['cv'], diff: '高',
+          id: 'm1', name: '岩屑岩性自动识别', methods: ['cv'], diff: '高', demo: true,
           diffWhy: '类间差异小（泥岩/页岩、粉砂岩/细砂岩）、样本不均衡，混样与污染带来标签噪声。',
           point: '对岩屑显微图像做细粒度分类与多标签识别，输出岩性组分比例，替代人工目估。',
           intro: '岩屑录井是判断钻遇地层最直接的手段，捞取的岩屑由录井工在显微镜下目估成分、粒级与含油级别，形成岩屑描述表。',
@@ -447,7 +458,7 @@ window.ATLAS = {
       blurb: '一次成功、终身受用。质量评价与参数设计都以声波曲线和施工数据为依据，是"错判代价最高"的环节之一。',
       scenes: [
         {
-          id: 'c1', name: '固井质量智能评价', methods: ['cv', 'ts'], diff: '高',
+          id: 'c1', name: '固井质量智能评价', methods: ['cv', 'ts'], diff: '高', demo: true,
           diffWhy: '评级标准本身存在主观带，快速地层与微环隙需要专门样本，误判代价大。',
           point: '对 CBL / VDL 图像与变密度图做分段分类，输出胶结等级曲线，替代人工分段评级。',
           intro: '固井质量决定层间封隔，评价依据是 CBL / VDL 测井：水泥胶结好则套管波弱、地层波强，传统由解释员按胶结指数分段评级。',
@@ -600,7 +611,7 @@ window.ATLAS = {
           refs: ['代理模型', '数值模拟', '仿真—实测标定']
         },
         {
-          id: 'p3', name: '射孔弹型智能选型', methods: ['kg'], diff: '低',
+          id: 'p3', name: '射孔弹型智能选型', methods: ['kg'], diff: '低', demo: true,
           diffWhy: '本质是结构化检索与规则匹配，数据可从手册整理，风险可控。',
           point: '用知识图谱组织弹型—参数—适用条件关系，按井况检索并排序候选弹型。',
           intro: '不同射孔弹在穿深、孔径与对套管的损伤上各有取舍，选型要匹配岩性、套管钢级与完井方式。',
@@ -711,7 +722,7 @@ window.ATLAS = {
       blurb: '低频、高成本、强经验。案例库往往比模型更重要，是知识图谱与文本抽取的主场。',
       scenes: [
         {
-          id: 'wo1', name: '修井作业方案智能推荐', methods: ['kg', 'nlp'], diff: '高',
+          id: 'wo1', name: '修井作业方案智能推荐', methods: ['kg', 'nlp'], diff: '高', demo: true,
           diffWhy: '文本案例非结构化，实体关系抽取的质量直接决定推荐效果。',
           point: '用知识图谱组织"故障现象—工艺—工具—效果"关系，按井况检索相似案例并推荐方案。',
           intro: '修井方案要针对具体故障（落物、套管变形、出水、砂卡）选定工艺与工具组合，方案质量直接决定作业周期与成功率。',
@@ -872,7 +883,7 @@ window.ATLAS = {
       blurb: '管网与站场：传感器密集、异常样本稀少，是典型的小样本异常检测问题，误报率比精度更关键。',
       scenes: [
         {
-          id: 't1', name: '管道泄漏智能检测', methods: ['ts'], diff: '中',
+          id: 't1', name: '管道泄漏智能检测', methods: ['ts'], diff: '中', demo: true,
           diffWhy: '泄漏样本稀少，工况扰动与泄漏特征相似，误报率是核心指标。',
           point: '用多源时序异常检测识别泄漏特征，结合水力模型定位泄漏点。',
           intro: '长输管道泄漏造成安全与环境风险，负压波、流量平衡与声波是主要检测手段，定位精度依赖波速与时间同步。',
@@ -964,7 +975,7 @@ window.ATLAS = {
           status: 'ext'
         },
         {
-          id: 'r2', name: '催化裂化产物预测', methods: ['opt', 'ts'], diff: '高',
+          id: 'r2', name: '催化裂化产物预测', methods: ['opt', 'ts'], diff: '高', demo: true,
           diffWhy: '强非线性、变量耦合，且需长期稳定的数据对齐（原料—操作—产品）。',
           point: '用深度网络从原料性质与操作条件预测产品分布，作为实时优化与排产的依据。',
           intro: '催化裂化（FCC）产品分布（干气、液化气、汽油、柴油、油浆）受原料性质、反应温度、剂油比等多因素影响，是炼厂效益的核心。',

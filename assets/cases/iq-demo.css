@@ -854,3 +854,35 @@ body.iq-page .iq-foot{
   background:#fff;color:var(--iq-ink-3);font-size:13px;line-height:1;cursor:pointer;
 }
 .iq-zoom-x:hover{background:var(--iq-paper);color:var(--iq-ink)}
+
+/* =========================================================
+   17 · 跨环节案例（g1 / s3 / d1 / m1 / c1 / p3 / wo1 / t1 / r2）
+   ---------------------------------------------------------
+   两栏示范版式：左列主图 + 对比表，右列参数 + 输出。
+   只新增 .gq- 前缀，不改动上面任何既有版式。
+   ========================================================= */
+.iqd .gq-wrap{
+  display:grid;
+  grid-template-columns:minmax(0,1.62fr) minmax(258px,.88fr);
+  gap:12px;align-items:start;
+}
+.iqd .gq-main,.iqd .gq-side{min-width:0}
+.iqd .gq-main > .iq-card + .iq-card{margin-top:12px}
+.iqd .gq-side > .iq-card + .iq-card{margin-top:11px}
+.iqd .gq-chart{position:relative;padding:2px 0 0}
+.iqd .gq-chart svg{display:block;width:100%;height:auto}
+.iqd .gq-foot-note{
+  font-size:10.5px;line-height:1.65;color:var(--iq-ink-4);
+  margin-top:12px;padding-top:9px;border-top:1px dashed var(--iq-line);
+}
+.iqd .gq-foot-note + .case-end{margin-top:12px}
+.iqd .gq-side .iq-kpi b{font-size:17px}
+.iqd .gq-side .iq-reco{margin-bottom:8px}
+.iqd .gq-side .iq-reco b{font-size:13.5px}
+.iqd .gq-side .iq-note{font-size:11.3px;line-height:1.66;margin-top:0}
+@media (max-width:900px){
+  .iqd .gq-wrap{grid-template-columns:minmax(0,1fr)}
+}
+@media (max-width:720px){
+  .iqd .gq-side .iq-kpi b{font-size:16px}
+}

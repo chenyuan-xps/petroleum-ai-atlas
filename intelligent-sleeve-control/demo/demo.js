@@ -183,11 +183,22 @@
       '</div>' +
       '<div class="iq-grid">' +
         '<div class="iq-figure">' +
-          '<div class="iq-card"><div class="iq-card-h"><h4><i class="iq-dot"></i>多层水平井</h4><span class="iq-mini" id="co4-fig-mini">—</span></div><div id="co4-figure"></div>' +
-            '<div class="iq-legend"><span><i style="background:#3a352d"></i>滑套开启</span><span><i style="background:#d4d0c8"></i>关闭段</span><span><i style="background:#a03d4f"></i>水相</span></div></div>' +
           '<div class="iq-card"><div class="iq-card-h"><h4>当前设定</h4><span class="iq-mini" id="co4-set-tag">—</span></div><div id="co4-detail"></div></div>' +
+          '<div class="iq-card"><div class="iq-card-h"><h4>工程图例 · 滑套与流体</h4><span class="iq-mini">co4</span></div>' +
+            '<div class="iq-legend" style="flex-direction:column;align-items:flex-start;gap:6px">' +
+              '<span><i style="background:#3a352d"></i>滑套开启（深色 = 开度大）</span>' +
+              '<span><i style="background:#d4d0c8"></i>滑套关闭</span>' +
+              '<span><i style="background:#b26a39"></i>产油贡献</span>' +
+              '<span><i style="background:#a03d4f"></i>产水 / 含水风险</span>' +
+              '<span><i style="background:#7d9dc4"></i>层段压力 / 水侵</span>' +
+              '<span><i style="background:#35785a"></i>建议保持 / 推荐</span>' +
+            '</div>' +
+            '<div class="iq-note slim" id="co4-fig-note">悬停任一储层分段，会同时高亮该段的滑套与产油 / 含水曲线；时间轴播放时滑套开度逐日变化。</div>' +
+          '</div>' +
         '</div>' +
         '<div class="iq-main">' +
+          '<div class="iq-card"><div class="iq-card-h"><h4>多层水平井 · 滑套开关与分层产液</h4><span class="iq-mini" id="co4-fig-mini">—</span></div><div id="co4-figure"></div>' +
+            '<div class="iq-legend"><span><i style="background:#3a352d"></i>已开启滑套</span><span><i style="background:#d4d0c8"></i>关闭</span><span><i style="background:#b26a39"></i>油贡献</span><span><i style="background:#a03d4f"></i>水贡献 / 高含水</span><span><i style="background:#7d9dc4"></i>层压 / 水侵</span><span><i style="background:#35785a"></i>建议</span></div></div>' +
       '<div class="iq-card"><div class="iq-card-h"><h4>滑套开度分配</h4><span class="iq-mini" id="co4-open-mini">—</span></div><div id="co4-openchart"></div>' +
             '<div class="iq-legend"><span><i style="background:#ddd7c8"></i>当前设定</span><span><i style="background:#3a352d"></i>AI 动态</span></div></div>' +
           '<div class="iq-card iq-timecard">' +
@@ -284,49 +295,98 @@
     }
     function tipHide() { tip.classList.remove('on'); }
 
-    /* ---------------- 多层井示意 ---------------- */
-    function figureSvg(plan, point) {
-      var W = 260, H = 312;
-      var s = '<svg viewBox="0 0 ' + W + ' ' + H + '" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="多层水平井滑套开度示意">';
+    /* ---------------- 多层水平井 + 滑套开关示意 ---------------- */
+    var hoverLayer = null;
+
+    function figureSvg(plan, point, series, day) {
+      var W = 780, H = 430;
+      var ys = [152, 252, 352];
+      var bandT = [96, 204, 304], bandB = [204, 304, 404];
+      var bandFill = ['#efe9dc', '#e9dfc7', '#e3d6b8'];
+      var s = '<svg viewBox="0 0 ' + W + ' ' + H + '" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="多层水平井滑套开度、层段压力与分层产液">';
       s += '<rect width="' + W + '" height="' + H + '" fill="#fff"/>';
-      var bands = [
-        { y: 58, h: 58, fill: '#efe9dc', name: 'A 层 · 主力油层', idx: 0 },
-        { y: 116, h: 58, fill: '#e9dfc7', name: 'B 层 · 接替层', idx: 1 },
-        { y: 174, h: 62, fill: '#e3d6b8', name: 'C 层 · 含水层', idx: 2 }
-      ];
-      bands.forEach(function (b) {
-        s += '<rect x="8" y="' + b.y + '" width="' + (W - 16) + '" height="' + b.h + '" fill="' + b.fill + '"/>';
-        s += '<text x="14" y="' + (b.y + 12) + '" font-size="8.2" fill="#8a744a">' + b.name + '</text>';
-      });
-      /* 主井眼 */
-      s += '<line x1="34" y1="22" x2="34" y2="236" stroke="#8d979d" stroke-width="6"/>';
-      s += '<rect x="26" y="14" width="16" height="8" rx="2" fill="#d4d0c8" stroke="#8d979d"/>';
-      s += '<text x="42" y="20" font-size="8" fill="#9ba3a9">井口</text>';
-      var ys = [88, 146, 206];
+      s += '<defs>' +
+        '<marker id="co4-oilar" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0 0 L6 3 L0 6 z" fill="#b26a39"/></marker>' +
+        '<marker id="co4-watar" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0 0 L6 3 L0 6 z" fill="#a03d4f"/></marker>' +
+        '<marker id="co4-upar" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0 0 L6 3 L0 6 z" fill="#7d9dc4"/></marker>' +
+        '</defs>';
+      s += '<text x="14" y="20" font-size="9" fill="#9ba3a9" font-family="ui-monospace,monospace" letter-spacing=".8">多层水平井 · 三个储层分段 · 第 ' + point.day + ' 天</text>';
+
+      /* 井口与主井眼 */
+      s += '<rect x="70" y="10" width="70" height="10" fill="#f3efe3" stroke="#e3ddcd"/>';
+      s += '<path d="M82 10 L88 0 L96 0 L102 10" fill="none" stroke="#9ba3a9" stroke-width="1.2"/>';
+      s += '<rect x="76" y="22" width="20" height="12" rx="2" fill="#b26a39"/>';
+      s += '<text x="86" y="42" font-size="8" fill="#b26a39">井口 ' + WHP + ' MPa</text>';
+      s += '<line x1="86" y1="34" x2="86" y2="352" stroke="#8d979d" stroke-width="7"/>';
+      s += '<line x1="86" y1="34" x2="86" y2="352" stroke="#3a352d" stroke-width="2"/>';
+      s += '<text x="52" y="200" font-size="8" fill="#9ba3a9" transform="rotate(-90 52 200)">主井筒</text>';
+
       for (var i = 0; i < 3; i++) {
-        var y = ys[i];
-        s += '<line x1="34" y1="' + y + '" x2="228" y2="' + y + '" stroke="#8d979d" stroke-width="4"/>';
-        /* 滑套：6 个槽，按开度点亮 */
-        var u = plan[i];
+        var y = ys[i], u = plan[i], lo = point.layerOil[i], lw = point.layerWater[i];
+        var wc = (lo + lw) > 0 ? lw / (lo + lw) : LAYERS[i].wc0;
+        s += '<g data-layer="' + i + '">';
+        s += '<rect x="8" y="' + bandT[i] + '" width="' + (W - 16) + '" height="' + (bandB[i] - bandT[i]) + '" fill="' + bandFill[i] + '"/>';
+        s += '<text x="14" y="' + (bandT[i] + 14) + '" font-size="9" fill="#8a744a">' + LAYERS[i].name + ' · 初始含水 ' + (LAYERS[i].wc0 * 100).toFixed(0) + '%</text>';
+        /* 水平分支 */
+        s += '<line x1="86" y1="' + y + '" x2="700" y2="' + y + '" stroke="#8d979d" stroke-width="6"/>';
+        s += '<line x1="86" y1="' + y + '" x2="700" y2="' + y + '" stroke="#3a352d" stroke-width="1.5"/>';
+        s += '<text x="700" y="' + (y + 14) + '" font-size="8" fill="#9ba3a9" text-anchor="end">水平段</text>';
+        /* 封隔器 */
+        s += '<rect x="206" y="' + (y - 10) + '" width="5" height="20" rx="1" fill="#5d6470"/>';
+        s += '<rect x="330" y="' + (y - 10) + '" width="5" height="20" rx="1" fill="#5d6470"/>';
+        s += '<text x="208" y="' + (y - 16) + '" font-size="7.5" fill="#9ba3a9">封隔器</text>';
+        /* 滑套 6 格 */
         for (var k = 0; k < 6; k++) {
           var on = (k + 0.5) / 6 <= u;
-          s += '<rect x="' + (98 + k * 7) + '" y="' + (y - 5) + '" width="5" height="10" rx="1" fill="' + (on ? '#3a352d' : '#d4d0c8') + '"/>';
+          s += '<rect x="' + (238 + k * 9) + '" y="' + (y - 6) + '" width="7" height="12" rx="1.5" fill="' + (on ? '#3a352d' : '#d4d0c8') + '"/>';
         }
-        s += '<rect x="96" y="' + (y - 7) + '" width="44" height="14" rx="3" fill="none" stroke="#5d6470" stroke-width=".8"/>';
-        s += '<text x="' + 152 + '" y="' + (y - 8) + '" font-size="9" fill="#3a352d">' + LAYERS[i].short + ' ' + Math.round(u * 100) + '%</text>';
-        /* 产油箭头 */
-        var oilLen = 6 + point.layerOil[i] * 0.42;
-        s += '<line x1="196" y1="' + (y + 2) + '" x2="196" y2="' + (y + 2 - oilLen) + '" stroke="#b26a39" stroke-width="2" marker-end="url(#co4-ar)"/>';
-        /* 水相：按层含水率画水滴数 */
-        var wc = point.layerOil[i] > 0 ? (point.layerWater[i] / (point.layerOil[i] + point.layerWater[i] + 0.001)) : 0;
-        var drops = Math.round(wc * 5);
-        for (var d = 0; d < drops; d++) {
-          s += '<circle cx="' + (210 + (d % 2) * 7) + '" cy="' + (y + 6 + Math.floor(d / 2) * 7) + '" r="1.9" fill="#a03d4f"/>';
+        s += '<rect x="236" y="' + (y - 9) + '" width="56" height="18" rx="3" fill="none" stroke="#5d6470" stroke-width=".8"/>';
+        s += '<text x="298" y="' + (y - 4) + '" font-size="8.5" fill="#3a352d">滑套 ' + Math.round(u * 100) + '%</text>';
+        /* 层段压力 */
+        var pLayer = (WHP - [0.6, 1.3, 2.2][i]) * (1 - (point.day - 1) / DAYS * 0.03);
+        s += '<circle cx="352" cy="' + (y - 13) + '" r="3" fill="#7d9dc4"/>';
+        s += '<text x="360" y="' + (y - 9) + '" font-size="8.5" fill="#5b7899">层压 ' + pLayer.toFixed(1) + ' MPa</text>';
+        /* 产液贡献 */
+        var oilLen = 8 + lo * 0.6, waterLen = 6 + lw * 0.9;
+        s += '<line x1="348" y1="' + (y - 2) + '" x2="' + (348 + oilLen) + '" y2="' + (y - 2) + '" stroke="#b26a39" stroke-width="2" marker-end="url(#co4-oilar)"/>';
+        s += '<text x="' + (348 + oilLen + 6) + '" y="' + (y - 4) + '" font-size="8" fill="#b26a39">油 ' + lo.toFixed(1) + '</text>';
+        if (lw > 0.2) {
+          s += '<line x1="348" y1="' + (y + 9) + '" x2="' + (348 + waterLen) + '" y2="' + (y + 9) + '" stroke="#a03d4f" stroke-width="1.6" marker-end="url(#co4-watar)"/>';
+          s += '<text x="' + (348 + waterLen + 6) + '" y="' + (y + 12) + '" font-size="8" fill="#a03d4f">水 ' + lw.toFixed(1) + '</text>';
         }
+        s += '<text x="352" y="' + (y + 26) + '" font-size="8" fill="#9ba3a9">含水 ' + (wc * 100).toFixed(0) + '%</text>';
+        /* 建议 */
+        var adv, advC = '#35785a';
+        if (wc * 100 > state.wct) { adv = '建议关小滑套'; advC = '#b05a51'; }
+        else if (u < 0.4 || lo < LAYERS[i].oilMax * 0.3) { adv = '建议增加开度'; advC = '#b26a39'; }
+        else { adv = '保持当前开度'; }
+        s += '<circle cx="440" cy="' + (y - 17) + '" r="2.8" fill="' + advC + '"/>';
+        s += '<text x="448" y="' + (y - 13) + '" font-size="8.5" fill="' + advC + '">' + adv + '</text>';
+        /* 层段压力 / 水侵提示 */
+        if (wc > 0.5) {
+          s += '<line x1="560" y1="' + (bandB[i] - 6) + '" x2="560" y2="' + (y + 4) + '" stroke="#7d9dc4" stroke-width="1.5" marker-end="url(#co4-upar)"/>';
+          s += '<text x="568" y="' + (bandB[i] - 8) + '" font-size="8" fill="#7d9dc4">水侵</text>';
+        }
+        /* 30 天分层油 / 水迷你曲线 */
+        var sx0 = 612, sx1 = 704, sy0 = y - 24, sy1 = y + 18;
+        var maxV = 1;
+        series.forEach(function (p) { maxV = Math.max(maxV, p.layerOil[i], p.layerWater[i]); });
+        var mini = d3.line().x(function (p) { return sx0 + (p.day - 1) / (DAYS - 1) * (sx1 - sx0); })
+          .y(function (p) { return sy1 - Math.min(p.v, maxV) / maxV * (sy1 - sy0); });
+        var shown = series.slice(0, day);
+        s += '<path d="' + mini(shown.map(function (p) { return { day: p.day, v: p.layerOil[i] }; })) + '" fill="none" stroke="#b26a39" stroke-width="1.2"/>';
+        s += '<path d="' + mini(shown.map(function (p) { return { day: p.day, v: p.layerWater[i] }; })) + '" fill="none" stroke="#a03d4f" stroke-width="1" opacity=".8"/>';
+        var px = sx0 + (day - 1) / (DAYS - 1) * (sx1 - sx0);
+        s += '<line x1="' + px + '" x2="' + px + '" y1="' + sy0 + '" y2="' + sy1 + '" stroke="#242a32" stroke-width="1" opacity=".3"/>';
+        s += '<text x="' + sx0 + '" y="' + (y - 30) + '" font-size="7.8" fill="#9ba3a9">30 天分层油 / 水</text>';
+        s += '</g>';
       }
-      s += '<defs><marker id="co4-ar" markerWidth="5" markerHeight="5" refX="4" refY="2.5" orient="auto"><path d="M0 0 L5 2.5 L0 5 z" fill="#b26a39"/></marker></defs>';
-      s += '<text x="' + W / 2 + '" y="' + (H - 16) + '" text-anchor="middle" font-size="8.5" fill="#9ba3a9">第 ' + point.day + ' 天 · AI 开度与分层产液</text>';
-      s += '<text x="' + W / 2 + '" y="' + (H - 4) + '" text-anchor="middle" font-size="8" fill="#9ba3a9">棕箭头 = 产油量级，蓝点 = 水相</text>';
+
+      /* 悬停覆盖层：整个层段，便于联动高亮 */
+      for (var h = 0; h < 3; h++) {
+        s += '<rect data-hover="' + h + '" x="8" y="' + bandT[h] + '" width="' + (W - 16) + '" height="' + (bandB[h] - bandT[h]) + '" fill="transparent" style="cursor:pointer"/>';
+      }
+      s += '<text x="14" y="' + (H - 8) + '" font-size="8" fill="#9ba3a9">滑套开度随第 ' + point.day + ' 天调控结果同步；数据为合成示范。</text>';
       return s + '</svg>';
     }
 
@@ -433,6 +493,21 @@
           .y1(function (p) { return y(p[key]); });
         svg.append('path').datum(aiOn ? series.ai : series.manual)
           .attr('d', area).attr('fill', aiOn ? '#3a352d' : '#b26a39').attr('opacity', 0.085);
+      }
+
+      /* 分层曲线：与井筒层段一一对应，悬停时联动高亮 */
+      var layC = boxId === 'co4-oil' ? ['#3a352d', '#5b9b87', '#9fc4b8'] : ['#a03d4f', '#7d9dc4', '#c3d3e6'];
+      for (var li = 0; li < 3; li++) {
+        var layerLine = d3.line()
+          .x(function (p) { return x(p.day); })
+          .y(function (p) {
+            var val = key === 'oil' ? p.layerOil[li]
+              : (p.layerWater[li] / (p.layerOil[li] + p.layerWater[li] + 0.001)) * 100;
+            return y(Math.min(val, yMax));
+          });
+        svg.append('path').datum(series.ai).attr('class', 'co4-lay')
+          .attr('data-layer', li).attr('d', layerLine).attr('fill', 'none')
+          .attr('stroke', layC[li]).attr('stroke-width', 1).attr('opacity', .35);
       }
 
       svg.append('path').datum(series.manual).attr('d', line).attr('fill', 'none')
@@ -868,6 +943,33 @@
       });
     }
 
+    /* ---------------- 层段与曲线联动高亮 ---------------- */
+    function highlightLayer(i) {
+      hoverLayer = i;
+      var fig = $('co4-figure');
+      if (fig) {
+        var gs = fig.querySelectorAll('g[data-layer]');
+        for (var k = 0; k < gs.length; k++) {
+          gs[k].style.opacity = (i == null || Number(gs[k].getAttribute('data-layer')) === i) ? '' : '.28';
+        }
+      }
+      ['co4-oil', 'co4-wc'].forEach(function (id) {
+        var box = $(id);
+        if (!box) return;
+        var els = box.querySelectorAll('.co4-lay');
+        for (var j = 0; j < els.length; j++) {
+          var li = Number(els[j].getAttribute('data-layer'));
+          if (i == null || li === i) {
+            els[j].setAttribute('opacity', i == null ? .35 : 1);
+            els[j].setAttribute('stroke-width', i == null ? 1 : 2.2);
+          } else {
+            els[j].setAttribute('opacity', .1);
+            els[j].setAttribute('stroke-width', 1);
+          }
+        }
+      });
+    }
+
     /* ---------------- 渲染 ---------------- */
     function renderAll() {
       var sims = getSims();
@@ -875,7 +977,7 @@
       var point = vw.point;
       var aiSeries = sims.ai.series.slice(0, simDay);
       var manualSeries = sims.manual.series.slice(0, simDay);
-      $('co4-figure').innerHTML = figureSvg(point.plan, point);
+      $('co4-figure').innerHTML = figureSvg(point.plan, point, view === 'fixed' ? sims.manual.series : sims.ai.series, simDay);
       renderOpenChart(point.plan);
       var oilMax = Math.max(state.target * 1.25, 100);
       lineChart('co4-oil', { manual: manualSeries, ai: aiSeries }, 'oil', oilMax, state.target, '目标 ' + state.target, {
@@ -969,6 +1071,28 @@
     listen($('co4-step'), 'click', function () {
       stopAnim();
       setDay(simDay >= DAYS ? 1 : simDay + 1);
+    });
+    listen($('co4-figure'), 'mousemove', function (ev) {
+      var box = $('co4-figure'), svg = box.querySelector('svg');
+      if (!svg) return;
+      var rect = svg.getBoundingClientRect();
+      if (!rect.height) return;
+      var vy = (ev.clientY - rect.top) / rect.height * 430;
+      if (vy < 96 || vy > 404) {
+        if (hoverLayer != null) { highlightLayer(null); tipHide(); }
+        return;
+      }
+      var i = vy < 204 ? 0 : (vy < 304 ? 1 : 2);
+      if (i === hoverLayer) return;
+      highlightLayer(i);
+      var p = viewData(getSims()).point;
+      var lo = p.layerOil[i], lw = p.layerWater[i];
+      tipShow(LAYERS[i].name + '<br>开度 <b>' + Math.round(p.plan[i] * 100) + '%</b> · 含水 <b>' +
+        ((lw / Math.max(lo + lw, 0.001)) * 100).toFixed(0) + '%</b><br>产油 ' + lo.toFixed(1) + ' t/d · 产水 ' + lw.toFixed(1) + ' t/d', ev);
+    });
+    listen($('co4-figure'), 'mouseleave', function () {
+      if (hoverLayer != null) highlightLayer(null);
+      tipHide();
     });
     listen($('co4-timeline'), 'input', function (ev) {
       stopAnim();

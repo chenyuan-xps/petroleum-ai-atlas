@@ -164,9 +164,17 @@
       '</div>' +
       '<div class="iq-grid">' +
         '<div class="iq-figure">' +
-          '<div class="iq-card"><div class="iq-card-h"><h4><i class="iq-dot"></i>井眼轨迹</h4><span class="iq-mini" id="co3-tr-mini">—</span></div><div id="co3-trajectory"></div>' +
-            '<div class="iq-legend"><span><i class="line" style="background:#3a352d"></i>管柱</span><span><i style="background:#b26a39"></i>狗腿 / 遇阻</span><span><i style="background:#a03d4f"></i>当前深度</span></div></div>' +
-          '<div class="iq-card"><div class="iq-card-h"><h4>当前工况</h4><span class="iq-mini" id="co3-detail-tag">—</span></div><div id="co3-detail"></div></div>' +
+          '<div class="iq-card"><div class="iq-card-h"><h4><i class="iq-dot"></i>当前工况</h4><span class="iq-mini" id="co3-detail-tag">—</span></div><div id="co3-detail"></div></div>' +
+          '<div class="iq-card"><div class="iq-card-h"><h4>工程图例 · 井筒与风险</h4><span class="iq-mini">co3</span></div>' +
+            '<div class="iq-legend" style="flex-direction:column;align-items:flex-start;gap:6px">' +
+              '<span><i class="line" style="background:#3a352d"></i>已下入完井管柱</span>' +
+              '<span><i style="background:#e9e6dc;border:1px solid #d8d2c4"></i>未下入裸眼井段</span>' +
+              '<span><i style="background:#d4d0c8"></i>套管 / 水泥环</span>' +
+              '<span><i style="background:#b26a39"></i>狗腿 / 缩径 / 遇阻点</span>' +
+              '<span><i style="background:#b05a51"></i>高风险井段（安全系数低）</span>' +
+              '<span><i style="background:#a03d4f"></i>当前管柱底端 / 深度线</span>' +
+            '</div>' +
+            '<div class="iq-note slim" id="co3-legend-note">颜色含义：深色 = 管柱与正常状态；橙色 = 工具、狗腿与遇阻点；红色 = 高风险井段与当前深度。点击右侧井筒或曲线图可查看该井深的受力解释。</div></div>' +
         '</div>' +
         '<div class="iq-main">' +
           '<div class="iq-card iq-timecard">' +
@@ -179,8 +187,9 @@
             '</div>' +
             '<div class="iq-note slim" id="co3-depth-note">拖动深度轴查看每个井深处的井斜、钩载与安全系数。</div>' +
           '</div>' +
-          '<div class="iq-card"><div class="iq-card-h"><h4>钩载曲线 · 大钩载荷随井深变化</h4><span class="iq-mini" id="co3-force-mini">—</span></div><div id="co3-force"></div>' +
-            '<div class="iq-legend"><span><i class="line" style="background:#3a352d"></i>预测钩载</span><span><i style="background:#f8f1e8"></i>安全窗口</span><span><i style="background:#b05a51"></i>高风险点</span></div></div>' +
+          '<div class="iq-card"><div class="iq-card-h"><h4>井筒剖面 · 管柱下入位置与钩载曲线联动</h4><span class="iq-mini" id="co3-scene-mini">—</span></div><div id="co3-scene"></div>' +
+            '<div class="iq-legend"><span><i class="line" style="background:#3a352d"></i>已下入管柱</span><span><i style="background:#e9e6dc"></i>未下入井眼</span><span><i style="background:#b26a39"></i>狗腿 / 遇阻</span><span><i style="background:#b05a51"></i>高风险井段</span><span><i style="background:#a03d4f"></i>当前深度</span><span><i style="background:#f8f1e8;border:1px solid #d8d2c4"></i>正常载荷区间</span></div>' +
+            '<div class="iq-note slim" id="co3-scene-note">点击井筒或曲线上的任意井深，查看该处的受力与风险解释。</div></div>' +
           '<div class="iq-card"><div class="iq-card-h"><h4>安全系数与风险热力带</h4><span class="iq-mini">阈值 ' + SF_LIMIT + ' / 1.6</span></div><div id="co3-safety"></div>' +
             '<div class="iq-legend"><span><i style="background:#3a352d"></i>低风险</span><span><i style="background:#a9852f"></i>中风险</span><span><i style="background:#b05a51"></i>高风险</span><span style="margin-left:auto">底部色带按井深分段</span></div></div>' +
         '</div>' +
@@ -259,153 +268,266 @@
     }
     function tipHide() { tip.classList.remove('on'); }
 
-    /* ---------------- 井眼轨迹 ---------------- */
-    function renderTrajectory(cur, opt) {
-      var box = $('co3-trajectory');
+    /* ---------------- 井筒剖面 + 钩载曲线工程场景 ---------------- */
+    var pinnedDepth = null;
+
+    function pointAt(arr, d) {
+      return arr.reduce(function (a, p) { return Math.abs(p.s - d) < Math.abs(a.s - d) ? p : a; }, arr[0]);
+    }
+
+    function riskLabel(p) {
+      return p.risk === 'high' ? '高风险' : (p.risk === 'mid' ? '中风险' : '正常');
+    }
+
+    function updateSceneNote(cur, d) {
+      var box = $('co3-scene-note');
+      if (!box) return;
+      var p = pointAt(cur.arr, d);
+      var run = cur.sum.highRuns.filter(function (r) { return p.s >= r.from && p.s <= r.to; })[0];
+      var anom = cur.sum.anomaly;
+      var cls = 'iq-note slim', html;
+      var lock = (pinnedDepth != null && Math.abs(pinnedDepth - depthNow) > 1) ? '（已锁定，点击图面可切换）' : '';
+      if (p.F < LOWER) {
+        cls += ' red';
+        html = '<b>低钩载风险 · ' + Math.round(p.s) + ' m' + lock + '：</b>钩载 ' + p.F.toFixed(0) +
+          ' kN 低于下限 ' + LOWER + ' kN，大斜度段摩阻吃掉自重，存在自锁/下不到位风险；建议提高润滑、短起下或调整管柱组合。';
+      } else if (p.F > UPPER) {
+        cls += ' red';
+        html = '<b>超载风险 · ' + Math.round(p.s) + ' m' + lock + '：</b>钩载 ' + p.F.toFixed(0) +
+          ' kN 超过上限 ' + UPPER + ' kN，井口设备与管柱强度余量不足，禁止继续提速下放。';
+      } else if (run) {
+        cls += ' red';
+        html = '<b>高风险井段 · ' + Math.round(p.s) + ' m' + lock + '：</b>安全系数 ' + p.sf.toFixed(2) +
+          '，弯曲应力偏高（井斜 ' + p.inc.toFixed(1) + '°、狗腿 ' + p.dls.toFixed(1) +
+          '°/30m）。建议降低下放速度、增加短起下或更换高钢级管柱。';
+      } else if (Math.abs(p.s - anom.s) <= 40) {
+        cls += ' clay';
+        html = '<b>疑似遇阻 · ' + Math.round(anom.s) + ' m' + lock + '：</b>钩载相对滑动平均下掉 ' +
+          Math.abs(anom.res).toFixed(0) + ' kN（载荷突降）。建议先核对指重表，确认后短起下再继续下放。';
+      } else {
+        html = '<b>正常载荷区间 · ' + Math.round(p.s) + ' m' + lock + '：</b>钩载 ' + p.F.toFixed(0) +
+          ' kN、井斜 ' + p.inc.toFixed(1) + '°、安全系数 ' + p.sf.toFixed(2) + '，在安全窗口内；继续监控狗腿段载荷变化。';
+      }
+      box.className = cls;
+      box.innerHTML = html;
+    }
+
+    function renderScene(cur) {
+      var box = $('co3-scene');
+      if (!box) return;
       box.innerHTML = '';
-      var W = 300, H = 330, M = { t: 22, r: 16, b: 34, l: 40 };
-      var svg = d3.select(box).append('svg').attr('viewBox', '0 0 ' + W + ' ' + H)
-        .attr('role', 'img').attr('aria-label', '井眼轨迹与管柱下入位置');
-      var arr = cur.arr, st = state;
-      var maxDisp = Math.max(d3.max(arr, function (p) { return p.disp; }), 100);
-      var x = d3.scaleLinear().domain([0, maxDisp * 1.12]).range([M.l, W - M.r]);
+      var st = state, arr = cur.arr;
+      var W = 780, H = 596, M = { t: 38, r: 20, b: 46, l: 54 };
       var y = d3.scaleLinear().domain([0, st.H]).range([M.t, H - M.b]);
-      var grid = d3.range(0, st.H + 1, Math.max(500, Math.round(st.H / 7 / 500) * 500));
+      var svg = d3.select(box).append('svg').attr('viewBox', '0 0 ' + W + ' ' + H)
+        .attr('role', 'img').attr('aria-label', '井筒剖面、完井管柱下入位置与钩载曲线联动图');
+
+      var wx0 = 96, wx1 = 358;
+      var maxDisp = Math.max(d3.max(arr, function (p) { return p.disp; }), 60) * 1.08;
+      var xD = d3.scaleLinear().domain([0, maxDisp]).range([wx0, wx1 - 24]);
+      var hx0 = 430, hx1 = 744;
+      var fmax = Math.max(d3.max(arr, function (p) { return p.F; }) * 1.16, UPPER * 1.12);
+      var xF = d3.scaleLinear().domain([0, fmax]).range([hx0, hx1]);
+
+      svg.append('rect').attr('x', 6).attr('y', 6).attr('width', W - 12).attr('height', H - 12)
+        .attr('rx', 6).attr('fill', '#fdfcfa').attr('stroke', '#f0ece1');
+
+      svg.append('text').attr('x', 16).attr('y', 22).attr('font-size', 9).attr('fill', '#9ba3a9')
+        .attr('font-family', 'ui-monospace,monospace').attr('letter-spacing', '.8').text('① 井筒剖面 · 垂深 / 水平位移');
+      svg.append('text').attr('x', hx0).attr('y', 22).attr('font-size', 9).attr('fill', '#9ba3a9')
+        .attr('font-family', 'ui-monospace,monospace').attr('letter-spacing', '.8').text('② 钩载曲线 · 大钩载荷随井深变化');
+
+      /* 深度网格与刻度：左右两侧同一井深严格对齐 */
+      var grid = d3.range(0, st.H + 1, Math.max(500, Math.round(st.H / 6 / 500) * 500));
       svg.selectAll('.gl').data(grid).enter().append('line')
-        .attr('x1', M.l).attr('x2', W - M.r).attr('y1', function (g) { return y(g); }).attr('y2', function (g) { return y(g); })
+        .attr('x1', 62).attr('x2', hx1).attr('y1', function (g) { return y(g); }).attr('y2', function (g) { return y(g); })
         .attr('stroke', '#f1eee6').attr('stroke-width', 1);
       svg.selectAll('.gt').data(grid).enter().append('text')
-        .attr('x', M.l - 4).attr('y', function (g) { return y(g) + 3; })
-        .attr('text-anchor', 'end').attr('font-size', 8).attr('fill', '#9ba3a9')
-        .attr('font-family', 'ui-monospace,monospace')
+        .attr('x', 50).attr('y', function (g) { return y(g) + 3; }).attr('text-anchor', 'end')
+        .attr('font-size', 8).attr('fill', '#9ba3a9').attr('font-family', 'ui-monospace,monospace')
         .text(function (g) { return g; });
-      svg.append('text').attr('x', M.l).attr('y', 13).attr('font-size', 8.5).attr('fill', '#9ba3a9').text('井深 (m)');
-      svg.append('text').attr('x', W - M.r).attr('y', H - 8).attr('text-anchor', 'end').attr('font-size', 8.5).attr('fill', '#9ba3a9').text('水平位移 (m) →');
+      svg.append('text').attr('x', 50).attr('y', 22).attr('text-anchor', 'end')
+        .attr('font-size', 8).attr('fill', '#9ba3a9').text('垂深 (m)');
 
-      var line = d3.line().x(function (p) { return x(p.disp); }).y(function (p) { return y(p.s); });
-      /* 井眼（浅色，始终完整） */
+      /* 地面与井口 */
+      var y0 = y(0), x0 = xD(0);
+      svg.append('rect').attr('x', wx0 - 34).attr('y', y0 - 13).attr('width', wx1 - wx0 + 70).attr('height', 13)
+        .attr('fill', '#f3efe3').attr('stroke', '#e3ddcd');
+      svg.append('line').attr('x1', wx0 - 34).attr('x2', wx1 + 36).attr('y1', y0).attr('y2', y0)
+        .attr('stroke', '#d8d2c4').attr('stroke-width', 1.4);
+      svg.append('text').attr('x', wx0 - 30).attr('y', y0 - 4).attr('font-size', 8).attr('fill', '#9ba3a9').text('地面 · 转盘');
+      svg.append('path').attr('d', 'M' + (x0 - 11) + ',' + y0 + ' L' + (x0 - 4) + ',' + (y0 - 22) + ' L' + (x0 + 4) + ',' + (y0 - 22) + ' L' + (x0 + 11) + ',' + y0)
+        .attr('fill', 'none').attr('stroke', '#9ba3a9').attr('stroke-width', 1.2);
+      svg.append('line').attr('x1', x0).attr('x2', x0).attr('y1', y0 - 22).attr('y2', y0)
+        .attr('stroke', '#9ba3a9').attr('stroke-width', 1);
+      svg.append('rect').attr('x', x0 - 8).attr('y', y0 - 5).attr('width', 16).attr('height', 10).attr('rx', 1.5)
+        .attr('fill', '#b26a39').attr('opacity', .85);
+      svg.append('text').attr('x', x0 + 13).attr('y', y0 + 10).attr('font-size', 8).attr('fill', '#b26a39').text('井口 / 采油树');
+
+      /* 井眼轨迹：裸眼、套管、内腔、已下入管柱 */
+      var line = d3.line().x(function (p) { return xD(p.disp); }).y(function (p) { return y(p.s); });
       svg.append('path').attr('d', line(arr)).attr('fill', 'none')
-        .attr('stroke', '#e9e6dc').attr('stroke-width', 6).attr('stroke-linecap', 'round');
-      /* 已下入的管柱（深色，随深度增长） */
+        .attr('stroke', '#e9e6dc').attr('stroke-width', 20).attr('stroke-linecap', 'round');
+      var casingMd = st.H * 0.5;
+      var casing = sliceTo(arr, casingMd);
+      if (casing.length > 1) {
+        svg.append('path').attr('d', line(casing)).attr('fill', 'none')
+          .attr('stroke', '#d4d0c8').attr('stroke-width', 14).attr('stroke-linecap', 'round');
+      }
+      svg.append('path').attr('d', line(arr)).attr('fill', 'none')
+        .attr('stroke', '#f8f6ef').attr('stroke-width', 6).attr('stroke-linecap', 'round');
+
       var run = sliceTo(arr, depthNow);
       if (run.length > 1) {
         svg.append('path').attr('d', line(run)).attr('fill', 'none')
-          .attr('stroke', '#3a352d').attr('stroke-width', 2.4).attr('stroke-linecap', 'round');
-        /* 管柱底端（引鞋）画一个小方块，位置随深度下移 */
-        var foot = run[run.length - 1];
-        svg.append('rect').attr('x', x(foot.disp) - 3.4).attr('y', y(foot.s) - 3.4)
-          .attr('width', 6.8).attr('height', 6.8).attr('rx', 1.2)
+          .attr('stroke', '#3a352d').attr('stroke-width', 3.6).attr('stroke-linecap', 'round');
+        var foot = run[run.length - 1], fx = xD(foot.disp), fy = y(foot.s);
+        svg.append('rect').attr('x', fx - 4.5).attr('y', fy - 12).attr('width', 9).attr('height', 12).attr('rx', 1.5)
           .attr('fill', '#3a352d').attr('stroke', '#fff').attr('stroke-width', 1.2);
+        svg.append('path').attr('d', 'M' + (fx - 4.5) + ',' + fy + ' L' + fx + ',' + (fy + 6) + ' L' + (fx + 4.5) + ',' + fy)
+          .attr('fill', '#b26a39').attr('stroke', '#fff').attr('stroke-width', 1);
+        svg.append('text').attr('x', fx + 10).attr('y', fy + 6).attr('font-size', 8).attr('fill', '#3a352d').text('引鞋 / 工具串');
       }
+
+      svg.append('text').attr('x', wx1 + 4).attr('y', y(casingMd * 0.45) - 6).attr('font-size', 8).attr('fill', '#9ba3a9').text('套管 + 水泥环');
+      svg.append('text').attr('x', wx1 + 4).attr('y', y(st.H * 0.82)).attr('font-size', 8).attr('fill', '#9ba3a9').text('裸眼井段');
 
       /* 高风险井段色带 */
       cur.sum.highRuns.forEach(function (r) {
-        var y0 = y(r.from), y1 = y(r.to);
-        svg.append('rect').attr('x', M.l).attr('y', y0).attr('width', W - M.l - M.r)
-          .attr('height', Math.max(2, y1 - y0)).attr('fill', '#b05a51').attr('opacity', 0.12);
-        svg.append('text').attr('x', M.l + 4).attr('y', (y0 + y1) / 2 + 3)
-          .attr('font-size', 7.6).attr('fill', '#b05a51').text('高风险');
+        var ry0 = y(r.from), ry1 = y(r.to);
+        svg.append('rect').attr('x', wx0 - 20).attr('y', ry0).attr('width', wx1 - wx0 + 44)
+          .attr('height', Math.max(3, ry1 - ry0)).attr('fill', '#b05a51').attr('opacity', .12);
+        svg.append('rect').attr('x', wx0 - 20).attr('y', ry0).attr('width', 3)
+          .attr('height', Math.max(3, ry1 - ry0)).attr('fill', '#b05a51');
+        svg.append('text').attr('x', wx0 - 16).attr('y', (ry0 + ry1) / 2 + 3)
+          .attr('font-size', 7.6).attr('fill', '#b05a51').text('高风险井段');
       });
 
-      /* 狗腿 / 遇阻点 */
-      var anom = cur.sum.anomaly;
-      var anomPoint = arr.reduce(function (a, p) { return Math.abs(p.s - anom.s) < Math.abs(a.s - anom.s) ? p : a; }, arr[0]);
-      svg.append('circle').attr('cx', x(anomPoint.disp)).attr('cy', y(anomPoint.s)).attr('r', 3.6)
-        .attr('fill', '#b26a39').attr('stroke', '#fff').attr('stroke-width', 1.4);
-      var ax = x(anomPoint.disp), ay = y(anomPoint.s);
-      var aLeft = ax > W * 0.55;
-      svg.append('text').attr('x', aLeft ? ax - 6 : ax + 6).attr('y', ay + 3)
-        .attr('text-anchor', aLeft ? 'end' : 'start')
-        .attr('font-size', 8).attr('fill', '#b26a39').text('遇阻 ' + Math.round(anom.s) + ' m');
+      /* 狗腿 / 缩径 / 遇阻点 */
+      var dp = pointAt(arr, st.H * 0.62);
+      var dogX = xD(dp.disp), dogY = y(dp.s);
+      svg.append('circle').attr('cx', dogX).attr('cy', dogY).attr('r', 4).attr('fill', '#b26a39')
+        .attr('stroke', '#fff').attr('stroke-width', 1.4);
+      svg.append('text').attr('x', dogX + 8).attr('y', dogY - 4).attr('font-size', 8).attr('fill', '#b26a39')
+        .text('狗腿 ' + Math.round(dp.s) + ' m · ' + dp.dls.toFixed(1) + '°/30m');
 
-      /* 当前下入深度 */
-      var curPoint = arr.reduce(function (a, p) { return Math.abs(p.s - depthNow) < Math.abs(a.s - depthNow) ? p : a; }, arr[0]);
-      svg.append('line').attr('x1', M.l).attr('x2', W - M.r)
-        .attr('y1', y(depthNow)).attr('y2', y(depthNow))
-        .attr('stroke', '#a03d4f').attr('stroke-width', 1).attr('stroke-dasharray', '3 3').attr('opacity', 0.55);
-      svg.append('circle').attr('cx', x(curPoint.disp)).attr('cy', y(curPoint.s)).attr('r', 4.2)
-        .attr('fill', '#a03d4f').attr('stroke', '#fff').attr('stroke-width', 1.5);
-      var cLeft = x(curPoint.disp) > W * 0.55;
-      svg.append('text').attr('x', cLeft ? x(curPoint.disp) - 6 : x(curPoint.disp) + 6).attr('y', y(curPoint.s) - 5)
-        .attr('text-anchor', cLeft ? 'end' : 'start')
-        .attr('font-size', 8).attr('fill', '#a03d4f').text('当前 ' + Math.round(depthNow) + ' m');
+      var tightP = pointAt(arr, st.H * 0.80);
+      var tightX = xD(tightP.disp), tightY = y(tightP.s);
+      svg.append('circle').attr('cx', tightX).attr('cy', tightY).attr('r', 3).attr('fill', '#e9dfc7')
+        .attr('stroke', '#b26a39').attr('stroke-width', 1.2);
+      svg.append('text').attr('x', tightX + 6).attr('y', tightY + 12).attr('font-size', 8).attr('fill', '#a9852f')
+        .text('缩径 · 通井确认');
 
-      $('co3-tr-mini').textContent = st.H + ' m · ' + st.inc + '°';
-    }
+      var anom = cur.sum.anomaly, ap = pointAt(arr, anom.s);
+      var aX = xD(ap.disp), aY = y(ap.s);
+      svg.append('path').attr('d', 'M' + aX + ',' + (aY - 4) + ' L' + (aX + 4) + ',' + aY + ' L' + aX + ',' + (aY + 4) + ' L' + (aX - 4) + ',' + aY + ' Z')
+        .attr('fill', '#b26a39').attr('stroke', '#fff').attr('stroke-width', 1.2);
+      svg.append('text').attr('x', aX - 8).attr('y', aY - 6).attr('text-anchor', 'end')
+        .attr('font-size', 8).attr('fill', '#b26a39').text('疑似遇阻 ' + Math.round(anom.s) + ' m');
 
-    /* ---------------- 钩载曲线 ---------------- */
-    function renderForce(cur) {
-      var box = $('co3-force');
-      box.innerHTML = '';
-      var W = 640, H = 264, M = { t: 18, r: 18, b: 36, l: 50 };
-      var arr = cur.arr;
-      var svg = d3.select(box).append('svg').attr('viewBox', '0 0 ' + W + ' ' + H)
-        .attr('role', 'img').attr('aria-label', '钩载随井深变化曲线');
-      var x = d3.scaleLinear().domain([0, state.H]).range([M.l, W - M.r]);
-      var fmax = Math.max(d3.max(arr, function (p) { return p.F; }) * 1.16, UPPER * 0.6);
-      var y = d3.scaleLinear().domain([0, fmax]).range([H - M.b, M.t]);
-
-      /* 安全窗口 */
-      svg.append('rect').attr('x', M.l).attr('y', y(UPPER)).attr('width', W - M.l - M.r)
-        .attr('height', Math.max(0, y(LOWER) - y(UPPER))).attr('fill', '#f8f1e8').attr('opacity', 0.7);
-      svg.append('line').attr('x1', M.l).attr('x2', W - M.r).attr('y1', y(LOWER)).attr('y2', y(LOWER))
+      /* 右侧钩载面板：低钩载 / 正常载荷 / 超载 */
+      var pt = y(0), pb = y(st.H);
+      svg.append('rect').attr('x', hx0).attr('y', pt).attr('width', xF(LOWER) - hx0).attr('height', pb - pt)
+        .attr('fill', '#b05a51').attr('opacity', .06);
+      svg.append('rect').attr('x', xF(LOWER)).attr('y', pt).attr('width', xF(UPPER) - xF(LOWER)).attr('height', pb - pt)
+        .attr('fill', '#f8f1e8').attr('opacity', .85);
+      svg.append('rect').attr('x', xF(UPPER)).attr('y', pt).attr('width', hx1 - xF(UPPER)).attr('height', pb - pt)
+        .attr('fill', '#b05a51').attr('opacity', .07);
+      svg.append('line').attr('x1', xF(LOWER)).attr('x2', xF(LOWER)).attr('y1', pt).attr('y2', pb)
         .attr('stroke', '#3a352d').attr('stroke-dasharray', '4 3').attr('stroke-width', 1);
-      svg.append('text').attr('x', W - M.r - 4).attr('y', y(LOWER) - 4).attr('text-anchor', 'end')
-        .attr('font-size', 8.5).attr('fill', '#3a352d').text('最小钩载 ' + LOWER + ' kN');
+      svg.append('line').attr('x1', xF(UPPER)).attr('x2', xF(UPPER)).attr('y1', pt).attr('y2', pb)
+        .attr('stroke', '#b05a51').attr('stroke-dasharray', '4 3').attr('stroke-width', 1);
+      svg.append('text').attr('x', (hx0 + xF(LOWER)) / 2).attr('y', 33).attr('text-anchor', 'middle')
+        .attr('font-size', 8).attr('fill', '#b05a51').text('低钩载风险');
+      svg.append('text').attr('x', (xF(LOWER) + xF(UPPER)) / 2).attr('y', 33).attr('text-anchor', 'middle')
+        .attr('font-size', 8).attr('fill', '#3a352d').text('正常载荷区间 ' + LOWER + '—' + UPPER + ' kN');
+      svg.append('text').attr('x', (xF(UPPER) + hx1) / 2 + 10).attr('y', 33).attr('text-anchor', 'middle')
+        .attr('font-size', 8).attr('fill', '#b05a51').text('超载风险');
 
-      svg.append('g').attr('transform', 'translate(' + M.l + ',0)')
-        .call(d3.axisLeft(y).ticks(5).tickSize(-(W - M.l - M.r)))
-        .call(function (g) {
-          g.select('.domain').remove();
-          g.selectAll('.tick line').attr('stroke', '#f1eee6');
-          g.selectAll('.tick text').attr('font-size', 8.5).attr('fill', '#9ba3a9');
-        });
-      svg.append('g').attr('transform', 'translate(0,' + (H - M.b) + ')')
-        .call(d3.axisBottom(x).ticks(6).tickSize(0))
-        .call(function (g) { g.select('.domain').attr('stroke', '#d8d2c4'); })
-        .selectAll('text').attr('font-size', 8.5).attr('fill', '#9ba3a9').attr('dy', '1em');
-      svg.append('text').attr('x', M.l).attr('y', 11).attr('font-size', 9).attr('fill', '#9ba3a9').text('钩载 (kN)');
-      svg.append('text').attr('x', W - M.r).attr('y', H - 6).attr('text-anchor', 'end').attr('font-size', 9).attr('fill', '#9ba3a9').text('井深 (m) →');
-
-      var line = d3.line().x(function (p) { return x(p.s); }).y(function (p) { return y(p.F); });
-      /* 未下入段：淡色参考线；已下入段：实色，随动画推进 */
-      svg.append('path').attr('d', line(arr)).attr('fill', 'none')
-        .attr('stroke', '#e9e6dc').attr('stroke-width', 1.8);
+      /* 钩载曲线（纵轴为井深、向下） */
+      var fLine = d3.line().x(function (p) { return xF(Math.min(p.F, fmax)); }).y(function (p) { return y(p.s); });
+      svg.append('path').attr('d', fLine(arr)).attr('fill', 'none').attr('stroke', '#e9e6dc').attr('stroke-width', 2);
       var runF = sliceTo(arr, depthNow);
       if (runF.length > 1) {
-        svg.append('path').attr('d', line(runF)).attr('fill', 'none')
+        svg.append('path').attr('d', fLine(runF)).attr('fill', 'none')
           .attr('stroke', '#3a352d').attr('stroke-width', 2.2).attr('stroke-linecap', 'round');
       }
-      /* 高风险点 */
       svg.selectAll('.riskdot').data(arr.filter(function (p) { return p.risk === 'high'; })).enter().append('circle')
-        .attr('cx', function (p) { return x(p.s); }).attr('cy', function (p) { return y(p.F); }).attr('r', 1.9)
-        .attr('fill', '#b05a51');
-      /* 异常点 */
-      var anom = cur.sum.anomaly;
-      var ap = arr.reduce(function (a, p) { return Math.abs(p.s - anom.s) < Math.abs(a.s - anom.s) ? p : a; }, arr[0]);
-      svg.append('circle').attr('cx', x(ap.s)).attr('cy', y(ap.F)).attr('r', 4.2)
+        .attr('cx', function (p) { return xF(Math.min(p.F, fmax)); }).attr('cy', function (p) { return y(p.s); })
+        .attr('r', 1.8).attr('fill', '#b05a51');
+
+      /* 异常点：曲线 ↔ 井筒连线 */
+      var fAnomX = xF(Math.min(ap.F, fmax)), fAnomY = y(ap.s);
+      svg.append('line').attr('x1', aX).attr('x2', fAnomX).attr('y1', aY).attr('y2', fAnomY)
+        .attr('stroke', '#b26a39').attr('stroke-width', 1).attr('stroke-dasharray', '3 3').attr('opacity', .65);
+      svg.append('circle').attr('cx', fAnomX).attr('cy', fAnomY).attr('r', 4)
         .attr('fill', 'none').attr('stroke', '#b26a39').attr('stroke-width', 2);
-      svg.append('text').attr('x', x(ap.s)).attr('y', y(ap.F) - 9).attr('text-anchor', 'middle')
-        .attr('font-size', 8.5).attr('fill', '#b26a39').text('遇阻残差 ' + anom.res.toFixed(0) + ' kN');
-      /* 当前深度 */
-      svg.append('line').attr('x1', x(depthNow)).attr('x2', x(depthNow)).attr('y1', M.t).attr('y2', H - M.b)
-        .attr('stroke', '#a03d4f').attr('stroke-width', 1).attr('stroke-dasharray', '3 3');
-      var cp = arr.reduce(function (a, p) { return Math.abs(p.s - depthNow) < Math.abs(a.s - depthNow) ? p : a; }, arr[0]);
-      svg.append('circle').attr('cx', x(cp.s)).attr('cy', y(cp.F)).attr('r', 3.6)
-        .attr('fill', '#a03d4f').attr('stroke', '#fff').attr('stroke-width', 1.2);
+      svg.append('text').attr('x', fAnomX + 7).attr('y', fAnomY - 7).attr('font-size', 8).attr('fill', '#b26a39')
+        .text('载荷突降 ' + Math.abs(anom.res).toFixed(0) + ' kN');
 
-      /* 悬停提示 */
-      var overlay = svg.append('rect').attr('x', M.l).attr('y', M.t)
-        .attr('width', W - M.l - M.r).attr('height', H - M.t - M.b)
-        .attr('fill', 'transparent').style('cursor', 'crosshair');
-      overlay.on('mousemove', function (ev) {
-        var mx = d3.pointer(ev, svg.node())[0];
-        var depth = clamp(x.invert(mx), 0, state.H);
-        var p = arr.reduce(function (a, q) { return Math.abs(q.s - depth) < Math.abs(a.s - depth) ? q : a; }, arr[0]);
-        tipShow('井深 <b>' + Math.round(p.s) + '</b> m · 井斜 <b>' + p.inc.toFixed(1) + '</b>°<br>钩载 <b>' + p.F.toFixed(0) + '</b> kN · 安全系数 <b>' + p.sf.toFixed(2) + '</b>', ev);
-      }).on('mouseleave', tipHide);
+      /* 坐标说明 */
+      svg.append('text').attr('x', hx0).attr('y', H - M.b + 20).attr('font-size', 8.5).attr('fill', '#9ba3a9').text('0');
+      svg.append('text').attr('x', hx1).attr('y', H - M.b + 20).attr('text-anchor', 'end').attr('font-size', 8.5).attr('fill', '#9ba3a9').text(Math.round(fmax) + ' kN');
+      svg.append('text').attr('x', hx1).attr('y', H - 14).attr('text-anchor', 'end').attr('font-size', 9).attr('fill', '#9ba3a9').text('大钩载荷 (kN) →');
+      svg.append('text').attr('x', wx1 - 10).attr('y', H - 14).attr('text-anchor', 'end').attr('font-size', 9).attr('fill', '#9ba3a9').text('水平位移 (m) →');
 
-      $('co3-force-mini').textContent = '末钩载 ' + cur.sum.endF.toFixed(0) + ' kN · 峰值 ' + cur.sum.maxF.toFixed(0) + ' kN';
+      /* 当前深度：贯穿井筒与曲线的定位线 */
+      var cp = depthPoint(arr);
+      var cy = y(depthNow), cwx = xD(cp.disp), cfx = xF(Math.min(cp.F, fmax));
+      svg.append('line').attr('x1', 58).attr('x2', hx1).attr('y1', cy).attr('y2', cy)
+        .attr('stroke', '#a03d4f').attr('stroke-width', 1).attr('stroke-dasharray', '3 3').attr('opacity', .5);
+      svg.append('line').attr('x1', cwx).attr('x2', cfx).attr('y1', cy).attr('y2', cy)
+        .attr('stroke', '#a03d4f').attr('stroke-width', 1.1).attr('stroke-dasharray', '2 2').attr('opacity', .7);
+      svg.append('circle').attr('cx', cwx).attr('cy', cy).attr('r', 4.4)
+        .attr('fill', '#a03d4f').attr('stroke', '#fff').attr('stroke-width', 1.5);
+      svg.append('circle').attr('cx', cfx).attr('cy', cy).attr('r', 4)
+        .attr('fill', '#a03d4f').attr('stroke', '#fff').attr('stroke-width', 1.3);
+      svg.append('text').attr('x', 62).attr('y', cy - 5).attr('font-size', 8).attr('fill', '#a03d4f')
+        .text('当前 ' + Math.round(depthNow) + ' m · 钩载 ' + cp.F.toFixed(0) + ' kN · SF ' + cp.sf.toFixed(2));
+      svg.append('text').attr('x', cfx + 8).attr('y', cy + 12).attr('font-size', 8).attr('fill', '#a03d4f')
+        .text('当前载荷');
+
+      /* 点击锁定的井深参考线 */
+      if (pinnedDepth != null) {
+        var pp = pointAt(arr, pinnedDepth);
+        svg.append('line').attr('x1', 58).attr('x2', hx1).attr('y1', y(pinnedDepth)).attr('y2', y(pinnedDepth))
+          .attr('stroke', '#a9852f').attr('stroke-width', 1).attr('stroke-dasharray', '6 3');
+        svg.append('circle').attr('cx', xD(pp.disp)).attr('cy', y(pp.s)).attr('r', 3.2)
+          .attr('fill', '#a9852f').attr('stroke', '#fff').attr('stroke-width', 1.2);
+      }
+
+      /* 悬停联动：同时高亮井筒与曲线上的同一井深 */
+      var hover = svg.append('g').attr('opacity', 0);
+      var hline = hover.append('line').attr('y1', pt).attr('y2', pb).attr('stroke', '#7d9dc4')
+        .attr('stroke-width', 1).attr('stroke-dasharray', '3 2');
+      var hwx = hover.append('circle').attr('r', 4.2).attr('fill', '#7d9dc4').attr('stroke', '#fff').attr('stroke-width', 1.2);
+      var hfx = hover.append('circle').attr('r', 3.8).attr('fill', '#7d9dc4').attr('stroke', '#fff').attr('stroke-width', 1.2);
+      var hconn = hover.append('line').attr('stroke', '#7d9dc4').attr('stroke-width', 1).attr('stroke-dasharray', '2 2').attr('opacity', .6);
+
+      function hoverAt(ev) {
+        var my = d3.pointer(ev, svg.node())[1];
+        var d = clamp(y.invert(my), 0, st.H);
+        var p = pointAt(arr, d);
+        hover.attr('opacity', 1);
+        hline.attr('x1', 58).attr('x2', hx1).attr('y1', y(p.s)).attr('y2', y(p.s));
+        hwx.attr('cx', xD(p.disp)).attr('cy', y(p.s));
+        hfx.attr('cx', xF(Math.min(p.F, fmax))).attr('cy', y(p.s));
+        hconn.attr('x1', xD(p.disp)).attr('x2', xF(Math.min(p.F, fmax))).attr('y1', y(p.s)).attr('y2', y(p.s));
+        tipShow('井深 <b>' + Math.round(p.s) + '</b> m · 井斜 <b>' + p.inc.toFixed(1) + '</b>°<br>钩载 <b>' + p.F.toFixed(0) +
+          '</b> kN · 安全系数 <b>' + p.sf.toFixed(2) + '</b><br>状态：<b>' + riskLabel(p) + '</b> · 点击锁定该深度', ev);
+        return p;
+      }
+
+      var overlay = svg.append('rect').attr('x', 58).attr('y', pt)
+        .attr('width', hx1 - 58).attr('height', pb - pt).attr('fill', 'transparent').style('cursor', 'crosshair');
+      overlay.on('mousemove', hoverAt).on('mouseleave', function () { hover.attr('opacity', 0); tipHide(); })
+        .on('click', function (ev) {
+          var p = hoverAt(ev);
+          pinnedDepth = p.s;
+          updateSceneNote(cur, p.s);
+        });
+
+      $('co3-scene-mini').textContent = Math.round(depthNow) + ' / ' + st.H + ' m · 钩载 ' + cp.F.toFixed(0) + ' kN';
     }
 
     /* ---------------- 安全系数与热力带 ---------------- */
@@ -516,6 +638,7 @@
           cp.F.toFixed(0) + ' kN · 安全系数 ' + cp.sf.toFixed(2) + '（阈值 ' + SF_LIMIT.toFixed(1) + '）。';
       }
       $('co3-time-mini').textContent = Math.round(depthNow) + ' / ' + state.H + ' m' + (playing ? ' · 下入中' : '');
+      updateSceneNote(cur, pinnedDepth != null ? pinnedDepth : depthNow);
     }
 
     /* ---------------- 输出 ---------------- */
@@ -823,8 +946,7 @@
       var conf = confidenceOf(opt, cur);
 
       renderSmart(cur, opt, conf);
-      renderTrajectory(cur);
-      renderForce(cur);
+      renderScene(cur);
       renderSafety(cur);
       renderOutput(cur, opt, conf);
       renderDepth(cur);
@@ -846,12 +968,14 @@
 
     function setDepth(d) {
       depthNow = clamp(Math.round(d / 10) * 10, 0, state.H);
+      pinnedDepth = null;
       renderAll();
     }
 
     function startAnim() {
       if (playing) { stopAnim(); renderAll(); return; }
       if (depthNow >= state.H - 1) depthNow = 0;
+      pinnedDepth = null;
       playing = true;
       syncPlayBtns();
       renderAll();
@@ -868,6 +992,7 @@
       listen($(id), 'input', function () {
         stopAnim();
         depthNow = state.H;
+        pinnedDepth = null;
         readState();
         renderAll();
       });
@@ -889,6 +1014,7 @@
       $('co3-v').value = state.v; $('co3-mu').value = state.mu; $('co3-inc').value = state.inc;
       $('co3-w').value = state.w; $('co3-H').value = state.H;
       depthNow = state.H;
+      pinnedDepth = null;
       readState(); renderAll();
     });
     listen($('co3-ai'), 'click', function () {
@@ -897,6 +1023,7 @@
       state.v = Math.round(opt.v * 20) / 20;
       $('co3-v').value = state.v;
       depthNow = state.H;
+      pinnedDepth = null;
       readState(); renderAll();
     });
 

@@ -137,12 +137,22 @@
       '</div>' +
       '<div class="iq-grid">' +
         '<div class="iq-figure">' +
-          '<div class="iq-card"><div class="iq-card-h"><h4><i class="iq-dot"></i>射孔结构</h4><span class="iq-mini" id="co2-figlabel">—</span></div><div id="co2-figure"></div>' +
-            '<div class="iq-legend"><span><i style="background:#b26a39"></i>孔眼 / 隧道</span><span><i style="background:#8d979d"></i>套管</span><span><i style="background:#c9c3b4"></i>水泥环</span></div></div>' +
-          '<div class="iq-card"><div class="iq-card-h"><h4>当前方案</h4><span class="iq-mini" id="co2-rank">—</span></div><div id="co2-detail"></div></div>' +
+          '<div class="iq-card"><div class="iq-card-h"><h4><i class="iq-dot"></i>当前方案</h4><span class="iq-mini" id="co2-rank">—</span></div><div id="co2-detail"></div></div>' +
+          '<div class="iq-card"><div class="iq-card-h"><h4>工程图例 · 射孔风险</h4><span class="iq-mini">co2</span></div>' +
+            '<div class="iq-legend" style="flex-direction:column;align-items:flex-start;gap:6px">' +
+              '<span><i style="background:#8d979d"></i>套管 / 水泥环</span>' +
+              '<span><i style="background:#b26a39"></i>射孔孔道</span>' +
+              '<span><i style="background:#a9852f"></i>近井污染带</span>' +
+              '<span><i style="background:#b05a51"></i>套管损伤 / 水层沟通风险</span>' +
+              '<span><i style="background:#7d9dc4"></i>含水层（蓝色）</span>' +
+            '</div>' +
+            '<div class="iq-note slim" id="co2-fig-note">左侧为沿井筒的纵向射孔段，右侧为径向放大视图；孔数随孔密、方向随相位、长度随孔径实时变化。</div>' +
+          '</div>' +
         '</div>' +
         '<div class="iq-main">' +
-          '<div class="iq-card"><div class="iq-card-h"><h4>产能热力图 · 孔密 × 段长</h4><span class="iq-mini" id="co2-hm-mini">—</span></div><div id="co2-heat"></div><div class="iq-legend" id="co2-heat-legend"></div></div>' +
+          '<div class="iq-card"><div class="iq-card-h"><h4>套管射孔现场示意 · 参数与风险联动</h4><span class="iq-mini" id="co2-figlabel">—</span></div><div id="co2-figure"></div>' +
+            '<div class="iq-legend"><span><i style="background:#8d979d"></i>套管</span><span><i style="background:#c9c3b4"></i>水泥环</span><span><i style="background:#e9dfc7"></i>目的层</span><span><i style="background:#b26a39"></i>射孔孔道</span><span><i style="background:#a9852f"></i>近井污染带</span><span><i style="background:#7d9dc4"></i>含水层</span><span><i style="background:#b05a51"></i>风险标注</span></div></div>' +
+          '<div class="iq-card"><div class="iq-card-h"><h4>产能热力图（辅助）· 孔密 × 段长</h4><span class="iq-mini" id="co2-hm-mini">—</span></div><div id="co2-heat"></div><div class="iq-legend" id="co2-heat-legend"></div></div>' +
           '<div class="iq-card"><div class="iq-card-h"><h4>风险等高线 · 阈值 ' + RISK_LIMIT + '</h4><span class="iq-mini">红虚线为约束边界</span></div><div id="co2-risk"></div></div>' +
           '<div class="iq-card"><div class="iq-card-h"><h4>相位敏感性</h4><span class="iq-mini">当前孔密 / 孔径 / 段长</span></div><div id="co2-phasechart"></div><div class="iq-legend" id="co2-phase-legend"></div></div>' +
         '</div>' +
@@ -229,42 +239,119 @@
     }
     function tipHide() { tip.classList.remove('on'); }
 
-    /* ---------------- 结构示意 ---------------- */
-    function figureSvg(st) {
-      var cx = 110, cy = 104, rIn = 22, rCem = 28, rFor = 74;
+    /* ---------------- 套管射孔现场示意 ---------------- */
+    function figureSvg(st, opt) {
+      var mm = calc(st.n, st.phase, st.d, st.len, st.pressure);
       var dirs = PHASE_HOLES[st.phase] || 4;
-      var tunnel = 12 + st.d * 2.2;
-      var s = '<svg viewBox="0 0 220 330" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="射孔相位与段长示意">';
-      s += '<rect width="220" height="330" fill="#fff"/>';
-      s += '<circle cx="' + cx + '" cy="' + cy + '" r="' + rFor + '" fill="#e9dfc7" stroke="#d8d2c4"/>';
-      s += '<circle cx="' + cx + '" cy="' + cy + '" r="' + rCem + '" fill="#ece8dc"/>';
-      s += '<circle cx="' + cx + '" cy="' + cy + '" r="' + rIn + '" fill="#fff" stroke="#8d979d" stroke-width="3"/>';
-      s += '<circle cx="' + cx + '" cy="' + cy + '" r="' + (rCem - 2) + '" fill="none" stroke="#c9c3b4" stroke-width="1.5"/>';
-      s += '<text x="' + cx + '" y="' + (cy + 3) + '" font-size="8" fill="#9ba3a9" text-anchor="middle">套管</text>';
-      for (var i = 0; i < dirs; i++) {
-        var a = (-90 + i * 360 / dirs) * Math.PI / 180;
-        var x1 = cx + Math.cos(a) * (rIn + 2), y1 = cy + Math.sin(a) * (rIn + 2);
-        var x2 = cx + Math.cos(a) * (rIn + 2 + tunnel), y2 = cy + Math.sin(a) * (rIn + 2 + tunnel);
-        s += '<line x1="' + x1 + '" y1="' + y1 + '" x2="' + x2 + '" y2="' + y2 + '" stroke="#b26a39" stroke-width="2.4" stroke-linecap="round"/>';
-        s += '<circle cx="' + x2 + '" cy="' + y2 + '" r="1.8" fill="#b26a39"/>';
-      }
-      s += '<text x="' + cx + '" y="' + (cy + rFor + 18) + '" font-size="10" fill="#4a545d" text-anchor="middle">相位 ' + st.phase + '° · 每排 ' + dirs + ' 孔</text>';
-      s += '<text x="' + cx + '" y="' + (cy + rFor + 32) + '" font-size="9" fill="#9ba3a9" text-anchor="middle">孔径 ' + st.d + ' mm，隧道长度按孔径示意</text>';
+      var s = '<svg viewBox="0 0 780 430" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="套管射孔纵向剖面与径向相位示意">';
+      s += '<rect width="780" height="430" fill="#fff"/>';
 
-      /* 段长与孔密 */
-      var top = 232, bot = 306, x = 96, w = 28;
-      s += '<rect x="' + x + '" y="' + top + '" width="' + w + '" height="' + (bot - top) + '" fill="#f6f3ea" stroke="#d8d2c4"/>';
-      var rows = Math.round(st.n * st.len / 2);
-      rows = Math.min(rows, 32);
-      for (var k = 0; k < rows; k++) {
-        var yy = top + 6 + k * (bot - top - 12) / Math.max(rows - 1, 1);
-        s += '<line x1="' + (x - 3) + '" y1="' + yy + '" x2="' + (x + 3) + '" y2="' + yy + '" stroke="#b26a39" stroke-width="1.6"/>';
-        s += '<line x1="' + (x + w - 3) + '" y1="' + yy + '" x2="' + (x + w + 3) + '" y2="' + yy + '" stroke="#b26a39" stroke-width="1.6"/>';
+      /* ---- 左：沿井筒的纵向射孔段 ---- */
+      var wx = 200, resT = 150, resB = 310, waterT = 310, waterB = 386;
+      s += '<text x="16" y="22" font-size="9" fill="#9ba3a9" font-family="ui-monospace,monospace" letter-spacing=".8">① 纵向剖面 · 射孔段 2850—2860 m</text>';
+      s += '<rect x="70" y="38" width="268" height="112" fill="#efe9dc" stroke="#e3ddcd"/>';
+      s += '<rect x="70" y="150" width="268" height="160" fill="#e9dfc7" stroke="#cbbd99"/>';
+      s += '<rect x="70" y="310" width="268" height="76" fill="#dbe5ee" stroke="#c3d3e6"/>';
+      s += '<text x="78" y="58" font-size="8.5" fill="#9ba3a9">上部井段（0—2850 m 压缩显示）</text>';
+      s += '<text x="78" y="166" font-size="9" fill="#8a744a">目的层 · 储层</text>';
+      s += '<text x="78" y="328" font-size="9" fill="#5b7899">含水层 · 2870 m</text>';
+      for (var po = 0; po < 24; po++) {
+        s += '<circle cx="' + (84 + (po % 12) * 19 + (po % 4)) + '" cy="' + (182 + Math.floor(po / 12) * 62 + (po % 3) * 3) + '" r="1.5" fill="#b26a39" opacity=".45"/>';
       }
-      s += '<line x1="' + (x + w + 22) + '" y1="' + top + '" x2="' + (x + w + 22) + '" y2="' + bot + '" stroke="#9ba3a9" stroke-width="1" marker-start="url(#co2-ar)" marker-end="url(#co2-ar)"/>';
-      s += '<defs><marker id="co2-ar" markerWidth="4" markerHeight="4" refX="2" refY="2" orient="auto"><path d="M0 0 L4 2 L0 4 z" fill="#9ba3a9"/></marker></defs>';
-      s += '<text x="' + (x + w + 28) + '" y="' + ((top + bot) / 2 + 3) + '" font-size="10" fill="#4a545d">' + st.len + ' m</text>';
-      s += '<text x="' + (x + w / 2) + '" y="' + (bot + 16) + '" font-size="9.5" fill="#9ba3a9" text-anchor="middle">约 ' + Math.round(st.n * st.len) + ' 孔 · ' + st.n + ' 孔/m</text>';
+      /* 深度刻度 */
+      s += '<text x="60" y="42" text-anchor="end" font-size="8" fill="#9ba3a9" font-family="ui-monospace,monospace">0 m</text>';
+      s += '<text x="60" y="148" text-anchor="end" font-size="8" fill="#9ba3a9" font-family="ui-monospace,monospace">2850</text>';
+      s += '<text x="60" y="314" text-anchor="end" font-size="8" fill="#8a744a" font-family="ui-monospace,monospace">2860</text>';
+      s += '<text x="60" y="382" text-anchor="end" font-size="8" fill="#5b7899" font-family="ui-monospace,monospace">2870</text>';
+      /* 盖层 / 目的层 / 水层与井筒 */
+      s += '<rect x="' + (wx - 24) + '" y="38" width="48" height="' + (waterB - 38) + '" fill="#ece8dc" stroke="#ddd6c6"/>';
+      s += '<rect x="' + (wx - 16) + '" y="38" width="32" height="' + (waterB - 38) + '" fill="#d4d0c8" stroke="#8d979d"/>';
+      s += '<rect x="' + (wx - 8) + '" y="38" width="16" height="' + (waterB - 38) + '" fill="#fbfaf6"/>';
+      s += '<text x="' + (wx - 30) + '" y="110" text-anchor="end" font-size="8" fill="#9ba3a9">套管 + 水泥环</text>';
+      /* 射孔段与孔道 */
+      var yTop = resT + 8, yEnd = Math.min(resT + 8 + st.len * 16, resB - 4);
+      var rows = clamp(Math.round(st.n * st.len / 3), 4, 24);
+      var tunnelPx = 13 + st.d * 1.9;
+      s += '<rect x="' + (wx - 28) + '" y="' + yTop + '" width="56" height="' + (yEnd - yTop) + '" fill="#a9852f" opacity=".14"/>';
+      s += '<rect x="' + (wx - 28) + '" y="' + yTop + '" width="56" height="' + (yEnd - yTop) + '" fill="none" stroke="#a9852f" stroke-dasharray="3 2" opacity=".7"/>';
+      var tilt = st.phase >= 90 ? 0 : 10;
+      for (var k = 0; k < rows; k++) {
+        var yy = yTop + 3 + k * (yEnd - yTop - 6) / Math.max(rows - 1, 1);
+        var dy = (k % 2 ? 1 : -1) * tilt;
+        s += '<line x1="' + (wx - 16) + '" y1="' + yy + '" x2="' + (wx - 16 - tunnelPx) + '" y2="' + (yy + dy) + '" stroke="#b26a39" stroke-width="2" stroke-linecap="round"/>';
+        s += '<line x1="' + (wx + 16) + '" y1="' + yy + '" x2="' + (wx + 16 + tunnelPx) + '" y2="' + (yy + dy) + '" stroke="#b26a39" stroke-width="2" stroke-linecap="round"/>';
+        s += '<circle cx="' + (wx - 16 - tunnelPx) + '" cy="' + (yy + dy) + '" r="1.6" fill="#b26a39"/>';
+        s += '<circle cx="' + (wx + 16 + tunnelPx) + '" cy="' + (yy + dy) + '" r="1.6" fill="#b26a39"/>';
+      }
+      s += '<text x="' + (wx + 36) + '" y="' + (yTop + 18) + '" font-size="8" fill="#a9852f">近井污染带</text>';
+      s += '<text x="' + (wx + 36) + '" y="' + (yTop + 44) + '" font-size="8" fill="#b26a39">' + st.n + ' 孔/m · 共 ' + Math.round(st.n * st.len) + ' 孔</text>';
+      s += '<text x="' + (wx + 36) + '" y="' + (yTop + 56) + '" font-size="8" fill="#9ba3a9">孔道长 ' + (0.4 + st.d / 14 * 1.0).toFixed(1) + ' m（按孔径折算）</text>';
+      /* 射孔段标注 */
+      s += '<line x1="' + (wx - 64) + '" y1="' + yTop + '" x2="' + (wx - 64) + '" y2="' + yEnd + '" stroke="#3a352d" stroke-width="1"/>';
+      s += '<line x1="' + (wx - 68) + '" y1="' + yTop + '" x2="' + (wx - 60) + '" y2="' + yTop + '" stroke="#3a352d" stroke-width="1"/>';
+      s += '<line x1="' + (wx - 68) + '" y1="' + yEnd + '" x2="' + (wx - 60) + '" y2="' + yEnd + '" stroke="#3a352d" stroke-width="1"/>';
+      s += '<text x="' + (wx - 72) + '" y="' + ((yTop + yEnd) / 2) + '" text-anchor="end" font-size="8.5" fill="#3a352d">' +
+        '射孔段 2850—' + (2850 + st.len) + ' m（' + st.len + ' m）</text>';
+      /* 套管损伤风险 */
+      if (mm.casing > 55) {
+        s += '<text x="' + (wx - 30) + '" y="' + (yTop - 10) + '" text-anchor="end" font-size="8" fill="#b05a51">套管损伤风险 ' + mm.casing.toFixed(0) + '</text>';
+        s += '<line x1="' + (wx - 22) + '" y1="' + (yTop - 6) + '" x2="' + (wx - 16) + '" y2="' + yTop + '" stroke="#b05a51" stroke-width="1.4"/>';
+      }
+      /* 水层沟通风险 */
+      if (yEnd > resB - 12 || st.len >= 12) {
+        s += '<line x1="' + (wx + 16) + '" y1="' + yEnd + '" x2="' + (wx + 74) + '" y2="' + (waterT + 14) + '" stroke="#b05a51" stroke-width="1.2" stroke-dasharray="3 2"/>';
+        s += '<text x="' + (wx + 78) + '" y="' + (waterT + 12) + '" font-size="8" fill="#b05a51">沟通水层风险</text>';
+      } else {
+        s += '<text x="' + (wx + 78) + '" y="' + (waterT + 12) + '" font-size="8" fill="#5b7899">距水层 ' + (2870 - (2850 + st.len)) + ' m</text>';
+      }
+      /* 流体流入 */
+      s += '<defs><marker id="co2-flow" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0 0 L6 3 L0 6 z" fill="#a03d4f"/></marker></defs>';
+      s += '<line x1="' + (wx - 64) + '" y1="' + (yTop + 34) + '" x2="' + (wx - 30) + '" y2="' + (yTop + 34) + '" stroke="#a03d4f" stroke-width="1.3" marker-end="url(#co2-flow)"/>';
+      s += '<line x1="' + (wx + 64) + '" y1="' + (yTop + 34) + '" x2="' + (wx + 30) + '" y2="' + (yTop + 34) + '" stroke="#a03d4f" stroke-width="1.3" marker-end="url(#co2-flow)"/>';
+
+      /* ---- 右：径向放大视图 ---- */
+      var cx = 588, cy = 208, rIn = 44, rCem = 56, rFor = 124;
+      s += '<text x="382" y="22" font-size="9" fill="#9ba3a9" font-family="ui-monospace,monospace" letter-spacing=".8">② 径向放大 · 相位 ' + st.phase + '°</text>';
+      s += '<circle cx="' + cx + '" cy="' + cy + '" r="' + rFor + '" fill="#e9dfc7" stroke="#d8d2c4"/>';
+      s += '<circle cx="' + cx + '" cy="' + cy + '" r="' + (rCem + 2) + '" fill="#ece8dc"/>';
+      s += '<circle cx="' + cx + '" cy="' + cy + '" r="' + rCem + '" fill="none" stroke="#c9c3b4" stroke-width="1.6"/>';
+      s += '<circle cx="' + cx + '" cy="' + cy + '" r="' + rIn + '" fill="#fff" stroke="#8d979d" stroke-width="4"/>';
+      s += '<circle cx="' + cx + '" cy="' + cy + '" r="' + rIn + '" fill="none" stroke="#d4d0c8" stroke-width="2"/>';
+      s += '<text x="' + cx + '" y="' + (cy + 3) + '" font-size="8.5" fill="#9ba3a9" text-anchor="middle">井筒</text>';
+      /* 近井污染环 */
+      s += '<circle cx="' + cx + '" cy="' + cy + '" r="' + (rIn + 24 + st.d * 2.4) + '" fill="none" stroke="#a9852f" stroke-width="1.2" stroke-dasharray="4 3" opacity=".8"/>';
+      s += '<text x="' + (cx + 86) + '" y="' + (cy - 96) + '" font-size="8" fill="#a9852f">近井污染带</text>';
+      /* 孔道 */
+      var tp = 36 + st.d * 3.6;
+      for (var j = 0; j < dirs; j++) {
+        var a = (-90 + j * 360 / dirs) * Math.PI / 180;
+        var x1 = cx + Math.cos(a) * (rIn + 4), y1 = cy + Math.sin(a) * (rIn + 4);
+        var x2 = cx + Math.cos(a) * (rIn + 4 + tp), y2 = cy + Math.sin(a) * (rIn + 4 + tp);
+        s += '<line x1="' + x1 + '" y1="' + y1 + '" x2="' + x2 + '" y2="' + y2 + '" stroke="#b26a39" stroke-width="3" stroke-linecap="round"/>';
+        s += '<circle cx="' + x2 + '" cy="' + y2 + '" r="2.2" fill="#b26a39"/>';
+      }
+      s += '<text x="' + cx + '" y="' + (cy + rFor + 20) + '" font-size="9.5" fill="#4a545d" text-anchor="middle">相位 ' + st.phase + '° · 每排 ' + dirs + ' 孔</text>';
+      s += '<text x="' + cx + '" y="' + (cy + rFor + 34) + '" font-size="9" fill="#9ba3a9" text-anchor="middle">孔径 ' + st.d + ' mm · 孔道长度随孔径变化（示意）</text>';
+      s += '<text x="' + cx + '" y="' + (cy + rFor + 48) + '" font-size="8.5" fill="#9ba3a9" text-anchor="middle">套管 ' + (rCem - rIn) + ' mm 壁厚示意 · 水泥环充填</text>';
+
+      /* ---- AI 推荐同步说明 ---- */
+      if (opt) {
+        s += '<rect x="382" y="360" width="368" height="26" rx="4" fill="#f8f1e8" stroke="#d8d2c4"/>';
+        s += '<text x="392" y="377" font-size="9" fill="#3a352d">AI 推荐：' + opt.n + ' 孔/m · ' + opt.phase + '° · ' +
+          opt.d + ' mm · ' + opt.len + ' m　（日产 ' + opt.q.toFixed(1) + ' t/d · 风险 ' + opt.risk.toFixed(0) + '）</text>';
+      }
+
+      /* ---- 风险状态条 ---- */
+      var chipY = 408;
+      var sandR = mm.sand, caseR = mm.casing;
+      var waterGap = 2870 - (2850 + st.len);
+      s += '<circle cx="24" cy="' + (chipY - 3) + '" r="3.2" fill="' + (sandR > 55 ? '#b05a51' : '#a9852f') + '"/>';
+      s += '<text x="33" y="' + chipY + '" font-size="8.5" fill="#4a545d">近井污染风险 ' + sandR.toFixed(0) + '</text>';
+      s += '<circle cx="204" cy="' + (chipY - 3) + '" r="3.2" fill="' + (caseR > 55 ? '#b05a51' : '#35785a') + '"/>';
+      s += '<text x="213" y="' + chipY + '" font-size="8.5" fill="#4a545d">套管损伤风险 ' + caseR.toFixed(0) + '</text>';
+      s += '<circle cx="384" cy="' + (chipY - 3) + '" r="3.2" fill="' + (waterGap < 4 ? '#b05a51' : '#7d9dc4') + '"/>';
+      s += '<text x="393" y="' + chipY + '" font-size="8.5" fill="#4a545d">' + (waterGap < 4 ? '沟通水层风险 高（余 ' + Math.max(0, waterGap) + ' m）' : '水层沟通风险 低（余 ' + waterGap + ' m）') + '</text>';
+      s += '<text x="764" y="' + chipY + '" text-anchor="end" font-size="8" fill="#9ba3a9">合成数据示意</text>';
       return s + '</svg>';
     }
 
@@ -816,7 +903,8 @@
         gridQ: surface(state, 'q')
       };
       renderSmart(res);
-      $('co2-figure').innerHTML = figureSvg(state);
+      $('co2-figure').innerHTML = figureSvg(state, opt);
+      $('co2-figlabel').textContent = state.n + ' 孔/m · ' + state.phase + '° · ' + state.d + ' mm · ' + state.len + ' m';
       renderHeat(res);
       renderRisk(res);
       renderPhase(res);
