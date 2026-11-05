@@ -23,6 +23,13 @@
 .cmdbar .hdr-in{width:calc(100% - 48px);gap:20px}
 .hdr-in{height:var(--nav-h)}
 
+/* 首页隐藏顶部命令栏（品牌 / 搜索 / 计数 / 添加案例），窄屏仍保留下方导航条 */
+.hdr.hdr-home{
+  background:transparent;border-bottom:0;box-shadow:none;
+  backdrop-filter:none;-webkit-backdrop-filter:none;
+}
+.hdr-home .hdr-in{display:none}
+
 .brand{gap:12px}
 .brand-mark{
   width:34px;height:34px;border-radius:11px;
@@ -1492,7 +1499,12 @@ table.compare tbody tr:hover th,table.compare tbody tr:hover td{background:#f1f8
     linear-gradient(180deg,rgba(11,9,7,.46) 0%,rgba(11,9,7,0) 26%,rgba(11,9,7,.55) 100%);
 }
 .home-hero .wrap{position:relative;z-index:2;width:min(var(--maxw),calc(100% - 96px))}
-.hh-in{max-width:880px;margin:0 auto;text-align:left}
+.hh-in{
+  display:grid;grid-template-columns:minmax(0,1fr) 348px;
+  gap:58px;max-width:1180px;margin:0 auto;
+  align-items:start;text-align:left;
+}
+.hh-copy{max-width:660px;min-width:0}
 .hh-kicker{
   display:inline-flex;align-items:center;gap:10px;
   font-family:var(--mono);font-size:11px;letter-spacing:.2em;
@@ -1543,10 +1555,87 @@ table.compare tbody tr:hover th,table.compare tbody tr:hover td{background:#f1f8
 }
 .hh-note p{margin:0;color:#c4b6a6;font-size:12.8px;line-height:1.72}
 .hh-note b{color:#f0e6d8}
+
+/* 右侧速览面板：深色玻璃卡，配色沿用 Hero 的铜色 / 暖灰体系 */
+.hh-glance{
+  position:relative;overflow:hidden;min-width:0;
+  padding:20px 20px 14px;border-radius:16px;
+  border:1px solid rgba(255,255,255,.14);
+  background:
+    linear-gradient(180deg,rgba(28,22,17,.94) 0%,rgba(14,11,8,.9) 100%);
+  box-shadow:
+    0 26px 60px -32px rgba(0,0,0,.92),
+    inset 0 1px 0 rgba(255,255,255,.09);
+  backdrop-filter:blur(10px) saturate(140%);
+  -webkit-backdrop-filter:blur(10px) saturate(140%);
+}
+.hh-glance::before{
+  content:'';position:absolute;left:0;right:0;top:0;height:3px;
+  background:linear-gradient(90deg,#6f9e83 0%,#d98a45 48%,#b5618a 100%);
+  opacity:.92;
+}
+.gl-head{
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+  padding-bottom:12px;border-bottom:1px solid rgba(255,255,255,.1);
+}
+.gl-kicker{
+  font-family:var(--mono);font-size:9.5px;letter-spacing:.17em;
+  color:#cdbca7;text-transform:uppercase;
+}
+.gl-ver{
+  font-family:var(--mono);font-size:9px;letter-spacing:.06em;color:#a9c0b1;
+  border:1px solid rgba(255,255,255,.16);border-radius:4px;padding:2px 6px;
+  background:rgba(255,255,255,.05);
+}
+.gl-rows{padding:4px 0 2px}
+.gl-row{
+  display:flex;align-items:baseline;justify-content:space-between;gap:12px;
+  padding:11px 0;border-bottom:1px solid rgba(255,255,255,.07);
+}
+.gl-row:last-child{border-bottom:0}
+.gl-l{font-size:12.5px;line-height:1.4;color:#c2b4a2;letter-spacing:.01em}
+.gl-n{
+  font-family:var(--mono);font-variant-numeric:tabular-nums;
+  font-size:22px;line-height:1;font-weight:650;color:#f6efe6;
+  display:inline-flex;align-items:baseline;gap:2px;
+}
+.gl-n i{font-style:normal;font-size:10px;line-height:1;color:#d98a45;transform:translateY(-1px)}
+.gl-n.sm{font-size:13px;font-weight:600;color:#efe3d4;letter-spacing:.01em}
+.gl-n.sm em{font-style:normal;color:#8b7e70;padding:0 1px}
+.gl-row.gl-stack{display:block}
+.gl-two{display:flex;align-items:baseline;justify-content:space-between;gap:12px}
+.gl-track{
+  display:flex;gap:2px;height:6px;margin-top:9px;
+  border-radius:3px;overflow:hidden;background:rgba(255,255,255,.07);
+}
+.gl-track i{display:block;height:100%;border-radius:2px;min-width:0}
+.gl-track.thin{height:4px;margin-top:8px;background:rgba(255,255,255,.055)}
+.gl-track.method{height:8px;margin-top:10px}
+.gl-method{margin-top:14px;padding-top:14px;border-top:1px solid rgba(255,255,255,.1)}
+.gl-mhead{font-size:11px;letter-spacing:.03em;color:#b7a794}
+.gl-mhead em{font-style:normal;color:#d98a45;padding:0 3px}
+.gl-legend{display:grid;grid-template-columns:1fr 1fr;gap:7px 12px;margin-top:11px}
+.gl-li{display:flex;align-items:center;gap:6px;min-width:0}
+.gl-li i{width:7px;height:7px;border-radius:2px;flex-shrink:0}
+.gl-la{font-family:var(--mono);font-size:9.5px;letter-spacing:.05em;color:#b3a492}
+.gl-ln{
+  margin-left:auto;font-family:var(--mono);font-size:10.5px;font-variant-numeric:tabular-nums;
+  color:#efe3d4;
+}
+.gl-foot{
+  display:flex;justify-content:space-between;gap:10px;
+  margin-top:14px;padding-top:10px;border-top:1px solid rgba(255,255,255,.08);
+  font-family:var(--mono);font-size:8.5px;letter-spacing:.06em;color:#8d8072;
+}
+@media (max-width:1100px){
+  .hh-in{grid-template-columns:minmax(0,1fr) 316px;gap:36px}
+}
 @media (max-width:900px){
   .home-hero{background-position:center;min-height:0;padding:72px 0 68px}
   .home-hero::before{background:linear-gradient(180deg,rgba(13,11,8,.88) 0%,rgba(13,11,8,.8) 60%,rgba(13,11,8,.92) 100%)}
-  .hh-in{max-width:none}
+  .hh-in{grid-template-columns:1fr;gap:36px;max-width:none}
+  .hh-copy{max-width:none}
+  .hh-glance{max-width:520px}
   .home-hero .wrap{width:calc(100% - 72px)}
 }
 @media (max-width:720px){
@@ -1556,6 +1645,10 @@ table.compare tbody tr:hover th,table.compare tbody tr:hover td{background:#f1f8
   .hh-note{margin-top:24px}
   .hh-acts{flex-direction:column;align-items:stretch}
   .hh-acts .btn{width:100%;justify-content:center}
+  .hh-glance{padding:16px 16px 12px;border-radius:13px}
+  .gl-two{flex-wrap:wrap;gap:4px 10px}
+  .gl-n{font-size:20px}
+  .gl-kicker{font-size:9px;letter-spacing:.14em}
 }
 .ph-stat .l{font-size:11px}
 .field h4{font-size:14px}

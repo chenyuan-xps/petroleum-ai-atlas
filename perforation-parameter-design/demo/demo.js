@@ -137,6 +137,11 @@
       '</div>' +
       '<div class="iq-grid">' +
         '<div class="iq-figure">' +
+          '<div class="iq-card">' +
+            '<div class="iq-card-h"><h4>三方案对比</h4><span class="iq-mini">可套用</span></div>' +
+            '<div class="iq-tri" id="co2-scheme" style="grid-template-columns:minmax(0,1fr)"></div>' +
+            '<div class="iq-note slim" id="co2-scheme-note">三张卡使用同一代理模型，只改变参数组合。</div>' +
+          '</div>' +
           '<div class="iq-card"><div class="iq-card-h"><h4><i class="iq-dot"></i>当前方案</h4><span class="iq-mini" id="co2-rank">—</span></div><div id="co2-detail"></div></div>' +
           '<div class="iq-card"><div class="iq-card-h"><h4>工程图例 · 射孔风险</h4><span class="iq-mini">co2</span></div>' +
             '<div class="iq-legend" style="flex-direction:column;align-items:flex-start;gap:6px">' +
@@ -154,7 +159,9 @@
             '<div class="iq-legend"><span><i style="background:#8d979d"></i>套管</span><span><i style="background:#c9c3b4"></i>水泥环</span><span><i style="background:#e9dfc7"></i>目的层</span><span><i style="background:#b26a39"></i>射孔孔道</span><span><i style="background:#a9852f"></i>近井污染带</span><span><i style="background:#7d9dc4"></i>含水层</span><span><i style="background:#b05a51"></i>风险标注</span></div></div>' +
           '<div class="iq-card"><div class="iq-card-h"><h4>产能热力图（辅助）· 孔密 × 段长</h4><span class="iq-mini" id="co2-hm-mini">—</span></div><div id="co2-heat"></div><div class="iq-legend" id="co2-heat-legend"></div></div>' +
           '<div class="iq-card"><div class="iq-card-h"><h4>风险等高线 · 阈值 ' + RISK_LIMIT + '</h4><span class="iq-mini">红虚线为约束边界</span></div><div id="co2-risk"></div></div>' +
-          '<div class="iq-card"><div class="iq-card-h"><h4>相位敏感性</h4><span class="iq-mini">当前孔密 / 孔径 / 段长</span></div><div id="co2-phasechart"></div><div class="iq-legend" id="co2-phase-legend"></div></div>' +
+          '<div class="iq-card"><div class="iq-card-h"><h4>孔密 × 日产 / 风险 双轴扫描</h4><span class="iq-mini" id="co2-scan-mini">4—24 孔/m</span></div><div id="co2-scan"></div>' +
+            '<div class="iq-legend"><span><i class="line" style="background:#3a352d"></i>预测日产</span><span><i class="line" style="background:#c58b62"></i>风险指数</span><span><i class="line" style="background:#b05a51"></i>风险阈值 ' + RISK_LIMIT + '</span></div>' +
+            '<div class="iq-note slim" id="co2-scan-note">—</div></div>' +
         '</div>' +
         '<div class="iq-side">' +
           '<div class="iq-card"><div class="iq-card-h"><h4>输入参数</h4><span class="iq-mini">5 项</span></div>' +
@@ -195,20 +202,7 @@
           '<div class="iq-flow" style="margin-top:8px"><span>数据采集</span><em>→</em><span>特征构造</span><em>→</em><span>代理模型</span><em>→</em><span>约束搜索</span><em>→</em><span>工程复核</span></div>' +
           '<div class="iq-poll">本示范使用合成数据，用于展示智能方法和可视化流程，不代表真实生产结果。</div>' +
         '</div>' +
-      '</div>' +
-      '<div class="iq-extra">' +
-        '<div class="iq-card">' +
-          '<div class="iq-card-h"><h4>孔密 × 日产 / 风险 双轴扫描</h4><span class="iq-mini" id="co2-scan-mini">4—24 孔/m</span></div>' +
-          '<div id="co2-scan"></div>' +
-          '<div class="iq-legend"><span><i class="line" style="background:#3a352d"></i>预测日产</span><span><i class="line" style="background:#c58b62"></i>风险指数</span><span><i class="line" style="background:#b05a51"></i>风险阈值 ' + RISK_LIMIT + '</span></div>' +
-          '<div class="iq-note slim" id="co2-scan-note">—</div>' +
-        '</div>' +
-        '<div class="iq-card">' +
-          '<div class="iq-card-h"><h4>三方案对比 · 经验 / 当前 / 推荐</h4><span class="iq-mini">点击可套用</span></div>' +
-          '<div class="iq-tri" id="co2-scheme"></div>' +
-          '<div class="iq-note slim" id="co2-scheme-note">三张卡使用同一代理模型，只改变参数组合。</div>' +
-        '</div>' +
-      '</div>';
+        '</div>';
 
     /* 智能方法说明卡：插在头部下方，数值随参数实时重算 */
     var smartBox = document.createElement('div');
@@ -532,73 +526,6 @@
         .text('超阈值组合 ' + over + ' / ' + cells.length);
     }
 
-    /* ---------------- 相位敏感性 ---------------- */
-    function renderPhase(res) {
-      var box = $('co2-phasechart');
-      box.innerHTML = '';
-      var W = 640, H = 218, M = { t: 18, r: 46, b: 40, l: 46 };
-      var data = PHASES.map(function (ph) {
-        var m = calc(state.n, ph, state.d, state.len, state.pressure);
-        return { phase: ph, q: m.q, risk: m.risk };
-      });
-      var qmax = d3.max(data, function (d) { return d.q; }) * 1.2;
-      var svg = d3.select(box).append('svg').attr('viewBox', '0 0 ' + W + ' ' + H)
-        .attr('role', 'img').attr('aria-label', '射孔相位敏感性曲线');
-      var x = d3.scalePoint().domain(PHASES).range([M.l, W - M.r]).padding(0.5);
-      var yq = d3.scaleLinear().domain([0, qmax]).range([H - M.b, M.t]);
-      var yr = d3.scaleLinear().domain([0, 100]).range([H - M.b, M.t]);
-      svg.append('g').attr('transform', 'translate(' + M.l + ',0)')
-        .call(d3.axisLeft(yq).ticks(4).tickSize(-(W - M.l - M.r)))
-        .call(function (g) {
-          g.select('.domain').remove();
-          g.selectAll('.tick line').attr('stroke', '#f1eee6');
-          g.selectAll('.tick text').attr('font-size', 9).attr('fill', '#9ba3a9');
-        });
-      svg.append('g').attr('transform', 'translate(' + (W - M.r) + ',0)')
-        .call(d3.axisRight(yr).ticks(4).tickSize(0))
-        .call(function (g) {
-          g.select('.domain').remove();
-          g.selectAll('.tick text').attr('font-size', 9).attr('fill', '#c58b62');
-        });
-      svg.append('text').attr('x', M.l).attr('y', 11).attr('font-size', 9).attr('fill', '#9ba3a9').text('日产 t/d');
-      svg.append('text').attr('x', W - M.r).attr('y', 11).attr('font-size', 9).attr('fill', '#c58b62').attr('text-anchor', 'end').text('风险');
-      var lineQ = d3.line().x(function (d) { return x(d.phase); }).y(function (d) { return yq(d.q); });
-      var lineR = d3.line().x(function (d) { return x(d.phase); }).y(function (d) { return yr(d.risk); });
-      svg.append('line').attr('x1', M.l).attr('x2', W - M.r)
-        .attr('y1', yr(RISK_LIMIT)).attr('y2', yr(RISK_LIMIT))
-        .attr('stroke', '#b05a51').attr('stroke-dasharray', '4 3').attr('stroke-width', 1);
-      svg.append('path').attr('d', lineQ(data)).attr('fill', 'none').attr('stroke', '#3a352d').attr('stroke-width', 2);
-      svg.append('path').attr('d', lineR(data)).attr('fill', 'none').attr('stroke', '#c58b62').attr('stroke-width', 1.6).attr('stroke-dasharray', '4 3');
-      svg.selectAll('.pq').data(data).enter().append('circle')
-        .attr('cx', function (d) { return x(d.phase); }).attr('cy', function (d) { return yq(d.q); })
-        .attr('r', 3.4).attr('fill', '#fff').attr('stroke', '#3a352d').attr('stroke-width', 1.6)
-        .style('cursor', 'pointer')
-        .on('mouseenter', function (ev, d) { tipShow('相位 <b>' + d.phase + '°</b><br>日产 <b>' + d.q.toFixed(1) + '</b> t/d · 风险 <b>' + d.risk.toFixed(0) + '</b>', ev); })
-        .on('mousemove', function (ev, d) { tipShow('相位 <b>' + d.phase + '°</b><br>日产 <b>' + d.q.toFixed(1) + '</b> t/d · 风险 <b>' + d.risk.toFixed(0) + '</b>', ev); })
-        .on('mouseleave', tipHide)
-        .on('click', function (ev, d) { setPhase(d.phase); });
-      svg.selectAll('.pr').data(data).enter().append('circle')
-        .attr('cx', function (d) { return x(d.phase); }).attr('cy', function (d) { return yr(d.risk); })
-        .attr('r', 2.6).attr('fill', '#c58b62');
-      svg.selectAll('.lab').data(PHASES).enter().append('text')
-        .attr('x', function (d) { return x(d); }).attr('y', H - M.b + 18)
-        .attr('text-anchor', 'middle').attr('font-size', 9.5).attr('fill', '#4a545d')
-        .text(function (d) { return d + '°'; });
-      svg.selectAll('.hit').data(PHASES).enter().append('rect')
-        .attr('x', function (d) { return x(d) - 22; }).attr('y', M.t)
-        .attr('width', 44).attr('height', H - M.t - M.b)
-        .attr('fill', 'transparent').style('cursor', 'pointer')
-        .on('click', function (ev, d) { setPhase(d); });
-      /* 当前相位高亮 */
-      svg.append('line').attr('x1', x(state.phase)).attr('x2', x(state.phase))
-        .attr('y1', M.t).attr('y2', H - M.b).attr('stroke', '#242a32').attr('stroke-width', 1).attr('opacity', 0.25);
-      $('co2-phase-legend').innerHTML =
-        '<span><i class="line" style="background:#3a352d"></i>预测日产</span>' +
-        '<span><i class="line" style="background:#c58b62"></i>风险指数</span>' +
-        '<span><i class="line" style="background:#b05a51"></i>风险阈值</span>' +
-        '<span style="margin-left:auto">推荐相位：' + res.opt.phase + '°（点击曲线切换）</span>';
-    }
-
     /* ---------------- 输出 ---------------- */
     function renderOutput(res) {
       var opt = res.opt, base = res.base, cur = res.cur;
@@ -717,7 +644,7 @@
           g.selectAll('.tick text').attr('font-size', 8.5).attr('fill', '#c58b62');
         });
       svg.append('g').attr('transform', 'translate(0,' + (H - M.b) + ')')
-        .call(d3.axisBottom(x).ticks(6).tickSize(0))
+        .call(d3.axisBottom(x).tickValues([4, 8, 12, 16, 20, 24]).tickSize(0))
         .call(function (g) { g.select('.domain').attr('stroke', '#d8d2c4'); })
         .selectAll('text').attr('font-size', 8.5).attr('fill', '#9ba3a9').attr('dy', '1em');
       svg.append('text').attr('x', M.l).attr('y', 12).attr('font-size', 9).attr('fill', '#9ba3a9').text('日产 t/d');
@@ -726,7 +653,7 @@
 
       svg.append('line').attr('x1', M.l).attr('x2', W - M.r).attr('y1', yr(RISK_LIMIT)).attr('y2', yr(RISK_LIMIT))
         .attr('stroke', '#b05a51').attr('stroke-dasharray', '4 3').attr('stroke-width', 1);
-      svg.append('text').attr('x', W - M.r - 4).attr('y', yr(RISK_LIMIT) - 4).attr('text-anchor', 'end')
+      svg.append('text').attr('x', M.l + 4).attr('y', yr(RISK_LIMIT) - 5)
         .attr('font-size', 8.5).attr('fill', '#b05a51').text('风险阈值 ' + RISK_LIMIT);
 
       var lq = d3.line().x(function (p) { return x(p.n); }).y(function (p) { return yq(p.q); });
@@ -742,12 +669,12 @@
 
       svg.append('line').attr('x1', x(state.n)).attr('x2', x(state.n)).attr('y1', M.t).attr('y2', H - M.b)
         .attr('stroke', '#a03d4f').attr('stroke-width', 1.2).attr('stroke-dasharray', '3 3');
-      svg.append('text').attr('x', x(state.n) + 4).attr('y', M.t + 24).attr('font-size', 8.5)
-        .attr('fill', '#a03d4f').text('当前 ' + state.n);
+      svg.append('text').attr('x', x(state.n) - 4).attr('y', H - M.b - 8).attr('text-anchor', 'end')
+        .attr('font-size', 8.5).attr('fill', '#a03d4f').text('当前 ' + state.n);
       svg.append('line').attr('x1', x(res.opt.n)).attr('x2', x(res.opt.n)).attr('y1', M.t).attr('y2', H - M.b)
         .attr('stroke', '#a9852f').attr('stroke-width', 1.6);
-      svg.append('text').attr('x', x(res.opt.n) + 4).attr('y', M.t + 38).attr('font-size', 8.5)
-        .attr('fill', '#a9852f').text('AI ' + res.opt.n);
+      svg.append('text').attr('x', x(res.opt.n) + 4).attr('y', H - M.b - 8)
+        .attr('font-size', 8.5).attr('fill', '#a9852f').text('AI ' + res.opt.n);
 
       var overlay = svg.append('rect').attr('x', M.l).attr('y', M.t)
         .attr('width', W - M.l - M.r).attr('height', H - M.t - M.b)
@@ -907,7 +834,6 @@
       $('co2-figlabel').textContent = state.n + ' 孔/m · ' + state.phase + '° · ' + state.d + ' mm · ' + state.len + ' m';
       renderHeat(res);
       renderRisk(res);
-      renderPhase(res);
       renderOutput(res);
       renderScanN(res);
       renderScheme(res);

@@ -854,3 +854,39 @@ body.iq-page .iq-foot{
   background:#fff;color:var(--iq-ink-3);font-size:13px;line-height:1;cursor:pointer;
 }
 .iq-zoom-x:hover{background:var(--iq-paper);color:var(--iq-ink)}
+
+/* =========================================================
+   co4 · 30 天动态调控大屏
+   ========================================================= */
+.iq-screen{
+  margin-top:12px;padding:12px 14px 13px;border-radius:14px;
+  border:1px solid #423b31;
+  background:linear-gradient(158deg,#302c25 0%,#26221c 55%,#211e19 100%);
+  box-shadow:0 18px 38px -26px rgba(30,25,18,.8),inset 0 1px 0 rgba(255,255,255,.05);
+}
+.iq-screen-h{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.iq-screen-t{display:flex;align-items:center;gap:9px;min-width:0}
+.iq-screen-t .dot{width:7px;height:7px;border-radius:50%;background:#eaa86c;box-shadow:0 0 0 3px rgba(234,168,108,.16);flex:none}
+.iq-screen-t b{font-size:13.5px;font-weight:600;letter-spacing:.02em;color:#f5eee1}
+.iq-screen-t small{font-family:var(--iq-mono);font-size:9px;letter-spacing:.12em;color:#a89a83;text-transform:uppercase;white-space:nowrap}
+.iq-screen .iq-timebar{margin-left:auto}
+.iq-screen .iq-timebar .iq-seg button{background:rgba(255,255,255,.05);border-color:#4a4238;color:#bfb29b}
+.iq-screen .iq-timebar .iq-seg button:hover{border-color:#d98a45;color:#f6e7d5}
+.iq-screen .iq-timebar .iq-seg button.on{background:#d98a45;border-color:#d98a45;color:#fff}
+.iq-screen .iq-btn{background:rgba(255,255,255,.06);border-color:#4a4238;color:#ece2cf}
+.iq-screen .iq-btn:hover{border-color:#d98a45;color:#fff;background:rgba(217,138,69,.14)}
+.iq-screen .iq-day{background:rgba(217,138,69,.15);color:#f0bd8d;border:1px solid rgba(226,160,102,.42)}
+.iq-screen .iq-timebar input[type=range]::-webkit-slider-runnable-track{background:#4a4238}
+.iq-screen .iq-timebar input[type=range]::-webkit-slider-thumb{background:#d98a45;border-color:#2b2721}
+.iq-screen-note{font-size:10px;line-height:1.6;color:#b8a992;margin:7px 0 10px}
+.iq-screen-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px;align-items:start}
+.iq-screen-grid > .iq-card{
+  margin:0;border-color:#3d372e;border-radius:10px;background:#fffdfa;
+  box-shadow:0 1px 0 rgba(255,255,255,.4) inset;
+}
+.iq-screen-grid > .iq-card.iq-span2{grid-column:1 / -1}
+@media (max-width:900px){
+  .iq-screen{padding:13px 12px 14px}
+  .iq-screen .iq-timebar{margin-left:0;width:100%}
+  .iq-screen-grid{grid-template-columns:minmax(0,1fr)}
+}

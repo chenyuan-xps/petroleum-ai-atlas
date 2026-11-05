@@ -86,7 +86,7 @@
   }
   function ownedCaseCount() { return ownedCases().length; }
 
-  function header() {
+  function header(isHome) {
     var r = parseHash();
     var p = r.parts, cur = p[0] || 'home';
     var s = A.stats();
@@ -101,7 +101,7 @@
       '<a class="' + (cur === 'guide' ? 'on' : '') + '" href="#/guide">接入指南</a>' +
       '</nav>';
 
-    return '<header class="hdr cmdbar"><div class="hdr-in">' +
+    return '<header class="hdr cmdbar' + (isHome ? ' hdr-home' : '') + '"><div class="hdr-in">' +
       '<a class="brand" href="#/">' +
       '<span class="brand-mark">' +
       '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.9" stroke-linecap="round">' +
@@ -845,11 +845,32 @@
 
   function homeHTML() {
     var total = A.allScenes.length;
+    var st = A.stats();
+    var cs = Cases.stats();
+    var mkeys = Object.keys(A.methods);
+    var mc = {};
+    mkeys.forEach(function (k) { mc[k] = 0; });
+    A.allScenes.forEach(function (sc) {
+      (sc.methods || []).forEach(function (k) { mc[k] = (mc[k] || 0) + 1; });
+    });
+    var MCC = { cv: '#a89a84', ts: '#cf813c', nlp: '#a07fb4', opt: '#b9616f', kg: '#a3a95a' };
+    var dLow = st.diff['低'] || 0, dMid = st.diff['中'] || 0, dHigh = st.diff['高'] || 0;
+    var coverPct = total ? Math.round(cs.coveredScenes / total * 100) : 0;
+    var msum = mkeys.reduce(function (a, k) { return a + (mc[k] || 0); }, 0);
+    var mseg = mkeys.map(function (k) {
+      return '<i style="width:' + (msum ? mc[k] / msum * 100 : 0) + '%;background:' + (MCC[k] || '#8b6bb3') + '"></i>';
+    }).join('');
+    var mleg = mkeys.map(function (k) {
+      return '<div class="gl-li"><i style="background:' + (MCC[k] || '#8b6bb3') + '"></i>' +
+        '<span class="gl-la">' + esc((A.methods[k] || {}).abbr || k) + '</span>' +
+        '<span class="gl-ln">' + mc[k] + '</span></div>';
+    }).join('');
 
     return '<main>' +
       /* ---------- Hero（深色主视觉） ---------- */
       '<section class="home-hero">' +
       '<div class="wrap hh-in">' +
+      '<div class="hh-copy">' +
       '<span class="hh-kicker"><i></i>PETRO × AI ATLAS<span class="sep">/</span>07 COMPLETION</span>' +
       '<h1>石油勘探开发的<em>智能化</em>案例实验平台</h1>' +
       '<p class="hh-lead">把 13 个作业环节拆成 ' + total + ' 个可判断的智能化场景；完井段落 4 个必做案例，加上 11 个跨环节扩展（覆盖其余 9 个环节），共 15 个案例都配有能在浏览器里直接调参、看结果、读风险的示范。不展示结论，而是把结论的生成过程摊开给你。</p>' +
@@ -864,6 +885,31 @@
       '<a class="btn ghost" href="#/project">项目说明</a>' +
       '</div>' +
       '<div class="hh-note"><p><b>数据声明：</b>本站所有曲线、指标与结论均由前端合成数据生成，用于教学与方法演示，不代表任何真实井的产能、受力或风险判断。案例包可离线运行，不依赖后端与外部接口。</p></div>' +
+      '</div>' +
+      /* ---------- 右侧速览面板 ---------- */
+      '<aside class="hh-glance" aria-label="平台速览">' +
+      '<div class="gl-head"><span class="gl-kicker">AT A GLANCE · 速览</span><span class="gl-ver">v2.0</span></div>' +
+      '<div class="gl-rows">' +
+      '<div class="gl-row"><span class="gl-l">作业环节</span><span class="gl-n">' + A.stages.length + '<i>↑</i></span></div>' +
+      '<div class="gl-row"><span class="gl-l">候选场景</span><span class="gl-n">' + total + '<i>↑</i></span></div>' +
+      '<div class="gl-row gl-stack"><div class="gl-two"><span class="gl-l">难度分布（低/中/高）</span>' +
+      '<span class="gl-n sm">' + dLow + '<em> / </em>' + dMid + '<em> / </em>' + dHigh + '</span></div>' +
+      '<div class="gl-track"><i style="width:' + (dLow / total * 100) + '%;background:#6f9e83"></i>' +
+      '<i style="width:' + (dMid / total * 100) + '%;background:#cf813c"></i>' +
+      '<i style="width:' + (dHigh / total * 100) + '%;background:#b5618a"></i></div></div>' +
+      '<div class="gl-row"><span class="gl-l">已接入案例</span><span class="gl-n">' + cs.registered + '<i>↑</i></span></div>' +
+      '<div class="gl-row"><span class="gl-l">其中可运行示范</span><span class="gl-n">' + cs.withDemo + '<i>↑</i></span></div>' +
+      '<div class="gl-row gl-stack"><div class="gl-two"><span class="gl-l">案例覆盖场景</span>' +
+      '<span class="gl-n sm">' + cs.coveredScenes + '<em> / ' + total + ' · ' + coverPct + '%</em></span></div>' +
+      '<div class="gl-track thin"><i style="width:' + coverPct + '%;background:#d98a45"></i></div></div>' +
+      '</div>' +
+      '<div class="gl-method">' +
+      '<div class="gl-mhead">方法构成 <em>/</em> BY METHOD</div>' +
+      '<div class="gl-track method">' + mseg + '</div>' +
+      '<div class="gl-legend">' + mleg + '</div>' +
+      '</div>' +
+      '<div class="gl-foot"><span>数据截至 ' + esc((A.meta || {}).updated || '2026-10') + '</span><span>教学用途</span></div>' +
+      '</aside>' +
       '</div>' +
       '</section>' +
       '</main>';
@@ -1198,11 +1244,12 @@
     }
 
     var tabs = [];
+    var showAi = !!(c && c.ai && global.IQAI && sc.stageId !== 'completion');
     if (c) {
       if (c.tabs.background) tabs.push({ key: 'bg', num: '01', name: c.tabs.background.label || '专业背景' });
       if (c.tabs.workflow) tabs.push({ key: 'flow', num: '02', name: c.tabs.workflow.label || '案例流程' });
       if (c.tabs.demo) tabs.push({ key: 'demo', num: '03', name: c.tabs.demo.label || '可运行示范' });
-      if (c.ai && global.IQAI) tabs.push({ key: 'ai', num: '04', name: 'AI 解释' });
+      if (showAi) tabs.push({ key: 'ai', num: '04', name: 'AI 解释' });
     }
 
     var tabBtns = tabs.map(function (t, i) {
@@ -1215,7 +1262,7 @@
       if (c.tabs.background) panels += '<div class="panel on" data-panel="bg">' + renderBackground(sc, c) + '</div>';
       if (c.tabs.workflow) panels += '<div class="panel" data-panel="flow">' + renderWorkflow(sc, c) + '</div>';
       if (c.tabs.demo) panels += '<div class="panel" data-panel="demo">' + renderDemoShell(sc, c) + '</div>';
-      if (c.ai && global.IQAI) panels += '<div class="panel" data-panel="ai">' + global.IQAI.block(c) + '</div>';
+      if (showAi) panels += '<div class="panel" data-panel="ai">' + global.IQAI.block(c) + '</div>';
     }
 
     var cBadge = allCases.length
@@ -2097,7 +2144,7 @@
     /* 首页不挂左侧导航，进入具体页面后再显示 */
     var isHome = !p.length;
     if (wfStop) { wfStop(); wfStop = null; }
-    view.innerHTML = header() +
+    view.innerHTML = header(isHome) +
       '<div class="plat' + (isHome ? ' plat-home' : '') + '">' +
       (isHome ? '' : railHTML()) +
       '<div class="plat-body">' + html + '</div></div>';

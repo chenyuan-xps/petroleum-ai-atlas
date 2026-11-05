@@ -260,6 +260,7 @@
     var state = {};
     for (var dk in DEFAULTS) state[dk] = DEFAULTS[dk];
     var selectedId = null;
+    var aiPicked = false;
 
     function esc(s) {
       return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;')
@@ -276,9 +277,15 @@
         '<div class="iq-tags">' +
           '<span class="iq-tag jade">TOPSIS</span>' +
           '<span class="iq-tag">多指标评分</span>' +
-          '<span class="iq-tag blue">权重敏感性</span>' +
+          '<span class="iq-tag blue">候选漏斗</span>' +
           '<span class="iq-tag clay">规则约束</span>' +
         '</div>' +
+      '</div>' +
+      '<div class="iq-link">' +
+        '<div class="lk"><span>① 输入参数</span><b id="co1-lk-param">—</b></div><i>›</i>' +
+        '<div class="lk"><span>② 决策偏好</span><b id="co1-lk-pref">—</b></div><i>›</i>' +
+        '<div class="lk"><span>③ TOPSIS 排序</span><b id="co1-lk-rank">—</b></div><i>›</i>' +
+        '<div class="lk on"><span>④ 当前查看</span><b id="co1-lk-cur">—</b></div>' +
       '</div>' +
       '<div class="iq-grid">' +
         '<div class="iq-figure">' +
@@ -311,10 +318,9 @@
           '<div class="iq-card"><div class="iq-card-h"><h4>前 3 名方案 · 五维雷达</h4><span class="iq-mini">0—100 分</span></div><div id="co1-radar"></div><div class="iq-legend" id="co1-radar-legend"></div></div>' +
           '<div class="iq-card"><div class="iq-card-h"><h4>TOPSIS 综合得分</h4><span class="iq-mini">越接近 100 越优</span></div><div id="co1-bar"></div></div>' +
           '<div class="iq-card"><div class="iq-card-h"><h4>推荐理由分解</h4><span class="iq-mini">加权贡献</span></div><div id="co1-reasons"></div></div>' +
-          '<div class="iq-card"><div class="iq-card-h"><h4>权重敏感性 · 10 组扰动</h4><span class="iq-mini" id="co1-stress-mini">逐项 ±25%</span></div>' +
-            '<div id="co1-stress"></div>' +
-            '<div class="iq-btns" style="margin-top:2px"><button class="iq-btn" id="co1-scan">扫描排序变化</button><button class="iq-btn" id="co1-scanstop" hidden>停止</button></div>' +
-            '<div class="iq-note" id="co1-scan-note" style="margin-top:2px">扫描会把权重逐项上调、下调，观察第一名是否翻转。</div>' +
+          '<div class="iq-card"><div class="iq-card-h"><h4>候选筛选漏斗 · 5 → 1</h4><span class="iq-mini">按本轮排序</span></div>' +
+            '<div id="co1-funnel"></div>' +
+            '<div class="iq-note slim" id="co1-funnel-note">漏斗只按“预算 / 可靠性底线 / 综合得分”逐步收窄，被淘汰的方案不是不能施工，只是本轮排序靠后。</div>' +
           '</div>' +
         '</div>' +
         '<div class="iq-side">' +
@@ -329,9 +335,11 @@
               '<button data-pref="balanced" class="on">均衡</button><button data-pref="sand">防砂优先</button><button data-pref="cost">投资优先</button><button data-pref="stim">增产优先</button>' +
             '</div></div>' +
             '<div class="iq-btns"><button class="iq-btn" id="co1-reset">重置参数</button><button class="iq-btn primary" id="co1-pick">选中 AI 方案</button></div>' +
+            '<div class="iq-note slim" id="co1-pick-note">AI 方案是按当前参数与偏好算出的第 1 名；点击可把它设为当前选中方案。</div>' +
           '</div>' +
           '<div class="iq-card">' +
             '<div class="iq-card-h"><h4>AI 决策输出</h4><span class="iq-mini" id="co1-conf-mini">—</span></div>' +
+            '<div class="iq-note slim" id="co1-side-cur">当前查看：—</div>' +
             '<div class="iq-kpis">' +
               '<div class="iq-kpi wide"><span>推荐完井方式</span><b class="hero" id="co1-k-best">—</b></div>' +
               '<div class="iq-kpi"><span>综合得分</span><b id="co1-k-score">—</b></div>' +
@@ -347,7 +355,7 @@
       '</div>' +
       '<div class="iq-bottom">' +
         '<div class="iq-card">' +
-          '<div class="iq-card-h"><h4>经验方案 vs AI 推荐</h4><span class="iq-mini">同一套参数下</span></div>' +
+          '<div class="iq-card-h"><h4>经验方案 vs 当前查看</h4><span class="iq-mini" id="co1-table-mini">同一套参数下</span></div>' +
           '<div id="co1-table"></div>' +
         '</div>' +
         '<div class="iq-card">' +
@@ -357,17 +365,6 @@
             '<span>数据采集</span><em>→</em><span>口径统一</span><em>→</em><span>指标计算</span><em>→</em><span>TOPSIS 排序</span><em>→</em><span>人工复核</span>' +
           '</div>' +
           '<div class="iq-poll">本示范使用合成数据，用于展示智能方法和可视化流程，不代表真实生产结果。</div>' +
-        '</div>' +
-      '</div>' +
-      '<div class="iq-extra">' +
-        '<div class="iq-card">' +
-          '<div class="iq-card-h"><h4>候选筛选漏斗 · 5 → 1</h4><span class="iq-mini">按本轮排序</span></div>' +
-          '<div id="co1-funnel"></div>' +
-          '<div class="iq-note slim" id="co1-funnel-note">漏斗只按“预算 / 可靠性底线 / 综合得分”逐步收窄，被淘汰的方案不是不能施工，只是本轮排序靠后。</div>' +
-        '</div>' +
-        '<div class="iq-card">' +
-          '<div class="iq-card-h"><h4>方案三态 · 推荐 / 备选 / 不推荐</h4><span class="iq-mini">点击切换井筒结构</span></div>' +
-          '<div class="iq-tri" id="co1-tri"></div>' +
         '</div>' +
       '</div>';
 
@@ -552,21 +549,22 @@
         { t: '得分前 3', v: top3.length, sub: '进入人工复核', set: top3 },
         { t: '推荐 1 个', v: 1, sub: rows[0].name, set: [rows[0]] }
       ];
-      var W = 640, H = 200, M = { t: 16, r: 64, b: 8, l: 92 };
+      var W = 640, H = 250, cx = 336, maxW = 316, minW = 48, stageH = 38, gap = 8, top = 14;
+      var maxV = stages[0].v || 1;
+      function wv(v) { return minW + (maxW - minW) * Math.min(1, v / maxV); }
+      var COL = ['#cfe3d9', '#a9cdbf', '#79ad9a', '#4f8c77', '#3a352d'];
       var svg = d3.select(box).append('svg').attr('viewBox', '0 0 ' + W + ' ' + H)
-        .attr('role', 'img').attr('aria-label', '候选方案筛选漏斗');
-      var x = d3.scaleLinear().domain([0, rows.length]).range([0, W - M.l - M.r]);
-      var rowH = (H - M.t - M.b) / stages.length;
+        .attr('role', 'img').attr('aria-label', '候选方案筛选漏斗：5 套方案逐步收窄到 1 套推荐');
       stages.forEach(function (st, i) {
-        var y = M.t + i * rowH, bh = Math.max(12, rowH - 15);
-        var w = Math.max(3, x(st.v));
-        svg.append('rect').attr('x', M.l).attr('y', y + 3).attr('width', W - M.l - M.r)
-          .attr('height', bh + 6).attr('rx', 5).attr('fill', '#fbfaf6');
-        svg.append('rect').attr('x', M.l).attr('y', y + 3).attr('width', w)
-          .attr('height', bh + 6).attr('rx', 5)
-          .attr('fill', i === 0 ? '#cfe3d9' : (i === stages.length - 1 ? '#3a352d' : '#5b9b87'))
-          .attr('opacity', 0.9 - i * 0.04)
-          .style('cursor', 'pointer')
+        var y = top + i * (stageH + gap);
+        var w1 = wv(st.v);
+        var w2 = i < stages.length - 1 ? wv(stages[i + 1].v) : w1 * 0.86;
+        var path = 'M' + (cx - w1 / 2) + ' ' + y + ' L' + (cx + w1 / 2) + ' ' + y +
+          ' L' + (cx + w2 / 2) + ' ' + (y + stageH) + ' L' + (cx - w2 / 2) + ' ' + (y + stageH) + ' Z';
+        var g = svg.append('g').style('cursor', 'pointer');
+        g.append('path').attr('d', path).attr('fill', COL[i]).attr('fill-opacity', .96)
+          .attr('stroke', i === stages.length - 1 ? '#241f19' : '#ffffff')
+          .attr('stroke-width', 1)
           .on('mouseenter', function (ev) {
             tipShow(st.t + '：<b>' + st.v + '</b> 个<br>' + st.set.map(function (r) { return r.short; }).join(' · '), ev);
           })
@@ -574,28 +572,17 @@
             tipShow(st.t + '：<b>' + st.v + '</b> 个<br>' + st.set.map(function (r) { return r.short; }).join(' · '), ev);
           })
           .on('mouseleave', tipHide);
-        svg.append('text').attr('x', 12).attr('y', y + bh / 2 + 4)
-          .attr('font-size', 9.5).attr('font-weight', 600).attr('fill', '#242a32').text(st.t);
-        svg.append('text').attr('x', 12).attr('y', y + bh / 2 + 16)
+        g.append('text').attr('x', cx).attr('y', y + stageH / 2 + 5)
+          .attr('text-anchor', 'middle').attr('font-family', 'ui-monospace,monospace')
+          .attr('font-size', 15).attr('font-weight', 700)
+          .attr('fill', i >= 2 ? '#ffffff' : '#2a322b').text(st.v);
+        g.append('text').attr('x', 8).attr('y', y + 16)
+          .attr('font-size', 10.5).attr('font-weight', 600).attr('fill', '#242a32').text(st.t);
+        g.append('text').attr('x', 8).attr('y', y + 29)
           .attr('font-size', 8).attr('fill', '#9ba3a9').text(st.sub);
-        svg.append('text').attr('x', M.l + w + 6).attr('y', y + bh / 2 + 5)
-          .attr('font-size', 11).attr('font-family', 'ui-monospace,monospace')
-          .attr('fill', i === stages.length - 1 ? '#3a352d' : '#4a545d').text(st.v);
       });
       $('co1-funnel-note').innerHTML = '当前参数下：预算内 <b>' + budgetOk.length + '</b> 个、可靠性达标 <b>' + relOk.length +
         '</b> 个、进入复核 <b>' + top3.length + '</b> 个。淘汰不是“不能做”，而是本轮排序靠后。';
-    }
-
-    function renderTri(res) {
-      var rows = res.ranked;
-      $('co1-tri').innerHTML = rows.map(function (r, i) {
-        var cls = i === 0 ? 'reco' : (i < 3 ? 'alt' : 'no');
-        var cap = i === 0 ? '推荐 RECOMMEND' : (i < 3 ? '备选 ALTERNATE' : '不推荐 BELOW');
-        return '<div class="iq-tcard ' + cls + (r.id === selectedId ? ' on' : '') + '" data-id="' + r.id + '">' +
-          '<div class="cap">' + cap + '</div><div class="nm">' + esc(r.name) + '</div>' +
-          '<div class="val">' + r.score.toFixed(1) + '<small>分</small></div>' +
-          '<div class="sub">日产 ' + r.q.toFixed(1) + ' t/d · 投资 ' + r.cost + ' 万<br>防砂 ' + r.sand + ' · 可靠性 ' + r.rel.toFixed(0) + '</div></div>';
-      }).join('');
     }
 
     /* ---------------- 雷达图 ---------------- */
@@ -709,7 +696,7 @@
         .attr('stroke', function (r) { return r.id === selectedId ? '#242a32' : 'none'; })
         .attr('stroke-width', 1.4)
         .style('cursor', 'pointer')
-        .on('click', function (ev, r) { selectedId = r.id; renderAll(); })
+        .on('click', function (ev, r) { selectedId = r.id; aiPicked = false; renderAll(); })
         .on('mouseenter', function (ev, r) { barTip(r, ev); })
         .on('mousemove', function (ev, r) { barTip(r, ev); })
         .on('mouseleave', tipHide)
@@ -739,74 +726,6 @@
       function barTip(r, ev) {
         tipShow(r.name + '<br>综合得分 <b>' + r.score.toFixed(1) + '</b><br>预测日产 <b>' + r.q.toFixed(1) + '</b> t/d · 投资 <b>' + r.cost + '</b> 万元', ev);
       }
-    }
-
-    /* ---------------- 敏感性 10 组 ---------------- */
-    var stressList = [];
-
-    function renderStress(res) {
-      var box = $('co1-stress');
-      stressList = perturbList(state, WEIGHTS[state.pref].w);
-      var same = 0;
-      box.innerHTML = '<div class="iq-stress">' + stressList.map(function (p, i) {
-        var ok = p.top.id === res.best.id;
-        if (ok) same++;
-        return '<div class="st-chip' + (ok ? ' ok' : ' flip') + '" data-i="' + i + '" title="' +
-          esc(p.crit) + (p.dir === 'up' ? ' 权重 +25%' : ' 权重 -25%') + ' → 第一名 ' + esc(p.top.name) +
-          '（' + p.top.score.toFixed(1) + '，领先 ' + p.gap.toFixed(1) + '）">' +
-          '<span class="st-k">' + esc(p.crit) + (p.dir === 'up' ? '↑' : '↓') + '</span>' +
-          '<span class="st-v">' + esc(p.top.short) + '</span></div>';
-      }).join('') + '</div>' +
-        '<div class="iq-meter-row" style="margin-top:4px"><span>仍选当前推荐</span><span><b>' + same + '</b> / 10 组</span></div>';
-      $('co1-stress-mini').textContent = same + '/10 稳定';
-    }
-
-    var scanTimer = null, scanIdx = 0, scanBase = null;
-
-    function stopScan() {
-      if (scanTimer) { window.clearInterval(scanTimer); scanTimer = null; }
-      var b = $('co1-scan'), s = $('co1-scanstop');
-      if (b) { b.hidden = false; b.textContent = '扫描排序变化'; }
-      if (s) s.hidden = true;
-      if (scanBase) {
-        var res = evaluate(state);
-        renderBar(res); renderStress(res); renderKpis(res);
-        scanBase = null;
-      }
-      var note = $('co1-scan-note');
-      if (note) {
-        note.className = 'iq-note';
-        note.innerHTML = '扫描结束：10 组扰动中，第一名保持不变的比例就是右侧的“稳定性”。';
-      }
-    }
-
-    function startScan() {
-      if (scanTimer) { stopScan(); return; }
-      var baseW = WEIGHTS[state.pref].w;
-      var list = perturbList(state, baseW);
-      if (!list.length) return;
-      if (scanBase) { var rb = evaluate(state); renderBar(rb); renderStress(rb); renderKpis(rb); }
-      scanBase = baseW;
-      scanIdx = 0;
-      $('co1-scan').hidden = true;
-      $('co1-scanstop').hidden = false;
-      var note = $('co1-scan-note');
-      note.className = 'iq-note blue';
-      function step() {
-        if (!scanTimer || scanIdx >= list.length) return;
-        var p = list[scanIdx];
-        var r2 = evaluate(state, p.w);
-        renderBar(r2, { label: '扫描 ' + (scanIdx + 1) + '/10 · ' + p.crit + (p.dir === 'up' ? ' +25%' : ' -25%') + ' → ' + r2.best.name, fast: true });
-        renderKpis(r2);
-        note.innerHTML = '<b>第 ' + (scanIdx + 1) + ' / 10 组：</b>' + esc(p.crit) + (p.dir === 'up' ? ' 权重 +25%' : ' 权重 -25%') +
-          ' 后，第一名是 <b>' + esc(r2.best.name) + '</b>，领先 ' + r2.gap.toFixed(1) + ' 分。';
-        scanIdx++;
-        if (scanIdx >= list.length) {
-          window.setTimeout(stopScan, 900);
-        }
-      }
-      scanTimer = window.setInterval(step, 900);
-      step();
     }
 
     /* ---------------- 推荐理由 ---------------- */
@@ -881,6 +800,38 @@
       }
     }
 
+    function renderLink(res) {
+      var id = selectedId || res.best.id;
+      var cur = res.rows.filter(function (r) { return r.id === id; })[0];
+      var pname = WEIGHTS[state.pref].name;
+      if ($('co1-lk-param')) $('co1-lk-param').textContent = '渗透 ' + state.perm + 'mD · 出砂 ' + state.sandRisk.toFixed(2) + ' · 预算 ' + state.budget + '万';
+      if ($('co1-lk-pref')) $('co1-lk-pref').textContent = pname;
+      if ($('co1-lk-rank')) $('co1-lk-rank').textContent = res.ranked.map(function (r) { return r.short; }).join(' > ');
+      if ($('co1-lk-cur')) $('co1-lk-cur').textContent = cur.name + ' · 第 ' + cur.rank + ' 名 · ' + cur.score.toFixed(1);
+      var sc = $('co1-side-cur');
+      if (sc) {
+        var isBest = cur.id === res.best.id;
+        sc.innerHTML = '当前查看：<b>' + esc(cur.name) + '</b> · 第 ' + cur.rank + ' 名 · ' + cur.score.toFixed(1) + ' 分' +
+          (isBest ? '（即 AI 推荐）' : '（AI 推荐 ' + esc(res.best.name) + '）');
+      }
+      var tm = $('co1-table-mini');
+      if (tm) tm.textContent = pname + '口径 · 当前参数';
+    }
+
+    function renderPickState(res) {
+      var btn = $('co1-pick'), note = $('co1-pick-note');
+      if (btn) btn.textContent = aiPicked ? '已采用 AI 方案 ✓' : '选中 AI 方案';
+      if (!note) return;
+      if (aiPicked) {
+        note.className = 'iq-note blue slim';
+        note.innerHTML = '已采用 AI 推荐：<b>' + esc(res.best.name) + '</b>（' + res.best.score.toFixed(1) +
+          ' 分 · 第 1 名）。左侧井筒剖面与工程维度评分已切换到该方案。';
+      } else {
+        note.className = 'iq-note slim';
+        note.innerHTML = 'AI 方案 = 按当前参数与“' + WEIGHTS[state.pref].name + '”口径算出的第 1 名；点击可把它设为选中方案。';
+      }
+    }
+
     function renderPicks(res) {
       var box = $('co1-picks');
       if (!box) return;
@@ -900,7 +851,7 @@
       var row = res.rows.filter(function (r) { return r.id === id; })[0];
       var isBest = id === res.best.id;
       $('co1-figure').innerHTML = completionSvg(id, row, res);
-      $('co1-figlabel').textContent = '第 ' + row.rank + ' 名';
+      $('co1-figlabel').textContent = '第 ' + row.rank + ' 名 · ' + WEIGHTS[state.pref].name;
       $('co1-compare-mini').textContent = row.name + ' · ' + (isBest ? 'AI 推荐' : '对比方案');
       $('co1-detail-rank').textContent = '第 ' + row.rank + ' 名';
       var dims = dimsOf(row, id);
@@ -942,31 +893,39 @@
     }
 
     function renderTable(res) {
-      var b = res.baseline, a = res.best;
-      var dScore = a.score - b.score, dQ = a.q - b.q, dCost = a.cost - b.cost;
+      var b = res.baseline;
+      var id = selectedId || res.best.id;
+      var cur = res.rows.filter(function (r) { return r.id === id; })[0];
+      var isBest = cur.id === res.best.id;
+      var risk = cur.rel >= 70 ? '低' : (cur.rel >= 50 ? '中' : '高');
+      var dScore = cur.score - b.score, dQ = cur.q - b.q, dCost = cur.cost - b.cost;
       function sgn(v, dg, unit) {
         var s = (v > 0 ? '+' : '') + v.toFixed(dg);
         return '<span class="' + (v > 0 ? 'ok' : (v < 0 ? 'bad' : '')) + '">' + s + (unit || '') + '</span>';
       }
       $('co1-table').innerHTML =
         '<table class="iq-table">' +
-        '<tr><th>指标</th><th>经验方案 · 射孔</th><th>AI 推荐 · ' + a.short + '</th><th>变化</th></tr>' +
-        '<tr><td>综合得分</td><td class="num">' + b.score.toFixed(1) + '</td><td class="num">' + a.score.toFixed(1) + '</td><td class="num">' + sgn(dScore, 1) + '</td></tr>' +
-        '<tr><td>预测日产</td><td class="num">' + b.q.toFixed(1) + ' t/d</td><td class="num">' + a.q.toFixed(1) + ' t/d</td><td class="num">' + sgn(dQ, 1, ' t/d') + '</td></tr>' +
-        '<tr><td>防砂能力</td><td class="num">' + b.sand + '</td><td class="num">' + a.sand + '</td><td class="num">' + sgn(a.sand - b.sand, 0) + '</td></tr>' +
-        '<tr><td>投资</td><td class="num">' + b.cost + ' 万元</td><td class="num">' + a.cost + ' 万元</td><td class="num">' + sgn(dCost, 0, ' 万元') + '</td></tr>' +
-        '<tr class="hl"><td>风险等级</td><td class="num">' + (b.rel >= 70 ? '低' : b.rel >= 50 ? '中' : '高') + '</td><td class="num">' + res.risk + '</td><td class="num">' + (res.risk === '低' ? '改善' : (a.rel >= b.rel ? '改善' : '需复核')) + '</td></tr>' +
+        '<tr><th>指标</th><th>经验方案 · 射孔</th><th>' + (isBest ? 'AI 推荐 · ' : '当前查看 · ') + cur.short + '</th><th>变化</th></tr>' +
+        '<tr><td>综合得分</td><td class="num">' + b.score.toFixed(1) + '</td><td class="num">' + cur.score.toFixed(1) + '</td><td class="num">' + sgn(dScore, 1) + '</td></tr>' +
+        '<tr><td>预测日产</td><td class="num">' + b.q.toFixed(1) + ' t/d</td><td class="num">' + cur.q.toFixed(1) + ' t/d</td><td class="num">' + sgn(dQ, 1, ' t/d') + '</td></tr>' +
+        '<tr><td>防砂能力</td><td class="num">' + b.sand + '</td><td class="num">' + cur.sand + '</td><td class="num">' + sgn(cur.sand - b.sand, 0) + '</td></tr>' +
+        '<tr><td>投资</td><td class="num">' + b.cost + ' 万元</td><td class="num">' + cur.cost + ' 万元</td><td class="num">' + sgn(dCost, 0, ' 万元') + '</td></tr>' +
+        '<tr class="hl"><td>风险等级</td><td class="num">' + (b.rel >= 70 ? '低' : b.rel >= 50 ? '中' : '高') + '</td><td class="num">' + risk + '</td><td class="num">' + (risk === '低' ? '改善' : (cur.rel >= b.rel ? '改善' : '需复核')) + '</td></tr>' +
         '</table>' +
-        '<p class="iq-poll">经验方案按邻井惯例取射孔完井；AI 方案由当前参数与权重计算，二者使用同一评分口径。</p>';
+        '<p class="iq-poll">当前查看 <b>' + esc(cur.name) + '</b>（第 ' + cur.rank + ' 名 · ' + cur.score.toFixed(1) + ' 分）' +
+        (isBest ? '，与 AI 推荐一致' : '；AI 推荐 <b>' + esc(res.best.name) + '</b>（' + res.best.score.toFixed(1) + ' 分）') +
+        '。左侧切换方案、右侧调整参数时，本表同步更新。</p>';
 
       var ex = $('co1-explain');
+      var a = res.best;
       var top2 = res.ranked.slice(0, 2).map(function (r) { return r.name + ' ' + r.score.toFixed(1); }).join(' / ');
       var reasons = CRIT.map(function (c, i) { return { n: c.name, v: a.vals[i] / 100 * res.weights[i] }; })
         .sort(function (x, y) { return y.v - x.v; }).slice(0, 2).map(function (x) { return x.n; }).join('、');
       ex.innerHTML = '<b>为什么推荐 ' + a.name + '：</b>它在“' + reasons + '”上贡献最大；与第二名（' + res.ranked[1].name + '）相差 ' + res.gap.toFixed(1) + ' 分。' +
         '权重扰动 10 组中有 ' + res.stable + ' 组仍选择它，因此置信度给到 ' + res.conf + '%。' +
         (res.gap < 2 ? '<br><b>注意：</b>前两名分差很小，结论对权重敏感，建议结合邻井产量与作业能力复核。' : '') +
-        '<br>排序：' + res.ranked.map(function (r) { return r.short; }).join(' > ') + '。';
+        '<br>排序：' + res.ranked.map(function (r) { return r.short; }).join(' > ') + '。' +
+        '<br>当前查看的是 ' + esc(cur.name) + '（第 ' + cur.rank + ' 名），与经验方案的差异见下方对比表。';
     }
 
     function readState() {
@@ -1057,15 +1016,15 @@
       renderFigure(res);
       renderPicks(res);
       renderTable(res);
-      renderStress(res);
       renderFunnel(res);
-      renderTri(res);
+      renderPickState(res);
+      renderLink(res);
     }
 
     /* ---------------- 事件 ---------------- */
     ['co1-perm', 'co1-pressure', 'co1-sand', 'co1-budget', 'co1-target'].forEach(function (id) {
       listen($(id), 'input', function () {
-        if (scanTimer) stopScan();
+        aiPicked = false;
         readState();
         renderAll();
       });
@@ -1073,6 +1032,7 @@
     $('co1-pref').querySelectorAll('button').forEach(function (btn) {
       listen(btn, 'click', function () {
         state.pref = btn.getAttribute('data-pref');
+        aiPicked = false;
         $('co1-pref').querySelectorAll('button').forEach(function (b) {
           b.classList.toggle('on', b === btn);
         });
@@ -1087,6 +1047,7 @@
       $('co1-budget').value = DEFAULTS.budget;
       $('co1-target').value = DEFAULTS.target;
       selectedId = null;
+      aiPicked = false;
       $('co1-pref').querySelectorAll('button').forEach(function (b) {
         b.classList.toggle('on', b.getAttribute('data-pref') === DEFAULTS.pref);
       });
@@ -1095,27 +1056,7 @@
     });
     listen($('co1-pick'), 'click', function () {
       selectedId = evaluate(state).best.id;
-      renderAll();
-    });
-    listen($('co1-scan'), 'click', startScan);
-    listen($('co1-scanstop'), 'click', stopScan);
-    /* 敏感性筹码：事件委托，避免每次重绘都重新绑定 */
-    listen($('co1-stress'), 'click', function (ev) {
-      var chip = ev.target.closest ? ev.target.closest('.st-chip') : null;
-      if (!chip) return;
-      var p = stressList[Number(chip.dataset.i)];
-      if (!p) return;
-      if (scanTimer) stopScan();
-      var r2 = evaluate(state, p.w);
-      renderBar(r2, { label: '扰动：' + p.crit + (p.dir === 'up' ? ' +25%' : ' -25%') + ' → 第一名 ' + r2.best.name });
-      renderKpis(r2);
-      renderStress(r2);
-    });
-
-    listen($('co1-tri'), 'click', function (ev) {
-      var c = ev.target.closest ? ev.target.closest('.iq-tcard') : null;
-      if (!c) return;
-      selectedId = c.getAttribute('data-id');
+      aiPicked = true;
       renderAll();
     });
 
@@ -1123,6 +1064,7 @@
       var c = ev.target.closest ? ev.target.closest('.iq-tcard') : null;
       if (!c) return;
       selectedId = c.getAttribute('data-id');
+      aiPicked = false;
       renderAll();
     });
 
@@ -1136,7 +1078,6 @@
 
     return {
       unmount: function () {
-        if (scanTimer) { window.clearInterval(scanTimer); scanTimer = null; }
         cleanups.forEach(function (fn) { try { fn(); } catch (e) { } });
         cleanups.length = 0;
         root.innerHTML = '';

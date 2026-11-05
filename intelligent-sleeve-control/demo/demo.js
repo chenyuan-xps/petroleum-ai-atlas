@@ -199,26 +199,6 @@
         '<div class="iq-main">' +
           '<div class="iq-card"><div class="iq-card-h"><h4>多层水平井 · 滑套开关与分层产液</h4><span class="iq-mini" id="co4-fig-mini">—</span></div><div id="co4-figure"></div>' +
             '<div class="iq-legend"><span><i style="background:#3a352d"></i>已开启滑套</span><span><i style="background:#d4d0c8"></i>关闭</span><span><i style="background:#b26a39"></i>油贡献</span><span><i style="background:#a03d4f"></i>水贡献 / 高含水</span><span><i style="background:#7d9dc4"></i>层压 / 水侵</span><span><i style="background:#35785a"></i>建议</span></div></div>' +
-      '<div class="iq-card"><div class="iq-card-h"><h4>滑套开度分配</h4><span class="iq-mini" id="co4-open-mini">—</span></div><div id="co4-openchart"></div>' +
-            '<div class="iq-legend"><span><i style="background:#ddd7c8"></i>当前设定</span><span><i style="background:#3a352d"></i>AI 动态</span></div></div>' +
-          '<div class="iq-card iq-timecard">' +
-            '<div class="iq-card-h"><h4>30 天调控回放</h4><span class="iq-mini" id="co4-time-mini">第 30 天</span></div>' +
-            '<div class="iq-timebar">' +
-              '<div class="iq-seg mini" id="co4-view">' +
-                '<button type="button" data-view="ai" class="on" title="AI 每周期按最新含水重算开度">AI 动态</button>' +
-                '<button type="button" data-view="fixed" title="沿用右侧当前设定，30 天不调整">固定开度</button>' +
-              '</div>' +
-              '<button type="button" class="iq-btn sm" id="co4-tplay">▶ 播放</button>' +
-              '<button type="button" class="iq-btn sm" id="co4-step">单步 →</button>' +
-              '<input type="range" id="co4-timeline" min="1" max="30" step="1" value="30" aria-label="调控日">' +
-              '<span class="iq-day" id="co4-day">D30</span>' +
-            '</div>' +
-            '<div class="iq-note slim" id="co4-time-note">拖动时间轴查看每天的滑套开度、分层产液与曲线位置。</div>' +
-          '</div>' +
-          '<div class="iq-card"><div class="iq-card-h"><h4>30 天产油曲线</h4><span class="iq-mini" id="co4-oil-mini">目标 ' + state.target + ' t/d</span></div><div id="co4-oil"></div>' +
-            '<div class="iq-legend"><span><i class="line" style="background:#b26a39"></i>固定开度</span><span><i class="line" style="background:#3a352d"></i>AI 动态调控</span><span><i class="line" style="background:#9ba3a9"></i>目标线</span></div></div>' +
-          '<div class="iq-card"><div class="iq-card-h"><h4>30 天含水率曲线</h4><span class="iq-mini" id="co4-wc-mini">目标 ≤ ' + state.wct + '%</span></div><div id="co4-wc"></div>' +
-            '<div class="iq-legend"><span><i class="line" style="background:#b26a39"></i>固定开度</span><span><i class="line" style="background:#3a352d"></i>AI 动态调控</span><span><i class="line" style="background:#b05a51"></i>含水目标</span></div></div>' +
         '</div>' +
         '<div class="iq-side">' +
           '<div class="iq-card"><div class="iq-card-h"><h4>输入参数</h4><span class="iq-mini">6 项</span></div>' +
@@ -246,17 +226,34 @@
           '</div>' +
         '</div>' +
       '</div>' +
-      '<div class="iq-extra">' +
-        '<div class="iq-card"><div class="iq-card-h"><h4>分层产液构成 · 面积</h4><span class="iq-mini" id="co4-stack-mini">—</span></div><div id="co4-stack"></div>' +
-          '<div class="iq-legend"><span><i style="background:#3a352d"></i>油 A</span><span><i style="background:#5b9b87"></i>油 B</span><span><i style="background:#9fc4b8"></i>油 C</span><span><i style="background:#a03d4f"></i>水 A</span><span><i style="background:#7d9dc4"></i>水 B</span><span><i style="background:#c3d3e6"></i>水 C</span></div></div>' +
-        '<div class="iq-card"><div class="iq-card-h"><h4>三层流量分配对比</h4><span class="iq-mini" id="co4-split-mini">—</span></div><div id="co4-split"></div>' +
-          '<div class="iq-legend"><span><i style="background:#b26a39"></i>固定 油</span><span><i style="background:#e2c9b5"></i>固定 水</span><span><i style="background:#3a352d"></i>AI 油</span><span><i style="background:#9fc4b8"></i>AI 水</span></div></div>' +
-        '<div class="iq-card"><div class="iq-card-h"><h4>滑套开度时间轴 · 30 天 × 3 层</h4><span class="iq-mini" id="co4-strip-mini">—</span></div>' +
-          '<div id="co4-strip" class="iq-strip"></div><div class="iq-strip-note" id="co4-strip-note"></div>' +
-          '<p class="iq-poll">每一格是一天：颜色越深，滑套开得越大；变暗的是还没播放到的天数，橙框是当前回放日。</p></div>' +
-        '<div class="iq-card"><div class="iq-card-h"><h4>自动控制闭环 · 监测 → 判断 → 控制 → 反馈</h4><span class="iq-mini" id="co4-loop-mini">—</span></div>' +
-          '<div id="co4-loop"></div>' +
-          '<p class="iq-poll">四个节点里的数字都来自本轮模拟结果，随右侧参数与时间轴实时更新。</p></div>' +
+      '<div class="iq-screen">' +
+        '<div class="iq-screen-h">' +
+          '<div class="iq-screen-t"><i class="dot"></i><b>30 天动态调控大屏</b><small id="co4-time-mini">第 30 天</small></div>' +
+          '<div class="iq-timebar">' +
+            '<div class="iq-seg mini" id="co4-view">' +
+              '<button type="button" data-view="ai" class="on" title="AI 每周期按最新含水重算开度">AI 动态</button>' +
+              '<button type="button" data-view="fixed" title="沿用右侧当前设定，30 天不调整">固定开度</button>' +
+            '</div>' +
+            '<button type="button" class="iq-btn sm" id="co4-tplay">▶ 播放</button>' +
+            '<button type="button" class="iq-btn sm" id="co4-step">单步 →</button>' +
+            '<input type="range" id="co4-timeline" min="1" max="30" step="1" value="30" aria-label="调控日">' +
+            '<span class="iq-day" id="co4-day">D30</span>' +
+          '</div>' +
+        '</div>' +
+        '<div class="iq-screen-note" id="co4-time-note">拖动时间轴查看每天的滑套开度、分层产液与曲线位置。</div>' +
+        '<div class="iq-screen-grid">' +
+          '<div class="iq-card"><div class="iq-card-h"><h4>30 天产油曲线</h4><span class="iq-mini" id="co4-oil-mini">目标 ' + state.target + ' t/d</span></div><div id="co4-oil"></div>' +
+            '<div class="iq-legend"><span><i class="line" style="background:#b26a39"></i>固定开度</span><span><i class="line" style="background:#3a352d"></i>AI 动态调控</span><span><i class="line" style="background:#9ba3a9"></i>目标线</span></div></div>' +
+          '<div class="iq-card"><div class="iq-card-h"><h4>30 天含水率曲线</h4><span class="iq-mini" id="co4-wc-mini">目标 ≤ ' + state.wct + '%</span></div><div id="co4-wc"></div>' +
+            '<div class="iq-legend"><span><i class="line" style="background:#b26a39"></i>固定开度</span><span><i class="line" style="background:#3a352d"></i>AI 动态调控</span><span><i class="line" style="background:#b05a51"></i>含水目标</span></div></div>' +
+          '<div class="iq-card"><div class="iq-card-h"><h4>分层产液构成 · 面积</h4><span class="iq-mini" id="co4-stack-mini">—</span></div><div id="co4-stack"></div>' +
+            '<div class="iq-legend"><span><i style="background:#3a352d"></i>油 A</span><span><i style="background:#5b9b87"></i>油 B</span><span><i style="background:#9fc4b8"></i>油 C</span><span><i style="background:#a03d4f"></i>水 A</span><span><i style="background:#7d9dc4"></i>水 B</span><span><i style="background:#c3d3e6"></i>水 C</span></div></div>' +
+          '<div class="iq-card"><div class="iq-card-h"><h4>三层流量分配对比</h4><span class="iq-mini" id="co4-split-mini">—</span></div><div id="co4-split"></div>' +
+            '<div class="iq-legend"><span><i style="background:#b26a39"></i>固定 油</span><span><i style="background:#e2c9b5"></i>固定 水</span><span><i style="background:#3a352d"></i>AI 油</span><span><i style="background:#9fc4b8"></i>AI 水</span></div></div>' +
+          '<div class="iq-card iq-span2"><div class="iq-card-h"><h4>滑套开度时间轴 · 30 天 × 3 层</h4><span class="iq-mini" id="co4-strip-mini">—</span></div>' +
+            '<div id="co4-strip" class="iq-strip"></div><div class="iq-strip-note" id="co4-strip-note"></div>' +
+            '<p class="iq-poll">每一格是一天：颜色越深，滑套开得越大；变暗的是还没播放到的天数，橙框是当前回放日。</p></div>' +
+        '</div>' +
       '</div>' +
       '<div class="iq-bottom">' +
         '<div class="iq-card"><div class="iq-card-h"><h4>固定开度 vs AI 动态</h4><span class="iq-mini">30 天模拟</span></div><div id="co4-table"></div></div>' +
@@ -388,66 +385,6 @@
       }
       s += '<text x="14" y="' + (H - 8) + '" font-size="8" fill="#9ba3a9">滑套开度随第 ' + point.day + ' 天调控结果同步；数据为合成示范。</text>';
       return s + '</svg>';
-    }
-
-    /* ---------------- 开度分配 ---------------- */
-    function renderOpenChart(plan) {
-      var box = $('co4-openchart');
-      box.innerHTML = '';
-      var W = 640, H = 226, M = { t: 22, r: 18, b: 44, l: 46 };
-      var svg = d3.select(box).append('svg').attr('viewBox', '0 0 ' + W + ' ' + H)
-        .attr('role', 'img').attr('aria-label', '三层滑套开度对比');
-      var cur = [state.ua / 100, state.ub / 100, state.uc / 100];
-      var data = LAYERS.map(function (l, i) {
-        return { name: l.short, full: l.name, cur: cur[i] * 100, ai: plan[i] * 100, wc0: l.wc0 * 100 };
-      });
-      var x0 = d3.scaleBand().domain(data.map(function (d) { return d.name; })).range([M.l, W - M.r]).padding(0.36);
-      var x1 = d3.scaleBand().domain(['cur', 'ai']).range([0, x0.bandwidth()]).padding(0.22);
-      var y = d3.scaleLinear().domain([0, 100]).range([H - M.b, M.t]);
-      svg.append('g').attr('transform', 'translate(' + M.l + ',0)')
-        .call(d3.axisLeft(y).ticks(5).tickSize(-(W - M.l - M.r)))
-        .call(function (g) {
-          g.select('.domain').remove();
-          g.selectAll('.tick line').attr('stroke', '#f1eee6');
-          g.selectAll('.tick text').attr('font-size', 9).attr('fill', '#9ba3a9');
-        });
-      svg.selectAll('.g').data(data).enter().append('g')
-        .each(function (d) {
-          var g = d3.select(this);
-          g.append('rect').attr('x', x0(d.name) + x1('cur')).attr('y', y(d.cur))
-            .attr('width', x1.bandwidth()).attr('height', H - M.b - y(d.cur)).attr('rx', 2)
-            .attr('fill', '#ddd7c8').attr('opacity', view === 'fixed' ? 1 : 0.4);
-          g.append('rect').attr('x', x0(d.name) + x1('ai')).attr('y', y(d.ai))
-            .attr('width', x1.bandwidth()).attr('height', H - M.b - y(d.ai)).attr('rx', 2)
-            .attr('fill', d.ai >= 99 ? '#3a352d' : (d.ai <= 1 ? '#c9c3b4' : '#5b9b87'))
-            .attr('opacity', view === 'ai' ? 1 : 0.4);
-          g.append('text').attr('x', x0(d.name) + x1('cur') + x1.bandwidth() / 2).attr('y', y(d.cur) - 5)
-            .attr('text-anchor', 'middle').attr('font-size', 9).attr('fill', '#9ba3a9')
-            .attr('font-family', 'ui-monospace,monospace').text(Math.round(d.cur) + '%');
-          g.append('text').attr('x', x0(d.name) + x1('ai') + x1.bandwidth() / 2).attr('y', y(d.ai) - 5)
-            .attr('text-anchor', 'middle').attr('font-size', 9).attr('fill', '#3a352d')
-            .attr('font-family', 'ui-monospace,monospace').text(Math.round(d.ai) + '%');
-        });
-      svg.selectAll('.hover').data(data).enter().append('rect')
-        .attr('x', function (d) { return x0(d.name); }).attr('y', M.t)
-        .attr('width', x0.bandwidth()).attr('height', H - M.t - M.b)
-        .attr('fill', 'transparent')
-        .on('mouseenter', function (ev, d) {
-          tipShow(d.full + '<br>当前开度 <b>' + Math.round(d.cur) + '%</b> → AI <b>' + Math.round(d.ai) + '%</b><br>初始含水 ' + d.wc0.toFixed(0) + '%', ev);
-        })
-        .on('mousemove', function (ev, d) {
-          tipShow(d.full + '<br>当前开度 <b>' + Math.round(d.cur) + '%</b> → AI <b>' + Math.round(d.ai) + '%</b><br>初始含水 ' + d.wc0.toFixed(0) + '%', ev);
-        })
-        .on('mouseleave', tipHide);
-      svg.selectAll('.xl').data(data).enter().append('text')
-        .attr('x', function (d) { return x0(d.name) + x0.bandwidth() / 2; })
-        .attr('y', H - M.b + 16).attr('text-anchor', 'middle').attr('font-size', 10).attr('fill', '#4a545d')
-        .text(function (d) { return d.name + ' 层'; });
-      svg.selectAll('.wc').data(data).enter().append('text')
-        .attr('x', function (d) { return x0(d.name) + x0.bandwidth() / 2; })
-        .attr('y', H - M.b + 30).attr('text-anchor', 'middle').attr('font-size', 8.5).attr('fill', '#9ba3a9')
-        .text(function (d) { return '含水 ' + d.wc0.toFixed(0) + '%'; });
-      $('co4-open-mini').textContent = '第 ' + simDay + ' 天 · ' + (view === 'ai' ? 'AI 动态' : '固定开度') + ' · 网格 21³';
     }
 
     /* ---------------- 时间序列 ---------------- */
@@ -820,42 +757,6 @@
       $('co4-strip-mini').textContent = (view === 'fixed' ? '固定开度' : 'AI 动态') + ' · 3 层 × 30 天';
     }
 
-    /* ---------------- 学习层：自动控制闭环 ---------------- */
-    function renderLoop(sims, vw) {
-      var pt = vw.point;
-      var wc = pt.wc * 100;
-      var okWc = wc <= state.wct;
-      var plan = vw.plan;
-      var choices = view === 'ai' ? sims.ai.choices : 0;
-      var nodes = [
-        { x: 26, y: 16, t: '① 监测', a: '第 ' + simDay + ' 天产油 ' + pt.oil.toFixed(1) + ' t/d', b: '含水 ' + wc.toFixed(1) + '%', c: '#a03d4f' },
-        { x: 384, y: 16, t: '② 判断', a: '含水目标 ≤ ' + state.wct + '%', b: okWc ? '当前达标，维持开度' : '当前超限，压 C 层', c: (okWc ? '#3a352d' : '#b05a51') },
-        { x: 384, y: 148, t: '③ 控制', a: '开度 A ' + Math.round(plan[0] * 100) + '% · B ' + Math.round(plan[1] * 100) + '%', b: 'C 层 ' + Math.round(plan[2] * 100) + '% · 下发井下', c: '#3a352d' },
-        { x: 26, y: 148, t: '④ 反馈', a: '产油达标 ' + vw.hit + ' 天 / 30', b: '含水达标 ' + vw.wcOk + ' 天 / 30', c: '#a9852f' }
-      ];
-      var s = '<svg viewBox="0 0 640 240" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="滑套自动控制闭环：监测、判断、控制、反馈">';
-      s += '<rect width="640" height="240" fill="#fff"/>';
-      s += '<defs><marker id="co4-l-ar" markerWidth="5" markerHeight="5" refX="4" refY="2.5" orient="auto"><path d="M0 0 L5 2.5 L0 5 z" fill="#8d979d"/></marker></defs>';
-      nodes.forEach(function (n) {
-        s += '<rect x="' + n.x + '" y="' + n.y + '" width="230" height="76" rx="7" fill="#fff" stroke="' + n.c + '" stroke-width="1.1" stroke-opacity=".55"/>';
-        s += '<text x="' + (n.x + 12) + '" y="' + (n.y + 21) + '" font-size="10.5" font-weight="650" fill="#2b3338">' + n.t + '</text>';
-        s += '<text x="' + (n.x + 12) + '" y="' + (n.y + 40) + '" font-size="9.5" fill="#4a545d">' + n.a + '</text>';
-        s += '<text x="' + (n.x + 12) + '" y="' + (n.y + 57) + '" font-size="9.5" fill="' + (n.t === '② 判断' && !okWc ? '#a85249' : '#4a545d') + '">' + n.b + '</text>';
-      });
-      s += '<line x1="256" y1="54" x2="384" y2="54" stroke="#8d979d" stroke-width="1.3" marker-end="url(#co4-l-ar)"/>';
-      s += '<text x="320" y="47" text-anchor="middle" font-size="8" fill="#9ba3a9">监测数据</text>';
-      s += '<line x1="499" y1="92" x2="499" y2="148" stroke="#8d979d" stroke-width="1.3" marker-end="url(#co4-l-ar)"/>';
-      s += '<text x="506" y="124" font-size="8" fill="#9ba3a9">决策</text>';
-      s += '<line x1="384" y1="186" x2="256" y2="186" stroke="#8d979d" stroke-width="1.3" marker-end="url(#co4-l-ar)"/>';
-      s += '<text x="320" y="179" text-anchor="middle" font-size="8" fill="#9ba3a9">控制指令</text>';
-      s += '<line x1="141" y1="148" x2="141" y2="92" stroke="#8d979d" stroke-width="1.3" marker-end="url(#co4-l-ar)"/>';
-      s += '<text x="148" y="124" font-size="8" fill="#9ba3a9">反馈</text>';
-      s += '<text x="320" y="124" text-anchor="middle" font-size="8.5" fill="#9ba3a9">每 ' + state.cycle + ' 天循环 · 已调控 ' + choices + ' 次</text>';
-      s += '<text x="320" y="137" text-anchor="middle" font-size="8" fill="#9ba3a9">' + (view === 'fixed' ? '固定开度：不循环' : 'AI 动态：自动循环') + '</text>';
-      $('co4-loop').innerHTML = s + '</svg>';
-      $('co4-loop-mini').textContent = view === 'fixed' ? '固定开度 · 不调整' : 'AI · ' + choices + ' 次调控';
-    }
-
     /* 智能方法说明：数值来自本轮分层产能模型与滚动优化结果 */
     function renderSmart(sims, vw) {
       if (!window.IQSmart || !smartBox) return;
@@ -978,7 +879,6 @@
       var aiSeries = sims.ai.series.slice(0, simDay);
       var manualSeries = sims.manual.series.slice(0, simDay);
       $('co4-figure').innerHTML = figureSvg(point.plan, point, view === 'fixed' ? sims.manual.series : sims.ai.series, simDay);
-      renderOpenChart(point.plan);
       var oilMax = Math.max(state.target * 1.25, 100);
       lineChart('co4-oil', { manual: manualSeries, ai: aiSeries }, 'oil', oilMax, state.target, '目标 ' + state.target, {
         unit: '产油 t/d', text: function (v) { return v.toFixed(0); }
@@ -991,7 +891,6 @@
       renderSmart(sims, vw);
       renderOutput(sims);
       renderStrip(sims);
-      renderLoop(sims, vw);
       $('co4-oil-mini').textContent = '目标 ' + state.target + ' t/d';
       $('co4-wc-mini').textContent = '目标 ≤ ' + state.wct + '%';
 

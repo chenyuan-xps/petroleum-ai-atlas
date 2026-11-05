@@ -192,6 +192,11 @@
             '<div class="iq-note slim" id="co3-scene-note">点击井筒或曲线上的任意井深，查看该处的受力与风险解释。</div></div>' +
           '<div class="iq-card"><div class="iq-card-h"><h4>安全系数与风险热力带</h4><span class="iq-mini">阈值 ' + SF_LIMIT + ' / 1.6</span></div><div id="co3-safety"></div>' +
             '<div class="iq-legend"><span><i style="background:#3a352d"></i>低风险</span><span><i style="background:#a9852f"></i>中风险</span><span><i style="background:#b05a51"></i>高风险</span><span style="margin-left:auto">底部色带按井深分段</span></div></div>' +
+          '<div class="iq-card"><div class="iq-card-h"><h4>下入速度 × 安全窗口扫描</h4><span class="iq-mini" id="co3-scan-mini">0.20—2.00 m/s</span></div>' +
+            '<div id="co3-scan"></div>' +
+            '<div class="iq-legend"><span><i class="line" style="background:#3a352d"></i>最小安全系数</span><span><i style="background:#b05a51"></i>低于阈值</span><span><i style="background:#a03d4f"></i>当前速度</span><span><i style="background:#a9852f"></i>AI 建议速度</span></div>' +
+            '<div class="iq-note slim" id="co3-scan-note">—</div>' +
+          '</div>' +
         '</div>' +
         '<div class="iq-side">' +
           '<div class="iq-card"><div class="iq-card-h"><h4>输入参数</h4><span class="iq-mini">5 项</span></div>' +
@@ -224,18 +229,6 @@
         '<div class="iq-card"><div class="iq-card-h"><h4>结果解释与流程</h4><span class="iq-mini">可复核</span></div><div class="iq-note blue" id="co3-explain">—</div>' +
           '<div class="iq-flow" style="margin-top:8px"><span>测斜数据</span><em>→</em><span>受力积分</span><em>→</em><span>应力校核</span><em>→</em><span>异常检测</span><em>→</em><span>速度决策</span></div>' +
           '<div class="iq-poll">本示范使用合成数据，用于展示智能方法和可视化流程，不代表真实生产结果。</div>' +
-        '</div>' +
-      '</div>' +
-      '<div class="iq-extra">' +
-        '<div class="iq-card">' +
-          '<div class="iq-card-h"><h4>下入速度 × 安全窗口扫描</h4><span class="iq-mini" id="co3-scan-mini">0.20—2.00 m/s</span></div>' +
-          '<div id="co3-scan"></div>' +
-          '<div class="iq-legend"><span><i class="line" style="background:#3a352d"></i>最小安全系数</span><span><i style="background:#b05a51"></i>低于阈值</span><span><i style="background:#a03d4f"></i>当前速度</span><span><i style="background:#a9852f"></i>AI 建议速度</span></div>' +
-          '<div class="iq-note slim" id="co3-scan-note">—</div>' +
-        '</div>' +
-        '<div class="iq-card">' +
-          '<div class="iq-card-h"><h4>关键深度风险清单</h4><span class="iq-mini">按当前参数</span></div>' +
-          '<div id="co3-risk"></div>' +
         '</div>' +
       '</div>';
 
@@ -825,31 +818,6 @@
         '</b>。绿色短条 = 同时满足安全系数、钩载上下限的可行档位。';
     }
 
-    /* ---------------- 学习层：关键深度风险清单 ---------------- */
-    function renderRiskList(cur, opt) {
-      var rows = [];
-      cur.sum.highRuns.forEach(function (r) {
-        var seg = cur.arr.filter(function (p) { return p.s >= r.from && p.s <= r.to; });
-        var mp = seg.reduce(function (a, p) { return p.sf < a.sf ? p : a; }, seg[0] || cur.arr[0]);
-        rows.push(['<b>' + Math.round(r.from) + '—' + Math.round(r.to) + ' m</b>', '高风险井段 · 最低 SF ' +
-          mp.sf.toFixed(2) + '（' + Math.round(mp.s) + ' m）', '降速 / 短起下 / 高钢级管柱']);
-      });
-      var anom = cur.sum.anomaly;
-      rows.push(['<b>' + Math.round(anom.s) + ' m</b>', '疑似遇阻点 · 钩载残差 ' + Math.abs(anom.res).toFixed(0) + ' kN', '指重表复核，确认后短起下']);
-      var valid = cur.arr.filter(function (p) { return p.s > state.H * 0.05; });
-      var minP = valid.reduce(function (a, p) { return p.sf < a.sf ? p : a; }, valid[0] || cur.arr[0]);
-      rows.push(['<b>' + Math.round(minP.s) + ' m</b>', '最小安全系数 ' + minP.sf.toFixed(2) + '（阈值 ' + SF_LIMIT.toFixed(1) + '）',
-        minP.sf < 1.6 ? '已低于 1.6，必须调整参数' : (minP.sf < SF_LIMIT ? '低于阈值，建议降速' : '在安全窗口内，保持监控')]);
-      $('co3-risk').innerHTML =
-        '<table class="iq-table"><tr><th>深度</th><th>现象</th><th>处理建议</th></tr>' +
-        rows.map(function (r) {
-          return '<tr><td>' + r[0] + '</td><td>' + r[1] + '</td><td>' + r[2] + '</td></tr>';
-        }).join('') + '</table>' +
-        '<p class="iq-poll">清单直接取自当前参数下的受力计算结果：' +
-        (cur.sum.highRuns.length ? cur.sum.highRuns.length + ' 段高风险、' : '无高风险井段、') +
-        '1 个疑似遇阻点。AI 速度 ' + opt.v.toFixed(2) + ' m/s 下最小 SF 为 ' + opt.sum.minSF.toFixed(2) + '。</p>';
-    }
-
     /* ---------------- 状态与渲染 ---------------- */
     function readState() {
       state.v = Number($('co3-v').value);
@@ -951,7 +919,6 @@
       renderOutput(cur, opt, conf);
       renderDepth(cur);
       renderScan(cur, opt);
-      renderRiskList(cur, opt);
     }
 
     function syncPlayBtns() {
